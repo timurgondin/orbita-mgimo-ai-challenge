@@ -1,0 +1,406 @@
+<!doctype html>
+<html lang="ru" class="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Орбита — Сегодня (макет v3)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600&family=Source+Serif+4:opsz,wght@8..60,400&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/lucide@0.460.0/dist/umd/lucide.min.js"></script>
+<style>
+  :root{
+    --bg:#141416; --w:#1B1B1E; --w-2:#232327; --w-3:#2A2A2F; --hover:rgba(255,255,255,.05);
+    --line:rgba(255,255,255,.07); --line-2:rgba(255,255,255,.11);
+    --ring:0 0 0 .5px rgba(255,255,255,.08), inset 0 .5px 0 rgba(255,255,255,.06);
+    --text:#EDEDEF; --text-2:#A3A3AC; --text-3:#8A8A94;
+    --accent:#8B8EFF;
+    --orange:#F2A35E; --blue:#62AEF7; --violet:#B39BFB; --yellow:#E3C766; --green:#5BD891; --red:#F58A8A; --gray:#9A9AA3;
+    --c-micro:#E0A75E; --c-econ:#8F8DF7; --c-eng:#52BBAA; --c-world:#E58091; --c-law:#6AA9F2; --c-hist:#C69CF0;
+    --dock-bg:rgba(34,34,38,.68); --dock-ring:rgba(255,255,255,.09); --dock-hi:rgba(255,255,255,.08); --dock-ind:rgba(255,255,255,.09);
+    --shadow:0 1px 2px rgba(0,0,0,.35),0 12px 32px -14px rgba(0,0,0,.7);
+    --serif:"Source Serif 4","PT Serif",Georgia,serif;
+    --sans:"Onest",system-ui,sans-serif;
+    --ease:cubic-bezier(.22,1,.36,1); --spring:cubic-bezier(.34,1.35,.5,1);
+  }
+  html.light{
+    --bg:#F3F3F2; --w:#FFFFFF; --w-2:#F4F4F3; --w-3:#EBEBEA; --hover:rgba(0,0,0,.04);
+    --line:rgba(0,0,0,.07); --line-2:rgba(0,0,0,.1);
+    --ring:0 0 0 .5px rgba(0,0,0,.07), 0 1px 2px rgba(0,0,0,.04);
+    --text:#17171A; --text-2:#52525B; --text-3:#6B6B74;
+    --accent:#5457E6;
+    --orange:#C2671B; --blue:#2575C9; --violet:#7651D6; --yellow:#8C700C; --green:#1C8A4C; --red:#C93D3D; --gray:#6B6B74;
+    --c-micro:#C4842F; --c-econ:#6563E0; --c-eng:#24907F; --c-world:#CC4F66; --c-law:#2F7FD6; --c-hist:#9A62D6;
+    --dock-bg:rgba(255,255,255,.75); --dock-ring:rgba(0,0,0,.08); --dock-hi:rgba(255,255,255,.95); --dock-ind:rgba(0,0,0,.06);
+    --shadow:0 1px 2px rgba(0,0,0,.05),0 12px 32px -14px rgba(0,0,0,.16);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{background:var(--bg);color-scheme:dark} html.light{color-scheme:light}
+  body{font-family:var(--sans);background:var(--bg);color:var(--text);-webkit-font-smoothing:antialiased;font-size:14px;line-height:1.5;font-variant-numeric:tabular-nums;transition:background .3s var(--ease),color .3s var(--ease)}
+  ::selection{background:color-mix(in srgb,var(--accent) 35%,transparent)}
+  ::-webkit-scrollbar{width:10px} ::-webkit-scrollbar-thumb{background:var(--line-2);border-radius:10px;border:3px solid var(--bg)}
+  :focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:8px}
+  button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
+  a{color:inherit;text-decoration:none}
+  svg.lucide{width:16px;height:16px;stroke-width:1.6;flex-shrink:0}
+
+  /* ---------- Header ---------- */
+  header{position:sticky;top:0;z-index:30;height:68px;display:grid;grid-template-columns:1fr auto 1fr;align-items:center;padding:0 28px;transition:background .25s,box-shadow .25s}
+  header.scrolled{background:color-mix(in srgb,var(--bg) 78%,transparent);backdrop-filter:blur(20px) saturate(1.5);-webkit-backdrop-filter:blur(20px) saturate(1.5);box-shadow:0 .5px 0 var(--line)}
+  .logo{display:flex;align-items:center;gap:9px;color:var(--text);width:max-content}
+  .logo span{font-weight:600;font-size:17px;letter-spacing:-.035em}
+  .right{display:flex;justify-content:flex-end;align-items:center;gap:6px}
+  .ib{position:relative;width:36px;height:36px;display:grid;place-items:center;border-radius:50%;color:var(--text-2);transition:background .15s,color .15s}
+  .ib:hover{background:var(--hover);color:var(--text)}
+  .ib .badge{position:absolute;top:8px;right:9px;width:7px;height:7px;border-radius:50%;background:var(--accent);box-shadow:0 0 0 2px var(--bg)}
+  .me{width:32px;height:32px;margin-left:4px;border-radius:50%;background:linear-gradient(140deg,#D6C3AE,#8F7A68);color:#2a211a;display:grid;place-items:center;font-size:12px;font-weight:600;box-shadow:0 0 0 .5px var(--line-2)}
+  .menu{position:absolute;top:58px;right:24px;width:248px;padding:6px;border-radius:16px;background:var(--w-2);box-shadow:var(--ring),0 20px 50px -12px rgba(0,0,0,.6);opacity:0;transform:translateY(-4px) scale(.98);transform-origin:top right;pointer-events:none;transition:opacity .18s var(--ease),transform .18s var(--ease)}
+  .menu.open{opacity:1;transform:none;pointer-events:auto}
+  .menu .who{padding:10px 10px 12px;border-bottom:1px solid var(--line);margin-bottom:6px}
+  .menu .who b{display:block;font-weight:600}
+  .menu .who small{color:var(--text-3);font-size:12px}
+  .mi{display:flex;align-items:center;gap:10px;width:100%;height:36px;padding:0 10px;border-radius:10px;color:var(--text-2);text-align:left}
+  .mi:hover{background:var(--hover);color:var(--text)}
+  .mi .sw{margin-left:auto;display:flex;padding:2px;border-radius:8px;background:var(--w-3)}
+  .mi .sw i{display:grid;place-items:center;width:26px;height:22px;border-radius:6px;font-style:normal}
+  html.dark .mi .sw i:first-child, html.light .mi .sw i:last-child{background:var(--w);box-shadow:var(--ring);color:var(--text)}
+  .mi .sw svg.lucide{width:13px;height:13px}
+
+  /* ---------- Dock ---------- */
+  .dock{position:relative;display:flex;align-items:center;height:48px;padding:5px;border-radius:999px;background:var(--dock-bg);backdrop-filter:blur(28px) saturate(1.7);-webkit-backdrop-filter:blur(28px) saturate(1.7);box-shadow:0 0 0 .5px var(--dock-ring),inset 0 .5px 0 var(--dock-hi),var(--shadow)}
+  .dock .ind{position:absolute;top:5px;bottom:5px;left:0;width:0;border-radius:999px;background:var(--dock-ind);box-shadow:inset 0 .5px 0 var(--dock-hi);transition:left .5s var(--spring),width .5s var(--spring)}
+  .tab{position:relative;z-index:1;display:flex;align-items:center;gap:7px;height:38px;padding:0 16px;border-radius:999px;font-size:13.5px;font-weight:500;letter-spacing:-.01em;color:var(--text-3);transition:color .2s}
+  .tab:hover{color:var(--text-2)} .tab.on{color:var(--text)}
+  .tab svg.lucide{width:15px;height:15px}
+  .orbslot{position:relative;z-index:1;width:46px;height:38px;display:grid;place-items:center;margin:0 2px}
+  .orbslot:hover .orb{transform:scale(1.08)}
+  .orb{position:relative;width:30px;height:30px;border-radius:50%;overflow:hidden;isolation:isolate;transition:transform .4s var(--spring);background:#2B2D7A;box-shadow:inset 0 0 0 .5px rgba(255,255,255,.25),inset 0 -4px 8px rgba(0,0,0,.35),0 2px 6px -1px rgba(30,30,90,.55)}
+  .orb i{position:absolute;border-radius:50%;filter:blur(5px);mix-blend-mode:screen}
+  .orb i:nth-child(1){width:70%;height:70%;left:-5%;top:0;background:#7C7FFF;animation:o1 7s ease-in-out infinite}
+  .orb i:nth-child(2){width:60%;height:60%;right:-10%;top:15%;background:#58B4FF;animation:o2 9s ease-in-out infinite}
+  .orb i:nth-child(3){width:55%;height:55%;left:20%;bottom:-15%;background:#D58BFF;animation:o3 8s ease-in-out infinite}
+  .orb::after{content:"";position:absolute;left:18%;top:10%;width:40%;height:28%;border-radius:50%;background:rgba(255,255,255,.55);filter:blur(4px)}
+  @keyframes o1{50%{transform:translate(35%,25%) scale(1.15)}} @keyframes o2{50%{transform:translate(-40%,20%) scale(.9)}} @keyframes o3{50%{transform:translate(10%,-45%) scale(1.2)}}
+
+  /* ---------- Page ---------- */
+  .page{max-width:1200px;margin:0 auto;padding:20px 32px 72px}
+  .greet{display:flex;align-items:baseline;justify-content:space-between;gap:24px;margin:4px 4px 20px}
+  .greet h1{font-family:var(--serif);font-weight:400;font-size:34px;line-height:1.1;letter-spacing:-.02em}
+  .greet p{font-size:14px;color:var(--text-3);text-align:right}
+  .greet p b{color:var(--text-2);font-weight:500}
+
+  .grid{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:16px;align-items:start}
+  .col-7{grid-column:span 7} .col-5{grid-column:span 5}
+  .stack{display:flex;flex-direction:column;gap:16px}
+
+  /* ---------- Widget ---------- */
+  .wg{position:relative;border-radius:24px;background:var(--w);box-shadow:var(--ring);padding:18px 20px 20px;overflow:hidden}
+  .wh{display:flex;align-items:center;gap:9px;margin-bottom:14px;min-height:28px}
+  .wh .ic{width:24px;height:24px;border-radius:7px;display:grid;place-items:center;color:#fff;background:var(--c)}
+  .wh .ic svg.lucide{width:14px;height:14px;stroke-width:2}
+  .wh h2{font-size:14px;font-weight:600;letter-spacing:-.01em}
+  .wh .more{margin-left:auto;display:inline-flex;align-items:center;gap:2px;font-size:13px;color:var(--text-3);padding:4px 6px;border-radius:8px;transition:color .15s,background .15s}
+  .wh .more:hover{color:var(--text);background:var(--hover)}
+  .wh .more svg.lucide{width:14px;height:14px}
+
+  .tag{display:inline-flex;align-items:center;gap:5px;height:22px;padding:0 8px 0 6px;border-radius:999px;font-size:12px;font-weight:500;white-space:nowrap;color:var(--c);background:color-mix(in srgb,var(--c) 13%,transparent)}
+  .tag svg.lucide{width:12px;height:12px;stroke-width:2.2}
+  .t-wait{--c:var(--orange)} .t-work{--c:var(--blue)} .t-sent{--c:var(--violet)} .t-check{--c:var(--yellow)} .t-ok{--c:var(--green)} .t-no{--c:var(--red)} .t-old{--c:var(--gray)}
+
+  .btn{display:inline-flex;align-items:center;gap:6px;height:30px;padding:0 11px;border-radius:9px;font-size:12.5px;font-weight:500;color:var(--text);background:var(--w-3);transition:background .15s,transform .15s var(--ease)}
+  .btn:hover{background:color-mix(in srgb,var(--w-3) 70%,var(--text) 8%)}
+  .btn:active{transform:scale(.97)}
+  .btn svg.lucide{width:14px;height:14px}
+
+  /* ---------- Schedule ---------- */
+  .days{display:grid;grid-template-columns:repeat(6,1fr);gap:4px;padding:4px;border-radius:14px;background:var(--w-2);margin-bottom:16px}
+  .day{position:relative;display:flex;flex-direction:column;align-items:center;gap:1px;padding:7px 0 8px;border-radius:10px;color:var(--text-3);transition:background .2s,color .2s}
+  .day:hover{color:var(--text-2)}
+  .day small{font-size:11px;font-weight:500;text-transform:uppercase;letter-spacing:.04em}
+  .day b{font-size:16px;font-weight:600;line-height:1.2}
+  .day.on{background:var(--w);color:var(--text);box-shadow:var(--ring),0 2px 6px -2px rgba(0,0,0,.25)}
+  .day.today b{color:var(--accent)}
+  .day .mk{position:absolute;bottom:3px;width:4px;height:4px;border-radius:50%;background:var(--orange)}
+
+  .sched{display:flex;flex-direction:column}
+  .cls{display:grid;grid-template-columns:52px 1fr;gap:14px;cursor:pointer}
+  .cls .tm{padding-top:12px;text-align:right}
+  .cls .tm b{display:block;font-size:14px;font-weight:500;line-height:1.2}
+  .cls .tm small{font-size:12px;color:var(--text-3)}
+  .blk{position:relative;padding:11px 14px 12px;border-radius:14px;background:color-mix(in srgb,var(--cc) 9%,var(--w));transition:background .15s,transform .2s var(--ease)}
+  .cls:hover .blk{background:color-mix(in srgb,var(--cc) 14%,var(--w))}
+  .blk .t1{display:flex;align-items:center;gap:8px}
+  .blk .nm{font-weight:600;font-size:14.5px;letter-spacing:-.01em;color:color-mix(in srgb,var(--cc) 35%,var(--text))}
+  .blk .kind{font-size:12px;color:var(--text-3)}
+  .blk .t1 .tag{margin-left:auto}
+  .blk .t2{font-size:13px;color:var(--text-2);margin-top:2px;display:flex;flex-wrap:wrap;gap:2px 12px}
+  .blk .t2 span{display:inline-flex;align-items:center;gap:5px}
+  .blk .t2 svg.lucide{width:13px;height:13px;color:var(--text-3)}
+  .blk .t2 s{color:var(--text-3)} .blk .t2 .chg{color:var(--orange);font-weight:500}
+  .cls.past{opacity:.45}
+  .cls.live .blk{background:color-mix(in srgb,var(--cc) 15%,var(--w));box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--cc) 30%,transparent)}
+  .live-row{display:flex;align-items:center;gap:10px;margin-top:10px;font-size:12px;color:var(--text-2)}
+  .live-row .pg{flex:1;height:4px;border-radius:4px;background:color-mix(in srgb,var(--cc) 18%,transparent);overflow:hidden}
+  .live-row .pg i{display:block;height:100%;border-radius:4px;background:var(--cc)}
+  .live-row .dot{width:6px;height:6px;border-radius:50%;background:var(--cc);animation:blink 2s ease-in-out infinite}
+  @keyframes blink{50%{opacity:.35}}
+  .blk .acts{display:flex;gap:6px;margin-top:12px}
+  .gap{display:grid;grid-template-columns:52px 1fr;gap:14px;height:26px;align-items:center}
+  .gap span{font-size:11.5px;color:var(--text-3);display:flex;align-items:center;gap:8px}
+  .gap span::after{content:"";flex:1;height:1px;background:repeating-linear-gradient(90deg,var(--line-2) 0 3px,transparent 3px 7px)}
+  .empty{padding:40px 10px;text-align:center;color:var(--text-3)}
+  .empty b{display:block;font-family:var(--serif);font-weight:400;font-size:22px;color:var(--text-2);margin-bottom:4px}
+
+  /* ---------- Shortcuts ---------- */
+  .sc{display:grid;grid-template-columns:repeat(4,1fr);gap:14px 8px}
+  .s{display:flex;flex-direction:column;align-items:center;gap:7px;font-size:12px;color:var(--text-2);text-align:center;line-height:1.25}
+  .s .q{width:52px;height:52px;border-radius:16px;display:grid;place-items:center;background:var(--w-2);color:var(--c);box-shadow:inset 0 .5px 0 rgba(255,255,255,.05);transition:transform .25s var(--spring),background .15s}
+  .s .q svg.lucide{width:21px;height:21px;stroke-width:1.7}
+  .s:hover .q{transform:scale(1.06);background:var(--w-3)}
+  .s:active .q{transform:scale(.95)}
+  .s.add .q{background:none;box-shadow:inset 0 0 0 1.5px var(--line-2);color:var(--text-3)}
+  .s.add{color:var(--text-3)}
+
+  /* ---------- Deadlines ---------- */
+  .dl{display:flex;align-items:center;gap:12px;padding:10px 0}
+  .dl + .dl{border-top:1px solid var(--line)}
+  .dl .when{width:58px;flex-shrink:0;font-size:12px;color:var(--text-3);line-height:1.3}
+  .dl .when b{display:block;font-size:13px;font-weight:600;color:var(--text)}
+  .dl .when.hot b{color:var(--orange)}
+  .dl .i{flex:1;min-width:0}
+  .dl .i div{font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .dl .i small{font-size:12px;color:var(--text-3);display:flex;align-items:center;gap:6px}
+  .dl .i small i{width:6px;height:6px;border-radius:50%;background:var(--cc)}
+
+  /* ---------- Feed ---------- */
+  .feed a{display:flex;gap:12px;padding:10px;margin:0 -10px;border-radius:14px;transition:background .15s}
+  .feed a:hover{background:var(--hover)}
+  .fic{width:34px;height:34px;flex-shrink:0;border-radius:11px;display:grid;place-items:center;color:var(--c);background:color-mix(in srgb,var(--c) 14%,transparent)}
+  .fic svg.lucide{width:16px;height:16px}
+  .fm{flex:1;min-width:0}
+  .ft{display:flex;justify-content:space-between;gap:8px}
+  .ft b{font-weight:500}
+  .ft time{font-size:12px;color:var(--text-3);flex-shrink:0}
+  .fx{font-size:13px;color:var(--text-3);margin-top:1px;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+  .score{display:inline-flex;align-items:baseline;gap:3px;margin-top:6px;font-family:var(--serif);font-size:22px;line-height:1}
+  .score small{font-family:var(--sans);font-size:12px;color:var(--text-3)}
+
+  /* ---------- Exam (dot field) ---------- */
+  .exam{min-height:268px;display:flex;flex-direction:column;background:color-mix(in srgb,var(--c-econ) 6%,var(--w))}
+  .exam canvas{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;
+     -webkit-mask-image:radial-gradient(90% 80% at 100% 0%,#000 10%,transparent 70%);mask-image:radial-gradient(90% 80% at 100% 0%,#000 10%,transparent 70%)}
+  .exam > *:not(canvas){position:relative}
+  .exam .big{font-family:var(--serif);font-weight:400;font-size:30px;line-height:1.08;letter-spacing:-.02em;margin-top:auto}
+  .exam .sub{font-size:13px;color:var(--text-2);margin-top:6px}
+  .bar{display:flex;gap:3px;height:6px;margin:16px 0 8px}
+  .bar div{border-radius:3px}
+  .lg{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:12px;color:var(--text-3)}
+  .lg span{display:flex;align-items:center;gap:6px} .lg i{width:8px;height:8px;border-radius:2px}
+  .lg .hl{color:var(--text)}
+  .exam .note{font-size:13px;color:var(--text-2);margin-top:12px}
+  .exam .note b{color:var(--text);font-weight:500}
+  .exam .acts{display:flex;gap:6px;margin-top:14px}
+
+  footer{text-align:center;font-size:12px;color:var(--text-3);padding:0 0 28px}
+</style>
+</head>
+<body>
+
+<header id="hdr">
+  <a class="logo" href="#" aria-label="Орбита — на главную">
+    <svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true">
+      <defs><mask id="gap"><rect width="24" height="24" fill="#fff"/><circle cx="18.72" cy="5.28" r="4.2" fill="#000"/></mask></defs>
+      <circle cx="12" cy="12" r="9.5" fill="none" stroke="currentColor" stroke-width="1.7" mask="url(#gap)"/>
+      <circle cx="18.72" cy="5.28" r="2.3" fill="currentColor"/>
+    </svg>
+    <span>орбита</span>
+  </a>
+
+  <nav class="dock" id="dock" aria-label="Основная навигация">
+    <span class="ind" id="ind"></span>
+    <a href="#" class="tab on"><i data-lucide="sun"></i>Сегодня</a>
+    <a href="#" class="tab"><i data-lucide="graduation-cap"></i>Учёба</a>
+    <button class="orbslot" aria-label="Спросить Орбиту (Ctrl K)" title="Спросить Орбиту · Ctrl K"><span class="orb"><i></i><i></i><i></i></span></button>
+    <a href="#" class="tab"><i data-lucide="calendar-range"></i>Время</a>
+    <a href="#" class="tab"><i data-lucide="stamp"></i>Офис</a>
+  </nav>
+
+  <div class="right">
+    <button class="ib" aria-label="Уведомления: 3 новых"><i data-lucide="bell"></i><span class="badge"></span></button>
+    <button class="me" id="me" aria-label="Профиль и настройки" aria-expanded="false">АВ</button>
+  </div>
+  <div class="menu" id="menu" role="menu">
+    <div class="who"><b>Алиса Воронцова</b><small>Международный бизнес · 2 курс · МБ-24-1</small></div>
+    <button class="mi"><i data-lucide="user-round"></i>Профиль</button>
+    <button class="mi"><i data-lucide="id-card"></i>Студенческий билет</button>
+    <button class="mi" id="theme"><i data-lucide="sun-moon"></i>Тема<span class="sw"><i><svg class="lucide" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg></i><i><svg class="lucide" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg></i></span></button>
+    <button class="mi"><i data-lucide="settings"></i>Настройки</button>
+    <button class="mi"><i data-lucide="log-out"></i>Выйти</button>
+  </div>
+</header>
+
+<div class="page">
+  <div class="greet">
+    <h1>Добрый день, Алиса</h1>
+    <p>Четверг, 19 ноября · 12-я неделя<br><b>3 пары</b> · <b>1 дедлайн</b> сегодня</p>
+  </div>
+
+  <div class="grid">
+    <!-- Schedule -->
+    <section class="wg col-7" aria-label="Расписание">
+      <div class="wh"><span class="ic" style="--c:var(--accent)"><i data-lucide="calendar-days"></i></span><h2>Расписание</h2><a class="more" href="#">Неделя<i data-lucide="chevron-right"></i></a></div>
+      <div class="days" id="days"></div>
+      <div class="sched" id="sched"></div>
+    </section>
+
+    <div class="col-5 stack">
+      <!-- Shortcuts -->
+      <section class="wg" aria-label="Быстрый доступ">
+        <div class="wh"><span class="ic" style="--c:#6B6B76"><i data-lucide="zap"></i></span><h2>Быстрый доступ</h2><a class="more" href="#">Изменить</a></div>
+        <div class="sc">
+          <a class="s" href="#"><span class="q" style="--c:var(--c-econ)"><i data-lucide="library-big"></i></span>Мои курсы</a>
+          <a class="s" href="#"><span class="q" style="--c:var(--green)"><i data-lucide="chart-no-axes-column"></i></span>Оценки</a>
+          <a class="s" href="#"><span class="q" style="--c:var(--c-micro)"><i data-lucide="file-plus-2"></i></span>Заказать справку</a>
+          <a class="s" href="#"><span class="q" style="--c:var(--c-law)"><i data-lucide="id-card"></i></span>Студбилет</a>
+          <a class="s" href="#"><span class="q" style="--c:var(--c-eng)"><i data-lucide="users-round"></i></span>Преподаватели</a>
+          <a class="s" href="#"><span class="q" style="--c:var(--c-world)"><i data-lucide="calendar-clock"></i></span>Консультации</a>
+          <a class="s" href="#"><span class="q" style="--c:var(--c-hist)"><i data-lucide="book-marked"></i></span>Библиотека</a>
+          <a class="s add" href="#"><span class="q"><i data-lucide="plus"></i></span>Добавить</a>
+        </div>
+      </section>
+
+      <!-- Deadlines -->
+      <section class="wg" aria-label="Дедлайны">
+        <div class="wh"><span class="ic" style="--c:var(--orange)"><i data-lucide="flag"></i></span><h2>Дедлайны</h2><a class="more" href="#">Все задания<i data-lucide="chevron-right"></i></a></div>
+        <div class="dl"><div class="when hot"><b>Сегодня</b>до 23:59</div><div class="i"><div>Эссе «Глобальные цепочки поставок»</div><small><i style="--cc:var(--c-world)"></i>Мировая экономика</small></div><span class="tag t-wait"><i data-lucide="pencil-line"></i>Черновик</span></div>
+        <div class="dl"><div class="when"><b>Сб, 21</b>до 18:00</div><div class="i"><div>Problem set 6</div><small><i style="--cc:var(--c-micro)"></i>Микроэкономика</small></div><span class="tag t-sent"><i data-lucide="send"></i>Отправлено</span></div>
+        <div class="dl"><div class="when"><b>Вс, 22</b>до 23:59</div><div class="i"><div>Case study: Tesla in China</div><small><i style="--cc:var(--c-eng)"></i>Английский язык B2</small></div><span class="tag t-check"><i data-lucide="scan-search"></i>На проверке</span></div>
+      </section>
+    </div>
+
+    <!-- Feed -->
+    <section class="wg col-7" aria-label="Новое">
+      <div class="wh"><span class="ic" style="--c:var(--c-law)"><i data-lucide="bell"></i></span><h2>Новое</h2><a class="more" href="#">Все уведомления<i data-lucide="chevron-right"></i></a></div>
+      <div class="feed">
+        <a href="#"><span class="fic" style="--c:var(--c-micro)"><i data-lucide="award"></i></span><span class="fm"><span class="ft"><b>Контрольная №1 проверена</b><time>10:05</time></span><span class="fx">Микроэкономика · Петрова Е. А.: «Хорошо с графиками. В задаче 3 не учтены постоянные издержки»</span><span class="score">8<small>из 10</small></span></span></a>
+        <a href="#"><span class="fic" style="--c:var(--green)"><i data-lucide="file-check-2"></i></span><span class="fm"><span class="ft"><b>Справка об обучении готова</b><time>вчера</time></span><span class="fx">PDF с QR-кодом подлинности уже в «Офисе». Бумажная копия — окно 3, до 18:00.</span></span></a>
+        <a href="#"><span class="fic" style="--c:var(--accent)"><i data-lucide="megaphone"></i></span><span class="fm"><span class="ft"><b>Открыта запись на элективы весны</b><time>вт</time></span><span class="fx">Учебный офис · до 30 ноября, на популярные курсы места ограничены</span></span></a>
+      </div>
+    </section>
+
+    <!-- Exam -->
+    <section class="wg col-5 exam" aria-label="Ближайшая контрольная">
+      <canvas id="dots" aria-hidden="true"></canvas>
+      <div class="wh"><span class="ic" style="--c:var(--c-econ)"><i data-lucide="target"></i></span><h2>Эконометрика</h2><span class="tag t-check" style="margin-left:auto"><i data-lucide="hourglass"></i>через 3 дня</span></div>
+      <div class="big">Контрольная №2</div>
+      <div class="sub">Пн, 23 ноября · 09:30 · ауд. 1201</div>
+      <div class="bar" aria-label="Формула оценки">
+        <div style="flex:20;background:var(--c-econ)"></div>
+        <div style="flex:20;background:var(--c-econ);opacity:.6;outline:1.5px solid var(--text);outline-offset:1.5px"></div>
+        <div style="flex:20;background:var(--c-econ);opacity:.35"></div>
+        <div style="flex:40;background:var(--line-2)"></div>
+      </div>
+      <div class="lg"><span><i style="background:var(--c-econ)"></i>КР 1 · 20%</span><span class="hl"><i style="background:var(--c-econ);opacity:.6"></i>КР 2 · 20%</span><span><i style="background:var(--c-econ);opacity:.35"></i>ДЗ · 20%</span><span><i style="background:var(--line-2)"></i>Экзамен · 40%</span></div>
+      <p class="note">Сейчас <b>7,4 из 10</b>. Для итоговой 8 нужно <b>8,5+</b>.</p>
+      <div class="acts"><button class="btn"><i data-lucide="file-search"></i>Демо-вариант</button><button class="btn"><i data-lucide="calendar-plus"></i>Консультация</button></div>
+    </section>
+  </div>
+</div>
+
+<footer>Концепт для конкурса MGIMO×AI Challenge. Не официальный сервис, все данные вымышлены.</footer>
+
+<script>
+  // ---------- schedule data ----------
+  const C = {micro:'var(--c-micro)', econ:'var(--c-econ)', eng:'var(--c-eng)', world:'var(--c-world)', law:'var(--c-law)', hist:'var(--c-hist)', acc:'var(--accent)'};
+  const week = [
+    {d:'Пн',n:16,items:[
+      {s:'09:30',e:'11:00',nm:'Эконометрика',k:'Лекция',room:'Ауд. 1201',who:'Соколов Д. В.',c:C.econ,st:'past'},
+      {s:'11:40',e:'13:10',nm:'Мировая экономика',k:'Семинар',room:'Ауд. 2302',who:'Ким А. С.',c:C.world,st:'past'}]},
+    {d:'Вт',n:17,items:[
+      {s:'13:50',e:'15:20',nm:'Международное право',k:'Лекция',room:'Ауд. 101',who:'Орлова М. И.',c:C.law,st:'past'},
+      {s:'15:30',e:'17:00',nm:'История дипломатии',k:'Семинар',room:'Ауд. 3315',who:'Белов Г. Н.',c:C.hist,st:'past'}]},
+    {d:'Ср',n:18,items:[]},
+    {d:'Чт',n:19,today:true,mark:true,items:[
+      {s:'09:30',e:'11:00',nm:'Эконометрика',k:'Лекция',room:'Ауд. 1201',who:'Соколов Д. В.',c:C.econ,st:'past'},
+      {s:'11:40',e:'13:10',nm:'Микроэкономика',k:'Семинар',topic:'Олигополия',room:'Ауд. 3108, корп. Б',who:'Петрова Е. А.',c:C.micro,st:'live',left:41,pct:55},
+      {s:'13:50',e:'15:20',nm:'Английский язык B2',k:'Практика',room:'<s>2214</s> <span class="chg">→ 4105</span>',who:'Morgan K.',c:C.eng,chg:true},
+      {s:'15:30',e:'15:45',nm:'Консультация',k:'Эконометрика',room:'Каб. 518',who:'Соколов Д. В.',c:C.acc,booked:true}]},
+    {d:'Пт',n:20,items:[
+      {s:'09:30',e:'11:00',nm:'Микроэкономика',k:'Лекция',room:'Ауд. 101',who:'Петрова Е. А.',c:C.micro},
+      {s:'11:40',e:'13:10',nm:'Международное право',k:'Семинар',room:'Ауд. 2410',who:'Орлова М. И.',c:C.law}]},
+    {d:'Сб',n:21,items:[
+      {s:'11:40',e:'13:10',nm:'Английский язык B2',k:'Практика',room:'Ауд. 4105',who:'Morgan K.',c:C.eng}]},
+  ];
+  const mins = t => { const [h,m] = t.split(':').map(Number); return h*60+m; };
+  const gapTxt = m => m >= 60 ? `Окно ${Math.floor(m/60)} ч${m%60 ? ' ' + m%60 + ' мин' : ''}` : `Перерыв ${m} мин`;
+
+  const daysEl = document.getElementById('days'), schedEl = document.getElementById('sched');
+  week.forEach((w,i) => {
+    const b = document.createElement('button');
+    b.className = 'day' + (w.today ? ' today on' : '');
+    b.innerHTML = `<small>${w.d}</small><b>${w.n}</b>${w.mark ? '<span class="mk" title="Есть изменения"></span>' : ''}`;
+    b.onclick = () => { daysEl.querySelectorAll('.day').forEach(x => x.classList.remove('on')); b.classList.add('on'); render(i); };
+    daysEl.appendChild(b);
+  });
+
+  function render(i){
+    const it = week[i].items;
+    if (!it.length){ schedEl.innerHTML = `<div class="empty"><b>Свободный день</b>Пар нет. Хорошее время для эссе или библиотеки.</div>`; return; }
+    schedEl.innerHTML = it.map((x,j) => {
+      const gap = j ? mins(x.s) - mins(it[j-1].e) : 0;
+      const tag = x.chg ? '<span class="tag t-wait"><i data-lucide="arrow-right-left"></i>Новая аудитория</span>'
+                : x.booked ? '<span class="tag t-ok"><i data-lucide="circle-check"></i>Записана</span>' : '';
+      const live = x.st === 'live' ? `<div class="live-row"><span class="dot"></span>Идёт · осталось ${x.left} мин<span class="pg"><i style="width:${x.pct}%"></i></span></div>
+        <div class="acts"><button class="btn"><i data-lucide="file-text"></i>Материалы</button><button class="btn"><i data-lucide="book-open"></i>Курс</button><button class="btn"><i data-lucide="mail"></i>Написать</button></div>` : '';
+      return (gap ? `<div class="gap"><span></span><span>${gapTxt(gap)}</span></div>` : '') +
+        `<div class="cls ${x.st||''}" style="--cc:${x.c}">
+          <div class="tm"><b>${x.s}</b><small>${x.e}</small></div>
+          <div class="blk">
+            <div class="t1"><span class="nm">${x.nm}</span><span class="kind">${x.k}${x.topic ? ' · ' + x.topic : ''}</span>${tag}</div>
+            <div class="t2"><span><i data-lucide="map-pin"></i>${x.room}</span><span><i data-lucide="user-round"></i>${x.who}</span></div>
+            ${live}
+          </div>
+        </div>`;
+    }).join('');
+    lucide.createIcons();
+  }
+  render(3);
+  lucide.createIcons();
+
+  // ---------- dock ----------
+  const dock = document.getElementById('dock'), ind = document.getElementById('ind'), tabs = [...dock.querySelectorAll('.tab')];
+  const place = el => { ind.style.left = el.offsetLeft + 'px'; ind.style.width = el.offsetWidth + 'px'; };
+  ind.style.transition = 'none'; place(dock.querySelector('.tab.on')); requestAnimationFrame(() => ind.style.transition = '');
+  document.fonts && document.fonts.ready.then(() => place(dock.querySelector('.tab.on')));
+  tabs.forEach(t => t.addEventListener('click', e => { e.preventDefault(); tabs.forEach(x => x.classList.remove('on')); t.classList.add('on'); place(t); }));
+
+  // ---------- header / menu / theme ----------
+  const hdr = document.getElementById('hdr');
+  addEventListener('scroll', () => hdr.classList.toggle('scrolled', scrollY > 4), {passive:true});
+  const me = document.getElementById('me'), menu = document.getElementById('menu');
+  me.onclick = e => { e.stopPropagation(); const o = menu.classList.toggle('open'); me.setAttribute('aria-expanded', o); };
+  document.addEventListener('click', e => { if (!menu.contains(e.target)) { menu.classList.remove('open'); me.setAttribute('aria-expanded', false); } });
+  document.getElementById('theme').onclick = () => { const r = document.documentElement; r.classList.toggle('light'); r.classList.toggle('dark'); };
+
+  // ---------- dot field inside the exam widget ----------
+  const cv = document.getElementById('dots'), ctx = cv.getContext('2d');
+  let W, H;
+  const fit = () => { const d = devicePixelRatio || 1; W = cv.clientWidth; H = cv.clientHeight; cv.width = W*d; cv.height = H*d; ctx.setTransform(d,0,0,d,0,0); };
+  new ResizeObserver(fit).observe(cv); fit();
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches, G = 11;
+  function draw(ms){
+    const t = ms/1000, light = document.documentElement.classList.contains('light');
+    const [R,Gc,B] = light ? [101,99,224] : [143,141,247];
+    ctx.clearRect(0,0,W,H);
+    for (let y = G/2; y < H; y += G) for (let x = G/2; x < W; x += G) {
+      const nx = x/W, ny = y/H;
+      const w = .5 + .5*Math.sin(nx*6 - t*.6 + Math.sin(ny*5 + t*.4)*1.5);
+      const v = .2 + .8*w;
+      ctx.fillStyle = `rgba(${R},${Gc},${B},${(light?.45:.6)*v})`;
+      ctx.beginPath(); ctx.arc(x, y, .5 + v*1.6, 0, 6.283); ctx.fill();
+    }
+    if (!reduce) requestAnimationFrame(draw);
+  }
+  requestAnimationFrame(draw);
+</script>
+</body>
+</html>

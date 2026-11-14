@@ -1,0 +1,428 @@
+<!doctype html>
+<html lang="ru" class="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Орбита — Сегодня (макет v2)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600&family=Source+Serif+4:opsz,wght@8..60,400&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/lucide@0.460.0/dist/umd/lucide.min.js"></script>
+<style>
+  :root{
+    --bg:#161618; --raise:#1C1C1F; --raise-2:#232326; --hover:rgba(255,255,255,.045);
+    --line:rgba(255,255,255,.075); --line-2:rgba(255,255,255,.12);
+    --text:#EDEDEF; --text-2:#A1A1AA; --text-3:#8A8A93;
+    --accent:#8B8EFF;
+    --orange:#F2A35E; --blue:#62AEF7; --violet:#B39BFB; --yellow:#E3C766; --green:#5BD891; --red:#F58A8A; --gray:#9A9AA3;
+    --c-micro:#D9A35B; --c-econ:#8B8AF5; --c-eng:#4FB6A7; --c-world:#E07A8A; --c-law:#6AA6F0;
+    --dock-bg:rgba(36,36,40,.66); --dock-ring:rgba(255,255,255,.09); --dock-hi:rgba(255,255,255,.08); --dock-ind:rgba(255,255,255,.085);
+    --shadow:0 1px 2px rgba(0,0,0,.35),0 10px 30px -12px rgba(0,0,0,.65);
+    --serif:"Source Serif 4","PT Serif",Georgia,serif;
+    --sans:"Onest",system-ui,sans-serif;
+    --ease:cubic-bezier(.22,1,.36,1);
+    --spring:cubic-bezier(.34,1.35,.5,1);
+  }
+  html.light{
+    --bg:#F6F6F5; --raise:#FFFFFF; --raise-2:#F0F0EF; --hover:rgba(0,0,0,.04);
+    --line:rgba(0,0,0,.07); --line-2:rgba(0,0,0,.11);
+    --text:#17171A; --text-2:#55555E; --text-3:#6B6B74;
+    --accent:#5457E6;
+    --orange:#C2671B; --blue:#2575C9; --violet:#7651D6; --yellow:#93760F; --green:#1C8A4C; --red:#C93D3D; --gray:#6B6B74;
+    --dock-bg:rgba(255,255,255,.72); --dock-ring:rgba(0,0,0,.08); --dock-hi:rgba(255,255,255,.9); --dock-ind:rgba(0,0,0,.06);
+    --shadow:0 1px 2px rgba(0,0,0,.06),0 10px 30px -12px rgba(0,0,0,.18);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{background:var(--bg);color-scheme:dark}
+  html.light{color-scheme:light}
+  body{font-family:var(--sans);background:var(--bg);color:var(--text);-webkit-font-smoothing:antialiased;font-size:14px;line-height:1.5;font-variant-numeric:tabular-nums;transition:background .3s var(--ease),color .3s var(--ease)}
+  ::selection{background:color-mix(in srgb,var(--accent) 35%,transparent)}
+  ::-webkit-scrollbar{width:10px} ::-webkit-scrollbar-thumb{background:var(--line-2);border-radius:10px;border:3px solid var(--bg)}
+  :focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:8px}
+  button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
+  a{color:inherit;text-decoration:none}
+  svg.lucide{width:16px;height:16px;stroke-width:1.6;flex-shrink:0}
+
+  /* ---------------- Header ---------------- */
+  header{position:sticky;top:0;z-index:30;height:72px;display:grid;grid-template-columns:1fr auto 1fr;align-items:center;padding:0 28px}
+  header::before{content:"";position:absolute;inset:0;z-index:-1;background:linear-gradient(var(--bg) 0%,color-mix(in srgb,var(--bg) 0%,transparent) 100%);opacity:0;transition:opacity .3s}
+  header.scrolled::before{opacity:1}
+  .brand{display:flex;align-items:center;gap:10px;font-weight:600;font-size:15px;letter-spacing:-.015em}
+  .right{display:flex;justify-content:flex-end;align-items:center;gap:4px}
+  .ib{width:36px;height:36px;display:grid;place-items:center;border-radius:10px;color:var(--text-2);position:relative;transition:background .15s,color .15s}
+  .ib:hover{background:var(--hover);color:var(--text)}
+  .ib .badge{position:absolute;top:9px;right:9px;width:6px;height:6px;border-radius:50%;background:var(--accent)}
+  .search{display:flex;align-items:center;gap:8px;height:36px;padding:0 8px 0 12px;margin-right:6px;border-radius:10px;color:var(--text-3);transition:background .15s,color .15s}
+  .search:hover{background:var(--hover);color:var(--text-2)}
+  .search kbd{font:500 11px var(--sans);padding:2px 6px;border-radius:5px;box-shadow:inset 0 0 0 1px var(--line-2);color:var(--text-3)}
+  .me{width:32px;height:32px;margin-left:8px;border-radius:50%;background:linear-gradient(140deg,#D6C3AE,#8F7A68);color:#2a211a;display:grid;place-items:center;font-size:12px;font-weight:600;box-shadow:0 0 0 1px var(--line-2)}
+
+  /* ---------------- Dock ---------------- */
+  .dock{position:relative;display:flex;align-items:center;height:48px;padding:5px;border-radius:999px;
+        background:var(--dock-bg);backdrop-filter:blur(28px) saturate(1.7);-webkit-backdrop-filter:blur(28px) saturate(1.7);
+        box-shadow:0 0 0 .5px var(--dock-ring),inset 0 .5px 0 var(--dock-hi),var(--shadow)}
+  .dock .ind{position:absolute;top:5px;bottom:5px;left:0;width:0;border-radius:999px;background:var(--dock-ind);box-shadow:inset 0 .5px 0 var(--dock-hi);
+             transition:left .5s var(--spring),width .5s var(--spring)}
+  .tab{position:relative;z-index:1;display:flex;align-items:center;gap:7px;height:38px;padding:0 16px;border-radius:999px;font-size:13.5px;font-weight:500;letter-spacing:-.01em;color:var(--text-3);transition:color .2s}
+  .tab:hover{color:var(--text-2)}
+  .tab.on{color:var(--text)}
+  .tab svg.lucide{width:15px;height:15px}
+  .orbslot{position:relative;z-index:1;width:46px;height:38px;display:grid;place-items:center;margin:0 2px}
+  .orbslot:hover .orb{transform:scale(1.08)}
+
+  /* ---------------- Orb (stand-in for thinking-orbs) ---------------- */
+  .orb{position:relative;width:30px;height:30px;border-radius:50%;overflow:hidden;isolation:isolate;transition:transform .4s var(--spring);
+       background:#2B2D7A;box-shadow:inset 0 0 0 .5px rgba(255,255,255,.25),inset 0 -4px 8px rgba(0,0,0,.35),0 2px 6px -1px rgba(30,30,90,.6)}
+  .orb i{position:absolute;border-radius:50%;filter:blur(5px);mix-blend-mode:screen}
+  .orb i:nth-child(1){width:70%;height:70%;left:-5%;top:0;background:#7C7FFF;animation:o1 7s ease-in-out infinite}
+  .orb i:nth-child(2){width:60%;height:60%;right:-10%;top:15%;background:#58B4FF;animation:o2 9s ease-in-out infinite}
+  .orb i:nth-child(3){width:55%;height:55%;left:20%;bottom:-15%;background:#D58BFF;animation:o3 8s ease-in-out infinite}
+  .orb::after{content:"";position:absolute;left:18%;top:10%;width:40%;height:28%;border-radius:50%;background:rgba(255,255,255,.55);filter:blur(4px)}
+  .orb.s{width:22px;height:22px}
+  .orb.s i{filter:blur(3.5px)}
+  @keyframes o1{50%{transform:translate(35%,25%) scale(1.15)}}
+  @keyframes o2{50%{transform:translate(-40%,20%) scale(.9)}}
+  @keyframes o3{50%{transform:translate(10%,-45%) scale(1.2)}}
+
+  /* ---------------- Hero ---------------- */
+  .hero{position:relative;margin-top:-72px;padding:128px 0 48px}
+  #dots{position:absolute;top:0;right:0;width:70%;height:440px;pointer-events:none;
+        -webkit-mask-image:radial-gradient(80% 90% at 75% 10%,#000 20%,transparent 75%);mask-image:radial-gradient(80% 90% at 75% 10%,#000 20%,transparent 75%)}
+  .wrap{position:relative;max-width:1120px;margin:0 auto;padding:0 40px}
+  .date{font-size:14px;color:var(--text-3)}
+  h1{font-family:var(--serif);font-weight:400;font-size:56px;line-height:1.04;letter-spacing:-.025em;margin:10px 0 14px;text-wrap:balance}
+  .summary{font-size:17px;line-height:1.55;color:var(--text-2);max-width:58ch;text-wrap:pretty}
+  .summary a{color:var(--text);box-shadow:inset 0 -1px 0 var(--line-2);transition:box-shadow .15s}
+  .summary a:hover{box-shadow:inset 0 -1px 0 var(--text-2)}
+
+  .ask{margin-top:32px;max-width:640px}
+  .field{display:flex;align-items:center;gap:12px;height:52px;padding:0 8px 0 14px;border-radius:16px;background:var(--raise);box-shadow:0 0 0 1px var(--line),var(--shadow);transition:box-shadow .2s}
+  .field:focus-within{box-shadow:0 0 0 1px color-mix(in srgb,var(--accent) 55%,transparent),0 0 0 4px color-mix(in srgb,var(--accent) 14%,transparent),var(--shadow)}
+  .field input{flex:1;min-width:0;background:none;border:none;outline:none;font:inherit;font-size:15px;color:var(--text)}
+  .field input::placeholder{color:var(--text-3)}
+  .field .go{width:36px;height:36px;border-radius:11px;display:grid;place-items:center;background:var(--text);color:var(--bg);transition:transform .15s var(--ease),opacity .15s}
+  .field .go:active{transform:scale(.94)}
+  .sugg{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px}
+  .sugg button{height:30px;padding:0 12px;border-radius:999px;font-size:13px;color:var(--text-2);box-shadow:inset 0 0 0 1px var(--line);transition:background .15s,color .15s}
+  .sugg button:hover{background:var(--hover);color:var(--text)}
+
+  /* ---------------- Layout ---------------- */
+  .cols{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(0,1fr);gap:64px;padding:8px 0 96px}
+  h2{font-size:15px;font-weight:600;letter-spacing:-.01em;display:flex;align-items:baseline;justify-content:space-between;margin-bottom:12px}
+  h2 a{font-size:13px;font-weight:400;color:var(--text-3);display:inline-flex;align-items:center;gap:2px;transition:color .15s}
+  h2 a:hover{color:var(--text)}
+  h2 a svg.lucide{width:14px;height:14px}
+  section + section{margin-top:44px}
+
+  /* Status tag */
+  .tag{display:inline-flex;align-items:center;gap:5px;height:24px;padding:0 9px 0 7px;border-radius:999px;font-size:12px;font-weight:500;white-space:nowrap;
+       color:var(--c);background:color-mix(in srgb,var(--c) 12%,transparent)}
+  .tag svg.lucide{width:13px;height:13px;stroke-width:2}
+  .t-wait{--c:var(--orange)} .t-work{--c:var(--blue)} .t-sent{--c:var(--violet)} .t-check{--c:var(--yellow)} .t-ok{--c:var(--green)} .t-no{--c:var(--red)} .t-old{--c:var(--gray)}
+
+  /* ---------------- Day timeline ---------------- */
+  .day{position:relative}
+  .row{position:relative;display:grid;grid-template-columns:56px 20px 1fr;align-items:start;cursor:pointer}
+  .row .t{padding-top:15px;font-size:13px;color:var(--text-3);text-align:right}
+  .row .rail{position:relative;align-self:stretch}
+  .row .rail::before{content:"";position:absolute;left:50%;top:0;bottom:0;width:1px;background:var(--line-2);transform:translateX(-.5px)}
+  .row:first-child .rail::before{top:20px} .row:last-child .rail::before{bottom:calc(100% - 22px)}
+  .row .rail::after{content:"";position:absolute;left:50%;top:17px;width:9px;height:9px;margin-left:-4.5px;border-radius:50%;background:var(--bg);box-shadow:inset 0 0 0 2px var(--cc)}
+  .row .item{margin-left:6px;padding:11px 14px;border-radius:14px;display:flex;justify-content:space-between;align-items:flex-start;gap:16px;transition:background .15s}
+  .row:hover .item{background:var(--hover)}
+  .item .nm{font-weight:500;font-size:14.5px;letter-spacing:-.01em}
+  .item .sub{font-size:13px;color:var(--text-3);margin-top:1px}
+  .item .sub s{text-decoration-color:var(--text-3)}
+  .item .sub .new{color:var(--orange)}
+  .row.past{opacity:.5}
+  .row.past .rail::after{background:var(--line-2);box-shadow:none}
+
+  .now{display:grid;grid-template-columns:56px 20px 1fr;align-items:center;height:20px}
+  .now .t{font-size:12px;font-weight:600;color:var(--accent);text-align:right}
+  .now .rail{position:relative;height:100%}
+  .now .rail::before{content:"";position:absolute;left:50%;top:0;bottom:0;width:1px;background:var(--line-2);transform:translateX(-.5px)}
+  .now .rail::after{content:"";position:absolute;left:50%;top:50%;width:7px;height:7px;margin:-3.5px 0 0 -3.5px;border-radius:50%;background:var(--accent);box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 22%,transparent)}
+  .now .ln{height:1px;margin-left:6px;background:linear-gradient(90deg,color-mix(in srgb,var(--accent) 60%,transparent),transparent 70%)}
+
+  /* expanded "next" item */
+  .row.next .item{display:block;padding:16px 18px 18px;background:var(--raise);box-shadow:0 0 0 1px var(--line),var(--shadow)}
+  .row.next:hover .item{background:var(--raise)}
+  .next-top{display:flex;justify-content:space-between;align-items:flex-start;gap:16px}
+  .next .nm{font-size:19px;font-weight:600;letter-spacing:-.02em}
+  .next .topic{font-size:14px;color:var(--text-2);margin-top:2px}
+  .in{text-align:right;flex-shrink:0}
+  .in b{display:block;font-family:var(--serif);font-weight:400;font-size:34px;line-height:1;letter-spacing:-.02em}
+  .in span{font-size:12px;color:var(--text-3)}
+  .facts{display:flex;flex-wrap:wrap;gap:6px 18px;margin-top:14px;font-size:13px;color:var(--text-2)}
+  .facts span{display:inline-flex;align-items:center;gap:6px}
+  .facts svg.lucide{width:14px;height:14px;color:var(--text-3)}
+  .acts{display:flex;gap:6px;margin-top:16px}
+  .btn{display:inline-flex;align-items:center;gap:6px;height:32px;padding:0 12px;border-radius:9px;font-size:13px;font-weight:500;color:var(--text);box-shadow:inset 0 0 0 1px var(--line-2);transition:background .15s,transform .15s var(--ease)}
+  .btn:hover{background:var(--hover)}
+  .btn:active{transform:scale(.97)}
+  .btn.pri{background:var(--text);color:var(--bg);box-shadow:none}
+  .btn.pri:hover{opacity:.9;background:var(--text)}
+  .btn svg.lucide{width:14px;height:14px}
+  .cdot{display:inline-block;width:8px;height:8px;border-radius:3px;background:var(--cc);margin-right:8px;vertical-align:1px}
+
+  /* ---------------- Right column ---------------- */
+  .feed a{display:flex;gap:12px;padding:12px;margin:0 -12px;border-radius:12px;transition:background .15s}
+  .feed a:hover{background:var(--hover)}
+  .feed a + a{position:relative}
+  .feed a + a::before{content:"";position:absolute;left:12px;right:12px;top:0;height:1px;background:var(--line)}
+  .feed a:hover::before,.feed a:hover + a::before{opacity:0}
+  .fic{width:32px;height:32px;flex-shrink:0;border-radius:10px;display:grid;place-items:center;color:var(--c);background:color-mix(in srgb,var(--c) 13%,transparent)}
+  .fic svg.lucide{width:15px;height:15px}
+  .fm{flex:1;min-width:0}
+  .ft{display:flex;justify-content:space-between;gap:8px}
+  .ft b{font-weight:500}
+  .ft time{font-size:12px;color:var(--text-3);flex-shrink:0}
+  .fx{font-size:13px;color:var(--text-3);margin-top:1px;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+  .ff{display:flex;align-items:center;gap:8px;margin-top:8px}
+  .score{font-family:var(--serif);font-size:22px;line-height:1}
+  .score small{font-family:var(--sans);font-size:12px;color:var(--text-3)}
+
+  .exam{padding:18px;border-radius:16px;background:var(--raise);box-shadow:0 0 0 1px var(--line),var(--shadow)}
+  .exam .h{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
+  .exam .nm{font-weight:600;letter-spacing:-.01em}
+  .exam .sub{font-size:13px;color:var(--text-3);margin-top:1px}
+  .bar{display:flex;gap:3px;height:6px;margin:18px 0 10px}
+  .bar div{border-radius:3px}
+  .lg{display:grid;grid-template-columns:1fr 1fr;gap:4px 12px;font-size:12px;color:var(--text-3)}
+  .lg span{display:flex;align-items:center;gap:6px}
+  .lg i{width:8px;height:8px;border-radius:2px;display:inline-block}
+  .lg .me2{color:var(--text)}
+  .note{margin-top:14px;padding-top:14px;border-top:1px solid var(--line);font-size:13px;color:var(--text-2)}
+  .note b{color:var(--text);font-weight:500}
+
+  .dl{display:flex;align-items:center;gap:14px;padding:11px 0}
+  .dl + .dl{border-top:1px solid var(--line)}
+  .dl .d{width:30px;text-align:center;flex-shrink:0}
+  .dl .d b{display:block;font-family:var(--serif);font-weight:400;font-size:21px;line-height:1}
+  .dl .d small{font-size:11px;color:var(--text-3)}
+  .dl .i{flex:1;min-width:0}
+  .dl .i div{font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .dl .i small{font-size:12px;color:var(--text-3);display:flex;align-items:center}
+  .dl .i .cdot{width:6px;height:6px;border-radius:50%;margin-right:6px}
+
+  footer{text-align:center;font-size:12px;color:var(--text-3);padding:0 0 28px}
+</style>
+</head>
+<body>
+
+<header id="hdr">
+  <a class="brand" href="#">
+    <svg width="26" height="26" viewBox="0 0 26 26" fill="none" aria-hidden="true">
+      <circle cx="13" cy="13" r="4.5" fill="currentColor"/>
+      <ellipse cx="13" cy="13" rx="11.5" ry="5.2" transform="rotate(-28 13 13)" stroke="var(--accent)" stroke-width="1.4"/>
+      <circle cx="22.6" cy="7.6" r="1.7" fill="var(--accent)"/>
+    </svg>
+    Орбита
+  </a>
+
+  <nav class="dock" id="dock" aria-label="Основная навигация">
+    <span class="ind" id="ind"></span>
+    <a href="#" class="tab on"><i data-lucide="sun"></i>Сегодня</a>
+    <a href="#" class="tab"><i data-lucide="graduation-cap"></i>Учёба</a>
+    <button class="orbslot" aria-label="Орбита: поиск, команды и ассистент"><span class="orb"><i></i><i></i><i></i></span></button>
+    <a href="#" class="tab"><i data-lucide="calendar-range"></i>Время</a>
+    <a href="#" class="tab"><i data-lucide="stamp"></i>Офис</a>
+  </nav>
+
+  <div class="right">
+    <button class="search" aria-label="Поиск"><i data-lucide="search"></i>Поиск<kbd>Ctrl K</kbd></button>
+    <button class="ib" id="theme" aria-label="Сменить тему"><i data-lucide="moon"></i></button>
+    <button class="ib" aria-label="Уведомления, есть новые"><i data-lucide="bell"></i><span class="badge"></span></button>
+    <button class="me" aria-label="Профиль: Алиса Воронцова">АВ</button>
+  </div>
+</header>
+
+<section class="hero">
+  <canvas id="dots" aria-hidden="true"></canvas>
+  <div class="wrap">
+    <p class="date">Четверг, 19 ноября · 12-я неделя семестра</p>
+    <h1>Добрый день, Алиса</h1>
+    <p class="summary">Через 24 минуты семинар по микроэкономике. На английском <a href="#">сменилась аудитория</a>, эссе по мировой экономике нужно сдать <a href="#">до 23:59</a>, а за контрольную пришла <a href="#">новая оценка</a>.</p>
+
+    <div class="ask">
+      <label class="field">
+        <span class="orb s"><i></i><i></i><i></i></span>
+        <input placeholder="Спроси Орбиту или найди что угодно">
+        <button class="go" aria-label="Отправить"><i data-lucide="arrow-up"></i></button>
+      </label>
+      <div class="sugg">
+        <button>Что у меня завтра?</button>
+        <button>Заказать справку об обучении</button>
+        <button>Сколько нужно на экзамене по эконометрике?</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<main class="wrap cols">
+  <div>
+    <section>
+      <h2>План на день <a href="#">Неделя<i data-lucide="chevron-right"></i></a></h2>
+      <div class="day">
+        <div class="row past" style="--cc:var(--c-econ)">
+          <div class="t">09:30</div><div class="rail"></div>
+          <div class="item"><div><div class="nm">Эконометрика</div><div class="sub">Лекция · ауд. 1201 · Соколов Д. В.</div></div></div>
+        </div>
+
+        <div class="now"><div class="t">11:16</div><div class="rail"></div><div class="ln"></div></div>
+
+        <div class="row next" style="--cc:var(--c-micro)">
+          <div class="t">11:40</div><div class="rail"></div>
+          <div class="item">
+            <div class="next-top">
+              <div>
+                <div class="nm"><span class="cdot"></span>Микроэкономика</div>
+                <div class="topic">Семинар 11. Рыночные структуры: олигополия</div>
+              </div>
+              <div class="in"><b>24</b><span>мин до начала</span></div>
+            </div>
+            <div class="facts">
+              <span><i data-lucide="clock-3"></i>11:40–13:10</span>
+              <span><i data-lucide="map-pin"></i>Ауд. 3108, корпус Б, 3 этаж</span>
+              <span><i data-lucide="user-round"></i>Петрова Елена Андреевна</span>
+            </div>
+            <div class="acts">
+              <button class="btn pri"><i data-lucide="navigation"></i>Как пройти</button>
+              <button class="btn"><i data-lucide="file-text"></i>Материалы</button>
+              <button class="btn"><i data-lucide="book-open"></i>Курс</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="row" style="--cc:var(--c-eng)">
+          <div class="t">13:50</div><div class="rail"></div>
+          <div class="item"><div><div class="nm">Английский язык B2</div><div class="sub">Практика · <s>ауд. 2214</s> <span class="new">→ ауд. 4105</span> · Morgan K.</div></div><span class="tag t-wait"><i data-lucide="arrow-right-left"></i>Новая аудитория</span></div>
+        </div>
+
+        <div class="row" style="--cc:var(--accent)">
+          <div class="t">15:30</div><div class="rail"></div>
+          <div class="item"><div><div class="nm">Консультация по эконометрике</div><div class="sub">Каб. 518 · Соколов Д. В. · 15 минут</div></div><span class="tag t-ok"><i data-lucide="circle-check"></i>Записана</span></div>
+        </div>
+
+        <div class="row" style="--cc:var(--c-world)">
+          <div class="t">23:59</div><div class="rail"></div>
+          <div class="item"><div><div class="nm">Сдать эссе «Глобальные цепочки поставок»</div><div class="sub">Мировая экономика · 15% итоговой оценки</div></div><span class="tag t-wait"><i data-lucide="pencil-line"></i>Черновик</span></div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <aside>
+    <section>
+      <h2>Новое <a href="#">Все<i data-lucide="chevron-right"></i></a></h2>
+      <div class="feed">
+        <a href="#">
+          <span class="fic" style="--c:var(--c-micro)"><i data-lucide="award"></i></span>
+          <span class="fm">
+            <span class="ft"><b>Контрольная №1 проверена</b><time>10:05</time></span>
+            <span class="fx">Микроэкономика · «Хорошо с графиками. В задаче 3 не учтены постоянные издержки»</span>
+            <span class="ff"><span class="score">8<small> из 10</small></span></span>
+          </span>
+        </a>
+        <a href="#">
+          <span class="fic" style="--c:var(--green)"><i data-lucide="file-check-2"></i></span>
+          <span class="fm">
+            <span class="ft"><b>Справка об обучении готова</b><time>вчера</time></span>
+            <span class="fx">PDF с QR-кодом подлинности. Бумажная копия — в учебном офисе, окно 3.</span>
+            <span class="ff"><span class="tag t-ok"><i data-lucide="circle-check"></i>Готово</span></span>
+          </span>
+        </a>
+        <a href="#">
+          <span class="fic" style="--c:var(--accent)"><i data-lucide="megaphone"></i></span>
+          <span class="fm">
+            <span class="ft"><b>Открыта запись на элективы</b><time>вт</time></span>
+            <span class="fx">Учебный офис · до 30 ноября, места ограничены</span>
+          </span>
+        </a>
+      </div>
+    </section>
+
+    <section>
+      <h2>Через 3 дня</h2>
+      <div class="exam">
+        <div class="h">
+          <div><div class="nm">Контрольная №2 · Эконометрика</div><div class="sub">Пн, 23 ноября · 09:30 · ауд. 1201</div></div>
+          <span class="tag t-check"><i data-lucide="hourglass"></i>Готовиться</span>
+        </div>
+        <div class="bar" aria-label="Формула оценки">
+          <div style="flex:20;background:var(--c-econ)"></div>
+          <div style="flex:20;background:var(--c-econ);opacity:.55;outline:1.5px solid var(--text);outline-offset:1.5px"></div>
+          <div style="flex:20;background:var(--c-econ);opacity:.35"></div>
+          <div style="flex:40;background:var(--line-2)"></div>
+        </div>
+        <div class="lg">
+          <span><i style="background:var(--c-econ)"></i>КР №1 · 20%</span>
+          <span class="me2"><i style="background:var(--c-econ);opacity:.55"></i>КР №2 · 20%</span>
+          <span><i style="background:var(--c-econ);opacity:.35"></i>Домашние · 20%</span>
+          <span><i style="background:var(--line-2)"></i>Экзамен · 40%</span>
+        </div>
+        <p class="note">Сейчас у тебя <b>7,4 из 10</b>. Чтобы выйти на 8, на контрольной нужно <b>8,5+</b>.</p>
+        <div class="acts">
+          <button class="btn"><i data-lucide="file-search"></i>Демо-вариант</button>
+          <button class="btn"><i data-lucide="calendar-plus"></i>Консультация</button>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Дедлайны <a href="#">Все задания<i data-lucide="chevron-right"></i></a></h2>
+      <div>
+        <div class="dl"><div class="d"><b>19</b><small>чт</small></div><div class="i"><div>Эссе «Глобальные цепочки поставок»</div><small><span class="cdot" style="--cc:var(--c-world)"></span>Мировая экономика</small></div><span class="tag t-wait"><i data-lucide="pencil-line"></i>Черновик</span></div>
+        <div class="dl"><div class="d"><b>21</b><small>сб</small></div><div class="i"><div>Problem set 6</div><small><span class="cdot" style="--cc:var(--c-micro)"></span>Микроэкономика</small></div><span class="tag t-sent"><i data-lucide="send"></i>Отправлено</span></div>
+        <div class="dl"><div class="d"><b>22</b><small>вс</small></div><div class="i"><div>Case study: Tesla in China</div><small><span class="cdot" style="--cc:var(--c-eng)"></span>Английский язык B2</small></div><span class="tag t-check"><i data-lucide="scan-search"></i>На проверке</span></div>
+        <div class="dl"><div class="d"><b>24</b><small>вт</small></div><div class="i"><div>Анализ договора поставки</div><small><span class="cdot" style="--cc:var(--c-law)"></span>Международное право</small></div><span class="tag t-work"><i data-lucide="loader-circle"></i>В работе</span></div>
+      </div>
+    </section>
+  </aside>
+</main>
+
+<footer>Концепт для конкурса MGIMO×AI Challenge. Не официальный сервис, все данные вымышлены.</footer>
+
+<script>
+  lucide.createIcons();
+
+  // dock: sliding indicator
+  const dock = document.getElementById('dock'), ind = document.getElementById('ind');
+  const place = el => { ind.style.left = el.offsetLeft + 'px'; ind.style.width = el.offsetWidth + 'px'; };
+  const tabs = [...dock.querySelectorAll('.tab')];
+  requestAnimationFrame(() => { ind.style.transition = 'none'; place(dock.querySelector('.tab.on')); requestAnimationFrame(() => ind.style.transition = ''); });
+  tabs.forEach(t => t.addEventListener('click', e => { e.preventDefault(); tabs.forEach(x => x.classList.remove('on')); t.classList.add('on'); place(t); }));
+  document.fonts && document.fonts.ready.then(() => place(dock.querySelector('.tab.on')));
+
+  // header backdrop on scroll
+  const hdr = document.getElementById('hdr');
+  addEventListener('scroll', () => hdr.classList.toggle('scrolled', scrollY > 8), { passive: true });
+
+  // theme
+  document.getElementById('theme').onclick = () => { const r = document.documentElement; r.classList.toggle('light'); r.classList.toggle('dark'); };
+
+  // halftone dot field
+  const cv = document.getElementById('dots'), ctx = cv.getContext('2d');
+  let W, H;
+  const fit = () => { const d = devicePixelRatio || 1; W = cv.clientWidth; H = cv.clientHeight; cv.width = W * d; cv.height = H * d; ctx.setTransform(d, 0, 0, d, 0, 0); };
+  addEventListener('resize', fit); fit();
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const G = 13;
+  function draw(ms){
+    const t = ms / 1000, light = document.documentElement.classList.contains('light');
+    ctx.clearRect(0, 0, W, H);
+    for (let y = G / 2; y < H; y += G) for (let x = G / 2; x < W; x += G) {
+      const nx = x / W, ny = y / H;
+      const w = .5 + .5 * Math.sin(nx * 7 - t * .7 + Math.sin(ny * 4 + t * .5) * 1.6);
+      const v = (.25 + .75 * w) * (1 - ny * .6);
+      if (v < .08) continue;
+      const k = nx;
+      const R = 139 + (98 - 139) * k, Gc = 142 + (174 - 142) * k, B = 255 + (247 - 255) * k;
+      ctx.fillStyle = `rgba(${R|0},${Gc|0},${B|0},${(light ? .5 : .75) * v})`;
+      ctx.beginPath(); ctx.arc(x, y, .55 + v * 1.9, 0, 6.283); ctx.fill();
+    }
+    if (!reduce) requestAnimationFrame(draw);
+  }
+  requestAnimationFrame(draw);
+</script>
+</body>
+</html>

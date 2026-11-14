@@ -1,0 +1,224 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+@custom-variant light (&:where(.light, .light *));
+
+/* Токены «Орбиты» (v4). Тёмная тема — по умолчанию, светлая — класс .light */
+:root {
+  --bg: #131315;
+  --s1: #1b1b1e;
+  --s2: #212124;
+  --s3: #2a2a2e;
+  --hover: rgba(255, 255, 255, 0.04);
+  --line: rgba(255, 255, 255, 0.07);
+  --text: #ededef;
+  --text-2: #9a9aa2;
+  --text-3: #7e7e87;
+  --accent: #8b8eff;
+  --urgent: #f2a35e;
+
+  /* палитра иллюстраций */
+  --i-card: #2c2c31;
+  --i-card-2: #36363c;
+  --i-line: #45454c;
+  --i-white: #e9e9ec;
+  --amber: #e0a75e;
+  --violet: #8f8df7;
+  --teal: #52bbaa;
+  --rose: #e58091;
+  --sky: #6aa9f2;
+  --green: #4fcb85;
+  --lilac: #c69cf0;
+
+  --dock-bg: rgba(34, 34, 38, 0.68);
+  --dock-ring: rgba(255, 255, 255, 0.09);
+  --dock-hi: rgba(255, 255, 255, 0.08);
+  --dock-ind: rgba(255, 255, 255, 0.09);
+  --shadow: 0 1px 2px rgba(0, 0, 0, 0.35), 0 12px 32px -14px rgba(0, 0, 0, 0.7);
+  --orb-ring-shadow: 0 8px 24px -8px rgba(0, 0, 0, 0.8);
+
+  --ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --spring: cubic-bezier(0.34, 1.35, 0.5, 1);
+}
+
+.light {
+  --bg: #ffffff;
+  --s1: #f4f4f5;
+  --s2: #eeeeef;
+  --s3: #e6e6e8;
+  --hover: rgba(0, 0, 0, 0.035);
+  --line: rgba(0, 0, 0, 0.07);
+  --text: #141416;
+  --text-2: #5c5c66;
+  --text-3: #6e6e78;
+  --accent: #5457e6;
+  --urgent: #c2671b;
+
+  --i-card: #ffffff;
+  --i-card-2: #f7f7f8;
+  --i-line: #dcdce0;
+  --i-white: #ffffff;
+
+  --dock-bg: rgba(255, 255, 255, 0.78);
+  --dock-ring: rgba(0, 0, 0, 0.08);
+  --dock-hi: rgba(255, 255, 255, 0.95);
+  --dock-ind: rgba(0, 0, 0, 0.06);
+  --shadow: 0 1px 2px rgba(0, 0, 0, 0.05), 0 12px 32px -14px rgba(0, 0, 0, 0.16);
+  --orb-ring-shadow: 0 8px 24px -8px rgba(0, 0, 0, 0.22);
+}
+
+@theme inline {
+  --font-sans: var(--font-onest), system-ui, sans-serif;
+
+  --color-bg: var(--bg);
+  --color-s1: var(--s1);
+  --color-s2: var(--s2);
+  --color-s3: var(--s3);
+  --color-hover: var(--hover);
+  --color-line: var(--line);
+  --color-text: var(--text);
+  --color-text-2: var(--text-2);
+  --color-text-3: var(--text-3);
+  --color-accent: var(--accent);
+  --color-urgent: var(--urgent);
+
+  --color-i-card: var(--i-card);
+  --color-i-card-2: var(--i-card-2);
+  --color-i-line: var(--i-line);
+  --color-i-white: var(--i-white);
+  --color-amber: var(--amber);
+  --color-violet: var(--violet);
+  --color-teal: var(--teal);
+  --color-rose: var(--rose);
+  --color-sky: var(--sky);
+  --color-green: var(--green);
+  --color-lilac: var(--lilac);
+
+  --color-dock-bg: var(--dock-bg);
+  --color-dock-ind: var(--dock-ind);
+
+  --ease-soft: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-spring: cubic-bezier(0.34, 1.35, 0.5, 1);
+}
+
+html {
+  background: var(--bg);
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-onest), system-ui, sans-serif;
+  font-size: 15px;
+  line-height: 1.45;
+  font-variant-numeric: tabular-nums;
+  -webkit-font-smoothing: antialiased;
+  transition:
+    background 0.3s var(--ease),
+    color 0.3s var(--ease);
+}
+
+button {
+  cursor: pointer;
+}
+
+::selection {
+  background: color-mix(in srgb, var(--accent) 35%, transparent);
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--s3);
+  border-radius: 10px;
+  border: 3px solid var(--bg);
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+  border-radius: 10px;
+}
+
+/* Сфера «Орбита» */
+.orb {
+  position: relative;
+  border-radius: 50%;
+  overflow: hidden;
+  isolation: isolate;
+  background: #2b2d7a;
+  box-shadow:
+    inset 0 0 0 0.5px rgba(255, 255, 255, 0.25),
+    inset 0 -4px 8px rgba(0, 0, 0, 0.35),
+    0 2px 6px -1px rgba(30, 30, 90, 0.55);
+  transition: transform 0.4s var(--spring);
+}
+.orb i {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(var(--orb-blur, 5px));
+  mix-blend-mode: screen;
+}
+.orb i:nth-child(1) {
+  width: 70%;
+  height: 70%;
+  left: -5%;
+  top: 0;
+  background: #7c7fff;
+  animation: o1 7s ease-in-out infinite;
+}
+.orb i:nth-child(2) {
+  width: 60%;
+  height: 60%;
+  right: -10%;
+  top: 15%;
+  background: #58b4ff;
+  animation: o2 9s ease-in-out infinite;
+}
+.orb i:nth-child(3) {
+  width: 55%;
+  height: 55%;
+  left: 20%;
+  bottom: -15%;
+  background: #d58bff;
+  animation: o3 8s ease-in-out infinite;
+}
+.orb::after {
+  content: "";
+  position: absolute;
+  left: 18%;
+  top: 10%;
+  width: 40%;
+  height: 28%;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.55);
+  filter: blur(4px);
+}
+@keyframes o1 {
+  50% {
+    transform: translate(35%, 25%) scale(1.15);
+  }
+}
+@keyframes o2 {
+  50% {
+    transform: translate(-40%, 20%) scale(0.9);
+  }
+}
+@keyframes o3 {
+  50% {
+    transform: translate(10%, -45%) scale(1.2);
+  }
+}
+@keyframes blink {
+  50% {
+    opacity: 0.3;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .orb i,
+  .live-dot {
+    animation: none;
+  }
+}

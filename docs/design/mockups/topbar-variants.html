@@ -1,0 +1,238 @@
+<!doctype html>
+<html lang="ru" class="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Орбита — варианты верхней панели</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/lucide@0.460.0/dist/umd/lucide.min.js"></script>
+<style>
+  :root{
+    --bg:#131315; --s1:#1B1B1E; --s2:#212124; --s3:#2A2A2E; --hover:rgba(255,255,255,.05);
+    --line:rgba(255,255,255,.07);
+    --text:#EDEDEF; --text-2:#9A9AA2; --text-3:#7E7E87; --accent:#8B8EFF;
+    --sans:"Onest",system-ui,sans-serif;
+    --ease:cubic-bezier(.22,1,.36,1); --spring:cubic-bezier(.34,1.35,.5,1);
+  }
+  html.light{
+    --bg:#FFFFFF; --s1:#F4F4F5; --s2:#EEEEEF; --s3:#E6E6E8; --hover:rgba(0,0,0,.04);
+    --line:rgba(0,0,0,.07); --text:#141416; --text-2:#5C5C66; --text-3:#6E6E78; --accent:#5457E6;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{background:var(--bg);color-scheme:dark} html.light{color-scheme:light}
+  body{font-family:var(--sans);background:var(--bg);color:var(--text);-webkit-font-smoothing:antialiased;font-size:15px;line-height:1.45;padding:40px 0 80px}
+  button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
+  a{color:inherit;text-decoration:none}
+  svg.lucide{width:16px;height:16px;stroke-width:1.6;flex-shrink:0}
+  :focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:10px}
+
+  .intro{max-width:1240px;margin:0 auto 28px;padding:0 30px;display:flex;justify-content:space-between;align-items:flex-end;gap:20px}
+  .intro h1{font-size:28px;font-weight:500;letter-spacing:-.03em}
+  .intro p{color:var(--text-2);margin-top:4px}
+  .ctrl{display:flex;gap:8px}
+  .ctrl button{height:34px;padding:0 14px;border-radius:999px;background:var(--s1);font-size:13px;font-weight:500;color:var(--text-2);transition:background .15s,color .15s}
+  .ctrl button:hover{color:var(--text)} .ctrl button.on{background:var(--text);color:var(--bg)}
+
+  .v{max-width:1240px;margin:0 auto 36px;padding:0 30px}
+  .v-h{display:flex;align-items:baseline;gap:12px;margin-bottom:10px}
+  .v-h b{font-size:16px;font-weight:600;letter-spacing:-.01em}
+  .v-h span{color:var(--text-3);font-size:14px}
+  .frame{position:relative;height:190px;border-radius:22px;background:var(--bg);overflow:hidden;box-shadow:0 0 0 1px var(--line)}
+
+  /* fake page under the bar */
+  .under{position:absolute;inset:0;padding:96px 44px 0;transition:transform .6s var(--ease)}
+  .under .d{font-size:14px;color:var(--text-2)} .under .h{font-size:30px;font-weight:500;letter-spacing:-.03em;margin-top:2px}
+  .under .tiles{display:grid;grid-template-columns:repeat(6,1fr);gap:14px;margin-top:28px}
+  .under .tiles i{display:block;aspect-ratio:1.4/1;border-radius:20px;background:var(--s1);position:relative;overflow:hidden}
+  .under .tiles i::after{content:"";position:absolute;inset:28% 30%;border-radius:10px;background:var(--c);opacity:.9}
+  body.scrolled .under{transform:translateY(-150px)}
+
+  /* shared header layout */
+  .bar{position:absolute;top:0;left:0;right:0;z-index:5;height:72px;display:grid;grid-template-columns:1fr auto 1fr;align-items:center;padding:0 26px}
+  .logo{display:flex;align-items:center;gap:9px;width:max-content}
+  .logo span{font-weight:600;font-size:17px;letter-spacing:-.035em}
+  .right{display:flex;justify-content:flex-end;align-items:center;gap:6px}
+  .ib{position:relative;width:36px;height:36px;display:grid;place-items:center;border-radius:50%;color:var(--text-2);transition:background .15s,color .15s}
+  .ib:hover{background:var(--hover);color:var(--text)}
+  .ib .badge{position:absolute;top:8px;right:9px;width:7px;height:7px;border-radius:50%;background:var(--accent);box-shadow:0 0 0 2px var(--bg)}
+  .me{width:32px;height:32px;margin-left:4px;border-radius:50%;background:linear-gradient(140deg,#D6C3AE,#8F7A68);color:#2a211a;display:grid;place-items:center;font-size:12px;font-weight:600}
+
+  /* orb */
+  .orb{position:relative;width:30px;height:30px;border-radius:50%;overflow:hidden;isolation:isolate;transition:transform .4s var(--spring);background:#2B2D7A;box-shadow:inset 0 0 0 .5px rgba(255,255,255,.25),inset 0 -4px 8px rgba(0,0,0,.35),0 2px 6px -1px rgba(30,30,90,.55)}
+  .orb i{position:absolute;border-radius:50%;filter:blur(5px);mix-blend-mode:screen}
+  .orb i:nth-child(1){width:70%;height:70%;left:-5%;top:0;background:#7C7FFF;animation:o1 7s ease-in-out infinite}
+  .orb i:nth-child(2){width:60%;height:60%;right:-10%;top:15%;background:#58B4FF;animation:o2 9s ease-in-out infinite}
+  .orb i:nth-child(3){width:55%;height:55%;left:20%;bottom:-15%;background:#D58BFF;animation:o3 8s ease-in-out infinite}
+  .orb::after{content:"";position:absolute;left:18%;top:10%;width:40%;height:28%;border-radius:50%;background:rgba(255,255,255,.55);filter:blur(4px)}
+  @keyframes o1{50%{transform:translate(35%,25%) scale(1.15)}} @keyframes o2{50%{transform:translate(-40%,20%) scale(.9)}} @keyframes o3{50%{transform:translate(10%,-45%) scale(1.2)}}
+  .orbslot{position:relative;z-index:1;display:grid;place-items:center}
+  .orbslot:hover .orb{transform:scale(1.08)}
+
+  /* generic dock pieces */
+  .dock{position:relative;display:flex;align-items:center}
+  .ind{position:absolute;left:0;width:0;border-radius:999px;transition:left .5s var(--spring),width .5s var(--spring)}
+  .tab{position:relative;z-index:1;display:flex;align-items:center;gap:7px;border-radius:999px;font-size:13.5px;font-weight:500;letter-spacing:-.01em;color:var(--text-3);transition:color .2s}
+  .tab:hover{color:var(--text-2)} .tab.on{color:var(--text)}
+  .tab svg.lucide{width:15px;height:15px}
+
+  /* ===== A. Baseline glass ===== */
+  .A .dock{height:48px;padding:5px;border-radius:999px;background:rgba(34,34,38,.68);backdrop-filter:blur(28px) saturate(1.7);-webkit-backdrop-filter:blur(28px) saturate(1.7);box-shadow:0 0 0 .5px rgba(255,255,255,.09),inset 0 .5px 0 rgba(255,255,255,.08),0 1px 2px rgba(0,0,0,.35),0 12px 32px -14px rgba(0,0,0,.7)}
+  .A .ind{top:5px;bottom:5px;background:rgba(255,255,255,.09);box-shadow:inset 0 .5px 0 rgba(255,255,255,.08)}
+  .A .tab{height:38px;padding:0 16px}
+  .A .orbslot{width:46px;height:38px;margin:0 2px}
+
+  /* ===== B. Icons, label on active ===== */
+  .B .dock{height:50px;padding:5px;border-radius:999px;gap:2px;background:rgba(30,30,33,.72);backdrop-filter:blur(28px) saturate(1.7);-webkit-backdrop-filter:blur(28px) saturate(1.7);box-shadow:0 0 0 .5px rgba(255,255,255,.08),inset 0 .5px 0 rgba(255,255,255,.07),0 12px 32px -14px rgba(0,0,0,.7)}
+  .B .tab{height:40px;padding:0 12px;gap:0;transition:color .2s,background .3s,padding .45s var(--spring)}
+  .B .tab span{max-width:0;opacity:0;overflow:hidden;white-space:nowrap;transition:max-width .45s var(--spring),opacity .25s,margin .45s var(--spring)}
+  .B .tab.on{background:rgba(255,255,255,.1);padding:0 16px 0 14px}
+  .B .tab.on span{max-width:90px;opacity:1;margin-left:8px}
+  .B .tab svg.lucide{width:17px;height:17px}
+  .B .orbslot{width:48px;height:40px}
+
+  /* ===== C. Liquid glass, split with orb bubble ===== */
+  .C .wrap{display:flex;align-items:center;gap:10px}
+  .C .glass{position:relative;height:48px;padding:5px;border-radius:999px;
+     background:linear-gradient(180deg,rgba(255,255,255,.10),rgba(255,255,255,.035));
+     backdrop-filter:blur(22px) saturate(1.9);-webkit-backdrop-filter:blur(22px) saturate(1.9);
+     box-shadow:inset 0 1px 0 rgba(255,255,255,.16),inset 0 -1px 0 rgba(255,255,255,.04),inset 0 0 0 .5px rgba(255,255,255,.1),0 1px 2px rgba(0,0,0,.3),0 14px 34px -14px rgba(0,0,0,.75)}
+  .C .glass::before{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;
+     background:radial-gradient(120% 60% at 30% -10%,rgba(255,255,255,.14),transparent 60%)}
+  .C .ind{top:5px;bottom:5px;background:linear-gradient(180deg,rgba(255,255,255,.16),rgba(255,255,255,.07));box-shadow:inset 0 .5px 0 rgba(255,255,255,.25),0 2px 8px -2px rgba(0,0,0,.4)}
+  .C .tab{height:38px;padding:0 16px}
+  .C .bubble{width:48px;height:48px;padding:0;display:grid;place-items:center}
+  .C .bubble .orb{width:34px;height:34px}
+  .C .right .pill{display:flex;align-items:center;gap:2px;height:44px;padding:4px;border-radius:999px;
+     background:linear-gradient(180deg,rgba(255,255,255,.08),rgba(255,255,255,.03));backdrop-filter:blur(22px);-webkit-backdrop-filter:blur(22px);
+     box-shadow:inset 0 1px 0 rgba(255,255,255,.12),inset 0 0 0 .5px rgba(255,255,255,.08)}
+  .C .right .me{margin-left:0}
+
+  /* ===== D. Quiet text, no capsule ===== */
+  .D .dock{gap:6px}
+  .D .tab{height:40px;padding:0 14px;font-size:14px}
+  .D .tab svg{display:none}
+  .D .ind{bottom:2px;height:3px;width:3px!important;border-radius:50%;background:var(--text);margin-left:-1.5px}
+  .D .orbslot{width:52px;height:40px;margin:0 8px}
+  .D .bar{box-shadow:0 .5px 0 var(--line)}
+  body.scrolled .D .bar{background:rgba(19,19,21,.72);backdrop-filter:blur(20px) saturate(1.6);-webkit-backdrop-filter:blur(20px) saturate(1.6)}
+
+  /* ===== E. Contrast segmented ===== */
+  .E .dock{height:46px;padding:4px;border-radius:999px;background:var(--s1);box-shadow:inset 0 0 0 .5px var(--line)}
+  .E .ind{top:4px;bottom:4px;background:var(--text);box-shadow:0 2px 8px -2px rgba(0,0,0,.5)}
+  .E .tab{height:38px;padding:0 16px;transition:color .35s var(--ease)}
+  .E .tab.on{color:var(--bg)}
+  .E .orbslot{width:46px;height:38px;margin:0 2px}
+  body.scrolled .E .dock{background:rgba(27,27,30,.8);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px)}
+
+  /* ===== F. Raised orb ===== */
+  .F .dock{height:48px;padding:5px 5px;border-radius:999px;background:rgba(34,34,38,.7);backdrop-filter:blur(28px) saturate(1.7);-webkit-backdrop-filter:blur(28px) saturate(1.7);box-shadow:0 0 0 .5px rgba(255,255,255,.09),inset 0 .5px 0 rgba(255,255,255,.08),0 12px 32px -14px rgba(0,0,0,.7)}
+  .F .ind{top:5px;bottom:5px;background:rgba(255,255,255,.09)}
+  .F .tab{height:38px;padding:0 16px}
+  .F .orbslot{width:68px;height:38px}
+  .F .orbslot .ring{position:absolute;width:56px;height:56px;border-radius:50%;background:var(--bg);box-shadow:0 0 0 .5px rgba(255,255,255,.1),0 8px 24px -8px rgba(0,0,0,.8);display:grid;place-items:center;top:50%;left:50%;transform:translate(-50%,-50%)}
+  .F .orbslot .orb{width:44px;height:44px}
+  .F .orbslot .orb i{filter:blur(7px)}
+  .F .orbslot::after{content:"Ctrl K";position:absolute;top:calc(100% + 16px);font-size:11px;color:var(--text-3);white-space:nowrap;opacity:0;transition:opacity .2s}
+  .F .orbslot:hover::after{opacity:1}
+
+  .note{max-width:1240px;margin:8px auto 0;padding:0 30px;color:var(--text-3);font-size:13px}
+</style>
+</head>
+<body>
+
+<div class="intro">
+  <div><h1>Верхняя панель: варианты</h1><p>Структура одна: логотип, док с четырьмя пространствами и сферой, справа уведомления и профиль. Кликай по вкладкам.</p></div>
+  <div class="ctrl"><button id="scroll">Контент под панелью</button></div>
+</div>
+
+<template id="tpl-under">
+  <div class="under"><div class="d">Четверг, 19 ноября</div><div class="h">Добрый день, Алиса</div>
+    <div class="tiles"><i style="--c:#8F8DF7"></i><i style="--c:#4FCB85"></i><i style="--c:#6AA9F2"></i><i style="--c:#7C7FFF"></i><i style="--c:#E58091"></i><i style="--c:#E0A75E"></i></div></div>
+</template>
+<template id="tpl-logo">
+  <a class="logo" href="#"><svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><defs><mask id="gapX"><rect width="24" height="24" fill="#fff"/><circle cx="18.72" cy="5.28" r="4.2" fill="#000"/></mask></defs><circle cx="12" cy="12" r="9.5" fill="none" stroke="currentColor" stroke-width="1.7" mask="url(#gapX)"/><circle cx="18.72" cy="5.28" r="2.3" fill="currentColor"/></svg><span>орбита</span></a>
+</template>
+<template id="tpl-right">
+  <div class="right"><button class="ib" aria-label="Уведомления"><i data-lucide="bell"></i><span class="badge"></span></button><button class="me">АВ</button></div>
+</template>
+
+<!-- A -->
+<div class="v A"><div class="v-h"><b>A. Базовый</b><span>Стеклянная капсула, «линза» переезжает за активной вкладкой. Как сейчас в v4.</span></div>
+  <div class="frame"><div data-under></div><header class="bar"><div data-logo></div>
+    <nav class="dock"><span class="ind"></span>
+      <a href="#" class="tab on"><i data-lucide="sun"></i>Сегодня</a><a href="#" class="tab"><i data-lucide="graduation-cap"></i>Учёба</a>
+      <button class="orbslot"><span class="orb"><i></i><i></i><i></i></span></button>
+      <a href="#" class="tab"><i data-lucide="calendar-range"></i>Время</a><a href="#" class="tab"><i data-lucide="stamp"></i>Офис</a></nav>
+    <div data-right></div></header></div></div>
+
+<!-- B -->
+<div class="v B"><div class="v-h"><b>B. Иконки, подпись у активной</b><span>Компактнее и тише: подпись «вырастает» только у выбранного пространства.</span></div>
+  <div class="frame"><div data-under></div><header class="bar"><div data-logo></div>
+    <nav class="dock">
+      <a href="#" class="tab on" title="Сегодня"><i data-lucide="sun"></i><span>Сегодня</span></a><a href="#" class="tab" title="Учёба"><i data-lucide="graduation-cap"></i><span>Учёба</span></a>
+      <button class="orbslot"><span class="orb"><i></i><i></i><i></i></span></button>
+      <a href="#" class="tab" title="Время"><i data-lucide="calendar-range"></i><span>Время</span></a><a href="#" class="tab" title="Офис"><i data-lucide="stamp"></i><span>Офис</span></a></nav>
+    <div data-right></div></header></div></div>
+
+<!-- C -->
+<div class="v C"><div class="v-h"><b>C. Жидкое стекло, сфера отдельно</b><span>В духе iOS 26: объёмное стекло с бликом, сфера — отдельный «пузырь», правая группа тоже в стекле.</span></div>
+  <div class="frame"><div data-under></div><header class="bar"><div data-logo></div>
+    <div class="wrap">
+      <nav class="dock glass"><span class="ind"></span>
+        <a href="#" class="tab on"><i data-lucide="sun"></i>Сегодня</a><a href="#" class="tab"><i data-lucide="graduation-cap"></i>Учёба</a>
+        <a href="#" class="tab"><i data-lucide="calendar-range"></i>Время</a><a href="#" class="tab"><i data-lucide="stamp"></i>Офис</a></nav>
+      <button class="orbslot glass bubble"><span class="orb"><i></i><i></i><i></i></span></button>
+    </div>
+    <div class="right"><div class="pill"><button class="ib" aria-label="Уведомления"><i data-lucide="bell"></i><span class="badge"></span></button><button class="me">АВ</button></div></div>
+  </header></div></div>
+
+<!-- D -->
+<div class="v D"><div class="v-h"><b>D. Тихий текст</b><span>Без капсулы, как навигация apple.com: только слова, активное отмечено точкой. Максимум воздуха.</span></div>
+  <div class="frame"><div data-under></div><header class="bar"><div data-logo></div>
+    <nav class="dock"><span class="ind"></span>
+      <a href="#" class="tab on">Сегодня</a><a href="#" class="tab">Учёба</a>
+      <button class="orbslot"><span class="orb"><i></i><i></i><i></i></span></button>
+      <a href="#" class="tab">Время</a><a href="#" class="tab">Офис</a></nav>
+    <div data-right></div></header></div></div>
+
+<!-- E -->
+<div class="v E"><div class="v-h"><b>E. Контрастный сегмент</b><span>Матовая капсула, активная вкладка — светлая «таблетка» с тёмным текстом. Чётко и уверенно.</span></div>
+  <div class="frame"><div data-under></div><header class="bar"><div data-logo></div>
+    <nav class="dock"><span class="ind"></span>
+      <a href="#" class="tab on"><i data-lucide="sun"></i>Сегодня</a><a href="#" class="tab"><i data-lucide="graduation-cap"></i>Учёба</a>
+      <button class="orbslot"><span class="orb"><i></i><i></i><i></i></span></button>
+      <a href="#" class="tab"><i data-lucide="calendar-range"></i>Время</a><a href="#" class="tab"><i data-lucide="stamp"></i>Офис</a></nav>
+    <div data-right></div></header></div></div>
+
+<!-- F -->
+<div class="v F"><div class="v-h"><b>F. Сфера-герой</b><span>Сфера крупнее и «выступает» из капсулы: ассистент — главный элемент навигации.</span></div>
+  <div class="frame"><div data-under></div><header class="bar"><div data-logo></div>
+    <nav class="dock"><span class="ind"></span>
+      <a href="#" class="tab on"><i data-lucide="sun"></i>Сегодня</a><a href="#" class="tab"><i data-lucide="graduation-cap"></i>Учёба</a>
+      <button class="orbslot"><span class="ring"><span class="orb"><i></i><i></i><i></i></span></span></button>
+      <a href="#" class="tab"><i data-lucide="calendar-range"></i>Время</a><a href="#" class="tab"><i data-lucide="stamp"></i>Офис</a></nav>
+    <div data-right></div></header></div></div>
+
+<p class="note">Можно смешивать: например, стекло из C + подписи из B, или D с увеличенной сферой из F.</p>
+
+<script>
+  const fill = (sel, id) => document.querySelectorAll(sel).forEach(n => n.replaceWith(document.getElementById(id).content.cloneNode(true)));
+  fill('[data-under]','tpl-under'); fill('[data-logo]','tpl-logo'); fill('[data-right]','tpl-right');
+  lucide.createIcons();
+
+  document.querySelectorAll('.dock').forEach(dock => {
+    const ind = dock.querySelector('.ind'), tabs = [...dock.querySelectorAll('.tab')];
+    const isDot = dock.closest('.D');
+    const place = el => { if (!ind) return; if (isDot) { ind.style.left = (el.offsetLeft + el.offsetWidth/2) + 'px'; } else { ind.style.left = el.offsetLeft + 'px'; ind.style.width = el.offsetWidth + 'px'; } };
+    const on = () => dock.querySelector('.tab.on');
+    if (ind){ ind.style.transition = 'none'; place(on()); requestAnimationFrame(() => ind.style.transition = ''); }
+    document.fonts && document.fonts.ready.then(() => place(on()));
+    tabs.forEach(t => t.addEventListener('click', e => { e.preventDefault(); tabs.forEach(x => x.classList.remove('on')); t.classList.add('on'); place(t); }));
+  });
+
+  const sb = document.getElementById('scroll');
+  sb.onclick = () => sb.classList.toggle('on', document.body.classList.toggle('scrolled'));
+</script>
+</body>
+</html>
