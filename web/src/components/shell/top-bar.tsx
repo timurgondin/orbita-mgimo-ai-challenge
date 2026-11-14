@@ -2,11 +2,12 @@ import { useId } from "react";
 import Link from "next/link";
 import { Bell } from "lucide-react";
 import { student } from "@/lib/mock/student";
+import type { UserView } from "@/lib/user-view";
 import { Dock } from "./dock";
 import { ProfileMenu } from "./profile-menu";
 import { ScrollHeader } from "./scroll-header";
 
-function Logo() {
+export function Logo({ textOnMobile = false }: { textOnMobile?: boolean }) {
   const maskId = `gap-${useId().replace(/:/g, "")}`;
   return (
     <Link
@@ -32,12 +33,12 @@ function Logo() {
         />
         <circle cx="18.72" cy="5.28" r="2.3" fill="currentColor" />
       </svg>
-      <span className="text-[17px] font-semibold tracking-[-.035em] max-sm:hidden">орбита</span>
+      <span className={`text-[17px] font-semibold tracking-[-.035em] ${textOnMobile ? "" : "max-sm:hidden"}`}>орбита</span>
     </Link>
   );
 }
 
-export function TopBar() {
+export function TopBar({ user }: { user: UserView }) {
   return (
     <ScrollHeader>
       <Logo />
@@ -51,7 +52,7 @@ export function TopBar() {
           <Bell size={16} strokeWidth={1.6} />
           <span className="absolute top-2 right-[9px] size-[7px] rounded-full bg-accent shadow-[0_0_0_2px_var(--bg)]" />
         </button>
-        <ProfileMenu />
+        <ProfileMenu user={user} />
       </div>
     </ScrollHeader>
   );

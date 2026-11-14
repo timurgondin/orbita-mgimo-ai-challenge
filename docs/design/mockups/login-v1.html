@@ -1,0 +1,247 @@
+<!doctype html>
+<html lang="ru" class="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Орбита — Вход (макет)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/lucide@0.460.0/dist/umd/lucide.min.js"></script>
+<style>
+  :root{
+    --bg:#131315; --s1:#1B1B1E; --s2:#212124; --s3:#2A2A2E; --hover:rgba(255,255,255,.04);
+    --line:rgba(255,255,255,.07);
+    --text:#EDEDEF; --text-2:#9A9AA2; --text-3:#7E7E87;
+    --accent:#8B8EFF; --danger:#F58A8A;
+    --sans:"Onest",system-ui,sans-serif;
+    --ease:cubic-bezier(.22,1,.36,1); --spring:cubic-bezier(.34,1.35,.5,1);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{background:var(--bg);color-scheme:dark}
+  body{font-family:var(--sans);background:var(--bg);color:var(--text);-webkit-font-smoothing:antialiased;font-size:15px;line-height:1.45;overflow:hidden}
+  ::selection{background:color-mix(in srgb,var(--accent) 35%,transparent)}
+  :focus-visible{outline:2px solid var(--accent);outline-offset:3px;border-radius:10px}
+  button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
+  a{color:inherit;text-decoration:none}
+  svg.lucide{width:16px;height:16px;stroke-width:1.6;flex-shrink:0}
+
+  .layout{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(420px,1fr);height:100vh;height:100dvh;overflow:hidden}
+
+  /* ---------- Left: orbit made of dots ---------- */
+  .stage{position:relative;overflow:hidden;background:var(--bg)}
+  #orbit{position:absolute;inset:0;width:100%;height:100%}
+  .stage .copy{position:absolute;left:56px;bottom:52px;right:56px}
+  .stage .uni{font-size:15px;color:var(--text-2)}
+  .stage h1{font-size:44px;font-weight:500;letter-spacing:-.035em;line-height:1.08;margin-top:8px;max-width:14ch}
+  .stage .brand{position:absolute;top:32px;left:56px;display:flex;align-items:center;gap:9px}
+  .stage .brand span{font-weight:600;font-size:17px;letter-spacing:-.035em}
+
+  /* ---------- Right: form ---------- */
+  .side{display:flex;flex-direction:column;padding:32px 56px 24px;min-height:0;overflow-y:auto;scrollbar-width:none;background:var(--bg);box-shadow:-.5px 0 0 var(--line)}
+  .form-wrap{width:100%;max-width:380px;margin:auto;transition:transform .45s var(--ease)}
+  .side h2{font-size:28px;font-weight:500;letter-spacing:-.03em}
+  .side .lead{color:var(--text-2);margin-top:6px}
+
+  form{margin-top:28px;display:flex;flex-direction:column;gap:14px}
+  label{display:block;font-size:13px;color:var(--text-2);margin-bottom:7px}
+  .field{position:relative}
+  .field input{width:100%;height:50px;padding:0 16px;border-radius:14px;border:none;outline:none;background:var(--s1);color:var(--text);font:inherit;font-size:15px;
+               box-shadow:inset 0 0 0 1px transparent;transition:box-shadow .2s var(--ease),background .2s}
+  .field input::placeholder{color:var(--text-3)}
+  .field input:hover{background:var(--s2)}
+  .field input:focus{background:var(--s1);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--accent) 60%,transparent),0 0 0 4px color-mix(in srgb,var(--accent) 14%,transparent)}
+  .field.err input{box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--danger) 60%,transparent)}
+  .field .eye{position:absolute;right:6px;top:50%;transform:translateY(-50%);width:38px;height:38px;border-radius:10px;display:grid;place-items:center;color:var(--text-3)}
+  .field .eye:hover{color:var(--text);background:var(--hover)}
+  .field input.filled{animation:fillflash .7s var(--ease)}
+  @keyframes fillflash{0%{background:color-mix(in srgb,var(--accent) 16%,var(--s1))}100%{background:var(--s1)}}
+  .row{display:flex;justify-content:space-between;align-items:center;margin-top:-2px}
+  .check{display:flex;align-items:center;gap:8px;font-size:14px;color:var(--text-2);cursor:pointer}
+  .check input{appearance:none;width:18px;height:18px;border-radius:6px;background:var(--s2);display:grid;place-items:center;cursor:pointer;transition:background .15s}
+  .check input:checked{background:var(--text)}
+  .check input:checked::after{content:"";width:9px;height:5px;border:2px solid var(--bg);border-top:0;border-right:0;transform:rotate(-45deg) translate(1px,-1px)}
+  .link{font-size:14px;color:var(--text-2);transition:color .15s}
+  .link:hover{color:var(--text)}
+  .error{display:none;align-items:center;gap:8px;font-size:14px;color:var(--danger)}
+  .error.show{display:flex}
+
+  .submit{position:relative;height:50px;margin-top:8px;border-radius:14px;background:var(--text);color:var(--bg);font-weight:600;font-size:15px;letter-spacing:-.01em;
+          display:flex;align-items:center;justify-content:center;gap:10px;transition:transform .15s var(--ease),opacity .2s}
+  .submit:hover{opacity:.92}
+  .submit:active{transform:scale(.985)}
+  .submit .orb{display:none}
+  .submit.loading{pointer-events:none}
+  .submit.loading .orb{display:block}
+
+  .orb{position:relative;width:22px;height:22px;border-radius:50%;overflow:hidden;isolation:isolate;background:#2B2D7A}
+  .orb i{position:absolute;border-radius:50%;filter:blur(3.5px);mix-blend-mode:screen}
+  .orb i:nth-child(1){width:70%;height:70%;left:-5%;top:0;background:#7C7FFF;animation:o1 1.4s ease-in-out infinite}
+  .orb i:nth-child(2){width:60%;height:60%;right:-10%;top:15%;background:#58B4FF;animation:o2 1.8s ease-in-out infinite}
+  .orb i:nth-child(3){width:55%;height:55%;left:20%;bottom:-15%;background:#D58BFF;animation:o3 1.6s ease-in-out infinite}
+  @keyframes o1{50%{transform:translate(35%,25%) scale(1.15)}} @keyframes o2{50%{transform:translate(-40%,20%) scale(.9)}} @keyframes o3{50%{transform:translate(10%,-45%) scale(1.2)}}
+
+  /* ---------- Demo accounts ---------- */
+  .demo{margin-top:14px;display:flex;flex-direction:column;align-items:center}
+  .demo-btn{display:inline-flex;align-items:center;gap:8px;height:40px;padding:0 14px;border-radius:12px;font-size:14px;color:var(--text-2);transition:background .15s,color .15s}
+  .demo-btn:hover,.demo-btn[aria-expanded="true"]{background:var(--hover);color:var(--text)}
+  .demo-btn .chev{width:15px;height:15px;transition:transform .35s var(--spring)}
+  .demo-btn[aria-expanded="true"] .chev{transform:rotate(180deg)}
+  .pop{display:grid;grid-template-rows:0fr;width:100%;transition:grid-template-rows .45s var(--ease)}
+  .pop > div{overflow:hidden;min-height:0}
+  .pop .in{padding:6px;margin-top:8px;border-radius:18px;background:var(--s1);opacity:0;transform:translateY(-6px) scale(.98);transition:opacity .25s var(--ease),transform .35s var(--spring)}
+  .pop.open{grid-template-rows:1fr}
+  .pop.open .in{opacity:1;transform:none}
+  .acc{display:flex;align-items:center;gap:12px;width:100%;padding:8px 10px;border-radius:12px;text-align:left;transition:background .12s}
+  .acc:hover,.acc:focus-visible{background:var(--hover);outline:none}
+  .acc .av{width:34px;height:34px;border-radius:50%;flex-shrink:0;display:grid;place-items:center;font-size:12px;font-weight:600;color:#1d1d20}
+  .acc .av.n{background:var(--s3);color:var(--text-2)}
+  .acc .m{display:flex;flex-direction:column;min-width:0}
+  .acc .nm{font-weight:500;font-size:14.5px}
+  .acc .sub{font-size:13px;color:var(--text-3)}
+
+  .foot{font-size:12px;color:var(--text-3);text-align:center;padding-top:24px}
+
+  @media (max-width:900px){
+    body{overflow:auto}
+    .layout{grid-template-columns:1fr;height:auto;min-height:100dvh;overflow:visible}
+    .stage{height:240px}
+    .stage .copy h1{display:none}
+    .stage .copy{left:auto;right:24px;bottom:auto;top:24px;text-align:right}
+    .stage h1{font-size:32px}
+    .stage .brand{left:24px;top:22px}
+    .side{padding:28px 20px;box-shadow:none}
+    .form-wrap{margin:0 auto}
+  }
+</style>
+</head>
+<body>
+<div class="layout">
+
+  <section class="stage" aria-hidden="false">
+    <canvas id="orbit" aria-hidden="true"></canvas>
+    <a class="brand" href="#" aria-label="Орбита">
+      <svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><defs><mask id="gap"><rect width="24" height="24" fill="#fff"/><circle cx="18.72" cy="5.28" r="4.2" fill="#000"/></mask></defs><circle cx="12" cy="12" r="9.5" fill="none" stroke="currentColor" stroke-width="1.7" mask="url(#gap)"/><circle cx="18.72" cy="5.28" r="2.3" fill="currentColor"/></svg>
+      <span>орбита</span>
+    </a>
+    <div class="copy">
+      <div class="uni">Университет Будущего</div>
+      <h1>Вся учёба — на одной орбите</h1>
+    </div>
+  </section>
+
+  <section class="side">
+    <div class="form-wrap">
+      <h2>Вход</h2>
+
+      <form id="form" novalidate>
+        <div>
+          <label for="login">Логин</label>
+          <div class="field" id="f-login"><input id="login" name="login" autocomplete="username" placeholder="i.familiya" spellcheck="false"></div>
+        </div>
+        <div>
+          <label for="pass">Пароль</label>
+          <div class="field" id="f-pass">
+            <input id="pass" name="password" type="password" autocomplete="current-password" placeholder="••••••••">
+            <button type="button" class="eye" id="eye" aria-label="Показать пароль"><i data-lucide="eye"></i></button>
+          </div>
+        </div>
+        <div class="row">
+          <label class="check" style="margin:0"><input type="checkbox" checked>Запомнить меня</label>
+          <a class="link" href="#">Забыли пароль?</a>
+        </div>
+        <div class="error" id="error" role="alert"><i data-lucide="circle-alert"></i>Неверный логин или пароль</div>
+        <button class="submit" id="submit" type="submit"><span class="orb"><i></i><i></i><i></i></span><span class="lbl">Войти</span></button>
+      </form>
+
+      <div class="demo" id="demo">
+        <button type="button" class="demo-btn" id="demoBtn" aria-expanded="false" aria-controls="demoList"><i data-lucide="users-round"></i>Демо-доступ<i data-lucide="chevron-down" class="chev"></i></button>
+        <div class="pop" id="demoList" role="listbox" aria-label="Демо-аккаунты"><div><div class="in">
+          <button class="acc" role="option" data-l="a.vorontsova" data-p="orbita-demo"><span class="av" style="background:linear-gradient(140deg,#D6C3AE,#8F7A68)">АВ</span><span class="m"><span class="nm">Алиса Воронцова</span><span class="sub">Студентка · 2 курс</span></span></button>
+          <button class="acc" role="option" data-l="m.orlov" data-p="orbita-demo"><span class="av" style="background:linear-gradient(140deg,#C9D3E6,#7F8BA6)">МО</span><span class="m"><span class="nm">Максим Орлов</span><span class="sub">Студент · 4 курс</span></span></button>
+          <button class="acc" role="option" data-l="n.lanskaya" data-p="orbita-demo"><span class="av" style="background:linear-gradient(140deg,#D9C2E4,#9878A8)">НЛ</span><span class="m"><span class="nm">Ника Ланская</span><span class="sub">Первокурсница · онбординг</span></span></button>
+          <button class="acc" role="option" data-l="e.petrova" data-p="orbita-demo"><span class="av" style="background:linear-gradient(140deg,#E7CDB4,#A88A70)">ЕП</span><span class="m"><span class="nm">Елена Петрова</span><span class="sub">Преподаватель</span></span></button>
+          <button class="acc" role="option" data-l="office" data-p="orbita-demo"><span class="av n"><i data-lucide="stamp"></i></span><span class="m"><span class="nm">Учебный офис</span><span class="sub">Сотрудник</span></span></button>
+        </div></div></div>
+      </div>
+    </div>
+    <p class="foot">Концепт для конкурса MGIMO×AI Challenge. Не официальный сервис, все данные вымышлены.</p>
+  </section>
+</div>
+
+<script>
+  lucide.createIcons();
+
+  // ---------- demo account picker ----------
+  const login = document.getElementById('login'), pass = document.getElementById('pass');
+  const demoBtn = document.getElementById('demoBtn'), pop = document.getElementById('demoList');
+  const setOpen = o => { pop.classList.toggle('open', o); demoBtn.setAttribute('aria-expanded', o); if (o) setTimeout(() => pop.querySelector('.acc').focus({preventScroll:true}), 200); };
+  demoBtn.onclick = e => { e.stopPropagation(); setOpen(!pop.classList.contains('open')); };
+  document.addEventListener('click', e => { if (!pop.contains(e.target)) setOpen(false); });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape' && pop.classList.contains('open')) { setOpen(false); demoBtn.focus(); } });
+  const flash = el => { el.classList.remove('filled'); void el.offsetWidth; el.classList.add('filled'); };
+  pop.querySelectorAll('.acc').forEach(b => b.addEventListener('click', () => {
+    login.value = b.dataset.l; pass.value = b.dataset.p; flash(login); flash(pass);
+    hideErr(); setOpen(false); document.getElementById('submit').focus();
+  }));
+
+  // ---------- password eye ----------
+  const eye = document.getElementById('eye');
+  eye.onclick = () => { const s = pass.type === 'password'; pass.type = s ? 'text' : 'password'; eye.setAttribute('aria-label', s ? 'Скрыть пароль' : 'Показать пароль'); eye.innerHTML = `<i data-lucide="${s ? 'eye-off' : 'eye'}"></i>`; lucide.createIcons(); };
+
+  // ---------- fake submit (mockup) ----------
+  const err = document.getElementById('error'), btn = document.getElementById('submit');
+  const hideErr = () => { err.classList.remove('show'); document.querySelectorAll('.field').forEach(f => f.classList.remove('err')); };
+  [login, pass].forEach(i => i.addEventListener('input', hideErr));
+  document.getElementById('form').addEventListener('submit', e => {
+    e.preventDefault(); hideErr();
+    btn.classList.add('loading'); btn.querySelector('.lbl').textContent = 'Входим';
+    setTimeout(() => {
+      const ok = pass.value === 'orbita-demo' && document.querySelector(`.acc[data-l="${login.value}"]`);
+      if (ok) { location.href = 'today-desktop-v4.html'; return; }
+      btn.classList.remove('loading'); btn.querySelector('.lbl').textContent = 'Войти';
+      err.classList.add('show'); document.getElementById('f-pass').classList.add('err'); document.getElementById('f-login').classList.add('err');
+    }, 900);
+  });
+
+  // ---------- orbit drawn with dots ----------
+  const cv = document.getElementById('orbit'), ctx = cv.getContext('2d');
+  let W, H;
+  const fit = () => { const d = devicePixelRatio || 1; W = cv.clientWidth; H = cv.clientHeight; cv.width = W*d; cv.height = H*d; ctx.setTransform(d,0,0,d,0,0); };
+  new ResizeObserver(fit).observe(cv); fit();
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches, G = 12;
+  const tilt = -0.42;
+  function draw(ms){
+    const t = ms / 1000;
+    ctx.clearRect(0,0,W,H);
+    const cx = W * .5, cy = H * .42, R = Math.min(W, H) * .36;
+    const rx = R * 1.15, ry = R * .42, ct = Math.cos(tilt), st = Math.sin(tilt);
+    const sa = t * .35;                                   // satellite angle
+    const sx = cx + rx*Math.cos(sa)*ct - ry*Math.sin(sa)*st, sy = cy + rx*Math.cos(sa)*st + ry*Math.sin(sa)*ct;
+    for (let y = G/2; y < H; y += G) for (let x = G/2; x < W; x += G) {
+      const dx = x - cx, dy = y - cy;
+      // planet: shaded disc, light from top-left
+      const pr = R * .42, pd = Math.hypot(dx, dy) / pr;
+      let v = 0;
+      if (pd < 1) { const lit = .5 + .5 * ((-dx - dy) / (pr * 1.5)); v = .18 + .72 * Math.pow(1 - pd * pd, .35) * (.45 + .55 * lit); }
+      // orbit band (rotated ellipse), back half hidden behind the planet
+      const ex = dx*ct + dy*st, ey = -dx*st + dy*ct;
+      const e = Math.abs(Math.hypot(ex/rx, ey/ry) - 1) * R;
+      if (ey > 0 || pd >= 1.05) v = Math.max(v, Math.max(0, 1 - e / 15) * .8);
+      // satellite
+      const sd = Math.hypot(x - sx, y - sy);
+      v = Math.max(v, Math.max(0, 1 - sd / 30));
+      // soft halo instead of a noisy field
+      const hd = Math.hypot(dx, dy) / (R * 1.9);
+      v = Math.max(v, hd < 1 ? .07 * (1 - hd) * (.6 + .4 * Math.sin(t * .6 + hd * 9)) : 0);
+      if (v < .04) continue;
+      const near = Math.max(0, 1 - sd / 60);
+      const r = 237 - near*100, g = 237 - near*95, b = 239 + near*16;
+      ctx.fillStyle = `rgba(${r|0},${g|0},${Math.min(255,b)|0},${.9*v})`;
+      ctx.beginPath(); ctx.arc(x, y, .5 + v*1.9, 0, 6.283); ctx.fill();
+    }
+    if (!reduce) requestAnimationFrame(draw);
+  }
+  requestAnimationFrame(draw);
+</script>
+</body>
+</html>

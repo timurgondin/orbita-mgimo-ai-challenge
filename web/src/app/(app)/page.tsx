@@ -12,9 +12,10 @@ import {
   toMinutes,
 } from "@/lib/demo-clock";
 import { schedule } from "@/lib/mock/schedule";
-import { student } from "@/lib/mock/student";
+import { requireUser } from "@/server/auth/session";
 
-export default function TodayPage() {
+export default async function TodayPage() {
+  const user = await requireUser();
   const byStart = (a: { start: string }, b: { start: string }) => toMinutes(a.start) - toMinutes(b.start);
   const today = schedule.filter((l) => l.date === DEMO_DATE).sort(byStart);
   const tomorrow = schedule.filter((l) => l.date === addDays(DEMO_DATE, 1)).sort(byStart)[0];
@@ -30,10 +31,14 @@ export default function TodayPage() {
       <div>
         <div className="text-[15px] text-text-2">{formatLongDate(DEMO_DATE)}</div>
         <h1 className="mt-1 text-[34px] leading-[1.15] font-medium tracking-[-.03em] max-sm:text-[28px]">
-          {greeting(DEMO_MINUTES)}, {student.firstName}
+          {greeting(DEMO_MINUTES)}, {user.firstName}
         </h1>
       </div>
 
+      {user.role !== "student" ? (
+        <p className="mt-8 text-[15px] text-text-2">Кабинет сотрудника появится здесь</p>
+      ) : (
+        <>
       <div className="mt-8 grid grid-cols-[minmax(0,1fr)] items-stretch gap-12 min-[900px]:grid-cols-[minmax(0,1.25fr)_minmax(0,1fr)]">
         {current && <NowCard lesson={current} nowMinutes={DEMO_MINUTES} />}
         <LaterToday lessons={later} tomorrow={tomorrow} />
@@ -45,6 +50,8 @@ export default function TodayPage() {
         <SoonList />
         <NewsList />
       </div>
+        </>
+      )}
     </>
   );
 }

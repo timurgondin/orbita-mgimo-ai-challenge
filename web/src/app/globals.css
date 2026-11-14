@@ -222,3 +222,32 @@ button {
     animation: none;
   }
 }
+
+/* Сфера в кнопке загрузки: быстрее и без блика */
+.orb-fast i:nth-child(1) {
+  animation-duration: 1.4s;
+}
+.orb-fast i:nth-child(2) {
+  animation-duration: 1.8s;
+}
+.orb-fast i:nth-child(3) {
+  animation-duration: 1.6s;
+}
+.orb-fast {
+  box-shadow: none;
+}
+.orb-fast::after {
+  display: none;
+}
+
+@keyframes fillflash {
+  0% {
+    background: color-mix(in srgb, var(--accent) 16%, var(--s1));
+  }
+  100% {
+    background: var(--s1);
+  }
+}
+.fill-flash {
+  animation: fillflash 0.7s var(--ease);
+}

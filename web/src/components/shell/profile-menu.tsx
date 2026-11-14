@@ -3,13 +3,14 @@
 import { useEffect, useRef, useState } from "react";
 import { LogOut, Moon, Settings, Sun, SunMoon, UserRound } from "lucide-react";
 import { useTheme } from "next-themes";
-import { student } from "@/lib/mock/student";
+import { logoutAction } from "@/server/auth/actions";
+import { avatarGradient, fullName, initials, subtitle, type UserView } from "@/lib/user-view";
 import { cn } from "@/lib/utils";
 
 const ITEM =
   "flex h-9 w-full items-center gap-2.5 rounded-[10px] px-2.5 text-left text-sm text-text-2 transition-colors hover:bg-hover hover:text-text";
 
-export function ProfileMenu() {
+export function ProfileMenu({ user }: { user: UserView }) {
   const [open, setOpen] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
@@ -43,9 +44,10 @@ export function ProfileMenu() {
         aria-haspopup="menu"
         aria-expanded={open}
         onClick={() => setOpen((o) => !o)}
-        className="ml-1 grid size-8 place-items-center rounded-full bg-[linear-gradient(140deg,#D6C3AE,#8F7A68)] text-xs font-semibold text-[#2a211a] transition-transform hover:scale-105"
+        style={{ background: avatarGradient(user) }}
+        className={cn("ml-1 grid size-8 place-items-center rounded-full text-xs font-semibold transition-transform hover:scale-105", user.avatar === "stone" ? "text-text-2" : "text-[#2a211a]")}
       >
-        {student.initials}
+        {initials(user)}
       </button>
 
       <div
@@ -58,10 +60,8 @@ export function ProfileMenu() {
         )}
       >
         <div className="mb-1.5 border-b border-line px-2.5 pt-2.5 pb-3">
-          <b className="block text-sm font-semibold">{student.fullName}</b>
-          <small className="text-xs text-text-3">
-            {student.program} · {student.course} курс · {student.group}
-          </small>
+          <b className="block text-sm font-semibold">{fullName(user)}</b>
+          <small className="text-xs text-text-3">{subtitle(user)}</small>
         </div>
         <button type="button" role="menuitem" className={ITEM}>
           <UserRound size={16} strokeWidth={1.6} />
@@ -89,10 +89,12 @@ export function ProfileMenu() {
             </i>
           </span>
         </button>
-        <button type="button" role="menuitem" className={ITEM}>
-          <LogOut size={16} strokeWidth={1.6} />
-          Выйти
-        </button>
+        <form action={logoutAction}>
+          <button type="submit" role="menuitem" className={ITEM}>
+            <LogOut size={16} strokeWidth={1.6} />
+            Выйти
+          </button>
+        </form>
       </div>
     </div>
   );

@@ -1,0 +1,49 @@
+// Прототип на SQLite. Для PostgreSQL: provider = "postgresql" и новый DATABASE_URL.
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id             String    @id @default(cuid())
+  login          String    @unique
+  passwordHash   String
+  pepperVersion  Int       @default(1)
+  role           String // student | teacher | staff
+  lastName       String
+  firstName      String
+  middleName     String?
+  faculty        String?
+  program        String?
+  course         Int?
+  groupName      String?
+  position       String?
+  avatar         String    @default("sand") // ключ градиента аватара
+  onboardingDone Boolean   @default(false)
+  createdAt      DateTime  @default(now())
+  sessions       Session[]
+}
+
+model Session {
+  id         String   @id // sha256(token) в hex
+  userId     String
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+  lastSeenAt DateTime @default(now())
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+// Одна строка на неудачную попытку входа; key = "login|ip"
+model LoginAttempt {
+  id        String   @id @default(cuid())
+  key       String
+  createdAt DateTime @default(now())
+
+  @@index([key, createdAt])
+}
