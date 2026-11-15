@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { formatDuration, toMinutes } from "@/lib/demo-clock";
-import type { Lesson } from "@/lib/mock/schedule";
+import type { Lesson } from "@/server/data/types";
 import { DotField } from "./dot-field";
 
 function meta(l: Lesson) {

@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { SectionHeader } from "./section-header";
-import { FileCheck2, Megaphone } from "lucide-react";
-import { news, type NewsItem } from "@/lib/mock/news";
+import { FileCheck2, MapPin, Megaphone } from "lucide-react";
+import type { NewsItem } from "@/server/data/types";
 import { cn } from "@/lib/utils";
 
 function Avatar({ avatar }: { avatar: NewsItem["avatar"] }) {
@@ -13,7 +13,7 @@ function Avatar({ avatar }: { avatar: NewsItem["avatar"] }) {
       </span>
     );
   }
-  const Icon = avatar.icon === "megaphone" ? Megaphone : FileCheck2;
+  const Icon = { megaphone: Megaphone, "map-pin": MapPin, "file-check-2": FileCheck2 }[avatar.icon];
   return (
     <span className={cn(base, "bg-s2 text-text-2")}>
       <Icon size={17} strokeWidth={1.6} />
@@ -49,7 +49,7 @@ function Item({ n }: { n: NewsItem }) {
   );
 }
 
-export function NewsList() {
+export function NewsList({ news }: { news: NewsItem[] }) {
   return (
     <section aria-label="Новое">
       <SectionHeader title="Новое" linkLabel="Все" />

@@ -30,6 +30,24 @@
   --green: #4fcb85;
   --lilac: #c69cf0;
 
+  /* цвета курсов */
+  --c-micro: #e0a75e;
+  --c-econ: #8f8df7;
+  --c-world: #e58091;
+  --c-eng: #52bbaa;
+  --c-law: #6aa9f2;
+  --c-hist: #c69cf0;
+  --c-py: #4fcb85;
+
+  /* статусы */
+  --st-orange: #f2a35e;
+  --st-blue: #62aef7;
+  --st-violet: #b39bfb;
+  --st-yellow: #e3c766;
+  --st-green: #5bd891;
+  --st-red: #f58a8a;
+  --st-gray: #9a9aa3;
+
   --dock-bg: rgba(34, 34, 38, 0.68);
   --dock-ring: rgba(255, 255, 255, 0.09);
   --dock-hi: rgba(255, 255, 255, 0.08);
@@ -58,6 +76,22 @@
   --i-card-2: #f7f7f8;
   --i-line: #dcdce0;
   --i-white: #ffffff;
+
+  --c-micro: #b9771f;
+  --c-econ: #5f5ce0;
+  --c-world: #c24a63;
+  --c-eng: #218f7e;
+  --c-law: #2f78d6;
+  --c-hist: #9a58d0;
+  --c-py: #20995a;
+
+  --st-orange: #b8631a;
+  --st-blue: #2a73c8;
+  --st-violet: #6d4fd6;
+  --st-yellow: #8f6d0a;
+  --st-green: #1e8a4c;
+  --st-red: #c43d3d;
+  --st-gray: #6e6e78;
 
   --dock-bg: rgba(255, 255, 255, 0.78);
   --dock-ring: rgba(0, 0, 0, 0.08);
@@ -250,4 +284,43 @@ button {
 }
 .fill-flash {
   animation: fillflash 0.7s var(--ease);
+}
+
+/* Учёба: обложка курса с точечным узором */
+.course-cover {
+  position: relative;
+  height: 104px;
+  overflow: hidden;
+  background: color-mix(in srgb, var(--cc) 16%, var(--s1));
+}
+.course-cover::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(circle, color-mix(in srgb, var(--cc) 75%, transparent) 1.1px, transparent 1.6px);
+  background-size: 11px 11px;
+  -webkit-mask-image: radial-gradient(85% 120% at 100% 0%, #000 0%, transparent 70%);
+  mask-image: radial-gradient(85% 120% at 100% 0%, #000 0%, transparent 70%);
+  transition: transform 0.8s var(--ease);
+}
+.course-card:hover .course-cover::before {
+  transform: translate(-4px, 3px);
+}
+@keyframes view-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.view-in {
+  animation: view-in 0.35s var(--ease);
+}
+@media (prefers-reduced-motion: reduce) {
+  .view-in {
+    animation: none;
+  }
 }

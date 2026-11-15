@@ -9,10 +9,10 @@ datasource db {
 }
 
 model User {
-  id             String    @id @default(cuid())
-  login          String    @unique
+  id             String           @id @default(cuid())
+  login          String           @unique
   passwordHash   String
-  pepperVersion  Int       @default(1)
+  pepperVersion  Int              @default(1)
   role           String // student | teacher | staff
   lastName       String
   firstName      String
@@ -22,10 +22,19 @@ model User {
   course         Int?
   groupName      String?
   position       String?
-  avatar         String    @default("sand") // ключ градиента аватара
-  onboardingDone Boolean   @default(false)
-  createdAt      DateTime  @default(now())
+  avatar         String           @default("sand") // ключ градиента аватара
+  onboardingDone Boolean          @default(false)
+  createdAt      DateTime         @default(now())
+  courseRank     Int? // место на курсе
+  courseSize     Int? // студентов на курсе
+  creditsEarned  Int? // кредитов в семестре
   sessions       Session[]
+  enrollments    Enrollment[]
+  works          StudentWork[]
+  onlineProgress OnlineProgress[]
+  notifications  Notification[]
+  events         ScheduleEvent[]
+  teaches        Course[]
 }
 
 model Session {
@@ -46,4 +55,122 @@ model LoginAttempt {
   createdAt DateTime @default(now())
 
   @@index([key, createdAt])
+}
+
+// ---- Учёба. Значения-перечисления хранятся строками (типы — в src/server/data/types.ts) ----
+
+model Course {
+  id             String           @id @default(cuid())
+  slug           String           @unique
+  title          String
+  color          String // ключ цвета: micro | econ | world | eng | law | hist | py
+  format         String // offline | online
+  assessment     String // exam | credit
+  credits        Int
+  kindsLabel     String           @default("")
+  teacherName    String
+  teacherAvatar  String           @default("sand")
+  teacherId      String?
+  teacher        User?            @relation(fields: [teacherId], references: [id])
+  lessonsTotal   Int? // онлайн
+  providerName   String? // онлайн
+  enrollments    Enrollment[]
+  components     GradeComponent[]
+  events         ScheduleEvent[]
+  onlineProgress OnlineProgress[]
+}
+
+model Enrollment {
+  id       String @id @default(cuid())
+  userId   String
+  courseId String
+  order    Int    @default(0)
+  user     User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  course   Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, courseId])
+}
+
+// Элемент формулы оценки курса
+model GradeComponent {
+  id         String          @id @default(cuid())
+  courseId   String
+  title      String
+  shortTitle String? // для карточки курса: «Эссе», «Case study»
+  subtitle   String? // «домашнее задание», «15% оценки»…
+  kind       String // test | homework | essay | project | exam | participation
+  weight     Int // проценты
+  dueAt      DateTime?
+  room       String?
+  order      Int             @default(0)
+  course     Course          @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  works      StudentWork[]
+  events     ScheduleEvent[]
+}
+
+// Состояние компонента у конкретного студента
+model StudentWork {
+  id             String         @id @default(cuid())
+  userId         String
+  componentId    String
+  status         String // upcoming | draft | in_progress | submitted | reviewing | graded | returned
+  score          Float?
+  feedback       String?
+  feedbackAuthor String?
+  submittedAt    DateTime?
+  gradedAt       DateTime?
+  user           User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  component      GradeComponent @relation(fields: [componentId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, componentId])
+}
+
+// userId задан только у личных событий (консультации); события курса видны записанным на курс
+model ScheduleEvent {
+  id              String          @id @default(cuid())
+  courseId        String?
+  userId          String?
+  componentId     String?
+  kind            String // lecture | seminar | practice | consultation | test
+  title           String?
+  startsAt        DateTime
+  endsAt          DateTime
+  room            String
+  teacherName     String
+  roomChangedFrom String?
+  topic           String?
+  course          Course?         @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  user            User?           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  component       GradeComponent? @relation(fields: [componentId], references: [id], onDelete: SetNull)
+
+  @@index([startsAt])
+}
+
+model OnlineProgress {
+  id                String @id @default(cuid())
+  userId            String
+  courseId          String
+  lessonsDone       Int
+  nextLessonTitle   String
+  nextLessonMinutes Int
+  user              User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  course            Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, courseId])
+}
+
+model Notification {
+  id          String    @id @default(cuid())
+  userId      String
+  kind        String // grade | document | announcement | schedule
+  title       String
+  body        String // **выделение** в тексте
+  link        String?
+  actorName   String?
+  actorAvatar String?
+  createdAt   DateTime
+  readAt      DateTime?
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
 }

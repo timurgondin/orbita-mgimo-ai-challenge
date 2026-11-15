@@ -3,7 +3,7 @@ import { spawn } from "node:child_process";
 import { chromium } from "playwright";
 import { PrismaClient } from "@prisma/client";
 
-const PORT = 3100;
+const PORT = Number(process.env.PORT ?? 3100);
 const BASE = `http://127.0.0.1:${PORT}`;
 const results = [];
 const check = (name, ok, extra = "") => {

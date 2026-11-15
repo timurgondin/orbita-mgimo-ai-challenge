@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { SectionHeader } from "./section-header";
 import { Check } from "lucide-react";
-import type { Lesson } from "@/lib/mock/schedule";
+import type { Lesson } from "@/server/data/types";
 
 function capitalize(s: string) {
   return s.charAt(0).toUpperCase() + s.slice(1);

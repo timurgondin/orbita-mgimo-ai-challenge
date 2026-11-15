@@ -1,0 +1,117 @@
+// Значения-перечисления: в БД лежат строками, типы — здесь.
+export type CourseFormat = "offline" | "online";
+export type Assessment = "exam" | "credit";
+export type ComponentKind = "test" | "homework" | "essay" | "project" | "exam" | "participation";
+export type WorkStatus = "upcoming" | "draft" | "in_progress" | "submitted" | "reviewing" | "graded" | "returned";
+export type EventKind = "lecture" | "seminar" | "practice" | "consultation" | "test";
+export type NotificationKind = "grade" | "document" | "announcement" | "schedule";
+
+/** Компоненты, которые студент сдаёт как задания (не участие и не экзамен). */
+export const TASK_KINDS: ComponentKind[] = ["test", "homework", "essay", "project"];
+
+export interface Lesson {
+  id: string;
+  /** YYYY-MM-DD */
+  date: string;
+  start: string;
+  end: string;
+  title: string;
+  format?: string;
+  place: { label: "ауд." | "каб."; number: string };
+  teacher: string;
+  note?: { kind: "flag" | "ok"; text: string };
+}
+
+export interface SoonItem {
+  id: string;
+  title: string;
+  subtitle: string;
+  /** Метка срока */
+  due: string;
+  today: boolean;
+}
+
+export type NewsAvatar =
+  | { kind: "initials"; text: string; gradient: string }
+  | { kind: "icon"; icon: "file-check-2" | "megaphone" | "map-pin" };
+
+export interface NewsItem {
+  id: string;
+  title: string;
+  subtitle: { before?: string; emphasis?: string; after?: string };
+  time: string;
+  unread: boolean;
+  avatar: NewsAvatar;
+}
+
+export interface FormulaSegment {
+  weight: number;
+  state: "done" | "pending" | "empty";
+}
+
+export interface CourseCardData {
+  id: string;
+  color: string;
+  kindLabel: string;
+  title: string;
+  teacher: string;
+  /** Крупное значение: «8,1», «Зачёт», «6» */
+  score: string;
+  /** Мелкое: «из 10», «из 12» */
+  scoreSuffix: string;
+  nextTitle: string | null;
+  nextWhen: string | null;
+  formula: FormulaSegment[];
+  /** Для онлайн-курса: доля пройденных уроков, % */
+  progress?: number;
+}
+
+export type TagKind = "upcoming" | "draft" | "in_progress" | "submitted" | "reviewing" | "returned";
+
+export interface TaskItemData {
+  id: string;
+  color: string;
+  title: string;
+  subtitle: string;
+  due: string;
+  dueHot: boolean;
+  status: TagKind | null;
+  score?: string;
+  feedback?: { text: string; initials: string; gradient: string };
+}
+
+export interface PerfRowData {
+  id: string;
+  color: string;
+  title: string;
+  sub: string;
+  fill: number;
+  value: string;
+  valueMuted: boolean;
+  forecast: string;
+}
+
+export interface ExamData {
+  id: string;
+  day: string;
+  month: string;
+  title: string;
+  sub: string;
+}
+
+export interface StudyData {
+  semester: string;
+  courses: CourseCardData[];
+  online: CourseCardData[];
+  upcoming: TaskItemData[];
+  checked: TaskItemData[];
+  perf: {
+    average: string;
+    rank: number | null;
+    size: number | null;
+    credits: number | null;
+    creditsPlan: number;
+    rows: PerfRowData[];
+    exams: ExamData[];
+  };
+}

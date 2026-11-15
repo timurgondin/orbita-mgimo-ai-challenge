@@ -6,19 +6,21 @@ import { SoonList } from "@/components/today/soon-list";
 import {
   DEMO_DATE,
   DEMO_MINUTES,
-  addDays,
   formatLongDate,
   greeting,
   toMinutes,
 } from "@/lib/demo-clock";
-import { schedule } from "@/lib/mock/schedule";
 import { requireUser } from "@/server/auth/session";
+import { getNews, getScheduleForToday, getSoon } from "@/server/data/today";
 
 export default async function TodayPage() {
   const user = await requireUser();
-  const byStart = (a: { start: string }, b: { start: string }) => toMinutes(a.start) - toMinutes(b.start);
-  const today = schedule.filter((l) => l.date === DEMO_DATE).sort(byStart);
-  const tomorrow = schedule.filter((l) => l.date === addDays(DEMO_DATE, 1)).sort(byStart)[0];
+  const student = user.role === "student";
+  const [schedule, soon, news] = student
+    ? await Promise.all([getScheduleForToday(), getSoon(), getNews()])
+    : [null, [], []];
+  const today = schedule?.today ?? [];
+  const tomorrow = schedule?.tomorrow;
 
   // Текущая пара; если сейчас перерыв — ближайшая следующая
   const current =
@@ -35,7 +37,7 @@ export default async function TodayPage() {
         </h1>
       </div>
 
-      {user.role !== "student" ? (
+      {!student ? (
         <p className="mt-8 text-[15px] text-text-2">Кабинет сотрудника появится здесь</p>
       ) : (
         <>
@@ -47,8 +49,8 @@ export default async function TodayPage() {
       <QuickTiles />
 
       <div className="mt-14 grid grid-cols-[minmax(0,1fr)] gap-12 min-[900px]:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
-        <SoonList />
-        <NewsList />
+        <SoonList items={soon} />
+        <NewsList news={news} />
       </div>
         </>
       )}

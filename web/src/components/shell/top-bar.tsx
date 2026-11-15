@@ -1,7 +1,6 @@
 import { useId } from "react";
 import Link from "next/link";
 import { Bell } from "lucide-react";
-import { student } from "@/lib/mock/student";
 import type { UserView } from "@/lib/user-view";
 import { Dock } from "./dock";
 import { ProfileMenu } from "./profile-menu";
@@ -38,7 +37,7 @@ export function Logo({ textOnMobile = false }: { textOnMobile?: boolean }) {
   );
 }
 
-export function TopBar({ user }: { user: UserView }) {
+export function TopBar({ user, unread }: { user: UserView; unread: number }) {
   return (
     <ScrollHeader>
       <Logo />
@@ -46,11 +45,13 @@ export function TopBar({ user }: { user: UserView }) {
       <div className="flex items-center justify-end gap-1.5">
         <button
           type="button"
-          aria-label={`Уведомления: ${student.unreadNotifications} новых`}
+          aria-label={unread ? `Уведомления: ${unread} новых` : "Уведомления"}
           className="relative grid size-9 place-items-center rounded-full text-text-2 transition-[background,color] duration-150 hover:bg-hover hover:text-text"
         >
           <Bell size={16} strokeWidth={1.6} />
-          <span className="absolute top-2 right-[9px] size-[7px] rounded-full bg-accent shadow-[0_0_0_2px_var(--bg)]" />
+          {unread > 0 && (
+            <span className="absolute top-2 right-[9px] size-[7px] rounded-full bg-accent shadow-[0_0_0_2px_var(--bg)]" />
+          )}
         </button>
         <ProfileMenu user={user} />
       </div>

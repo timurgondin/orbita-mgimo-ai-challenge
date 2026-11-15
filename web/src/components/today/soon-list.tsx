@@ -1,17 +1,9 @@
 import Link from "next/link";
 import { SectionHeader } from "./section-header";
-import { DEMO_DATE, formatShortWeekday } from "@/lib/demo-clock";
-import { deadlines, type Deadline } from "@/lib/mock/deadlines";
+import type { SoonItem } from "@/server/data/types";
 import { cn } from "@/lib/utils";
 
-function formatDue(due: string) {
-  const [date, time] = due.split("T");
-  const today = date === DEMO_DATE;
-  return { today, label: `${today ? "Сегодня" : formatShortWeekday(date)}, ${time}` };
-}
-
-function Item({ d }: { d: Deadline }) {
-  const { today, label } = formatDue(d.due);
+function Item({ d }: { d: SoonItem }) {
   return (
     <Link
       href="#"
@@ -21,18 +13,18 @@ function Item({ d }: { d: Deadline }) {
         <div className="truncate font-medium">{d.title}</div>
         <div className="mt-px truncate text-sm text-text-3">{d.subtitle}</div>
       </div>
-      <span className={cn("text-sm whitespace-nowrap", today ? "text-urgent" : "text-text-2")}>
-        {label}
+      <span className={cn("text-sm whitespace-nowrap", d.today ? "text-urgent" : "text-text-2")}>
+        {d.due}
       </span>
     </Link>
   );
 }
 
-export function SoonList() {
+export function SoonList({ items }: { items: SoonItem[] }) {
   return (
     <section aria-label="Скоро">
       <SectionHeader title="Скоро" linkLabel="Все задания" />
-      {deadlines.map((d) => (
+      {items.map((d) => (
         <Item key={d.id} d={d} />
       ))}
     </section>
