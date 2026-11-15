@@ -6,37 +6,55 @@ import { avatarGradientByKey, formatDue, getStudent, teacherInitials } from "./s
 import type { EventKind, Lesson, NewsItem, NotificationKind, SoonItem, WorkStatus } from "./types";
 import { TASK_KINDS } from "./types";
 
-const FORMAT: Partial<Record<EventKind, string>> = { lecture: "Лекция", seminar: "Семинар", test: "Контрольная" };
+const FORMAT: Partial<Record<EventKind, string>> = { lecture: "Лекция", seminar: "Семинар", practice: "Практика", test: "Контрольная" };
 
-/** События дня студента: события его курсов + его личные события. */
+/** «Каб. 518» → { «каб.», «518» }; «Онлайн» → { «», «Онлайн» } */
+function parsePlace(place: string): Lesson["place"] {
+  const m = place.match(/^(Каб|Ауд)\.\s*(.+)$/);
+  return m ? { label: m[1] === "Каб" ? "каб." : "ауд.", number: m[2] } : { label: "", number: place };
+}
+
+/** События дня студента: события его курсов + консультации, на которые он записан. */
 async function eventsBetween(userId: string, from: Date, to: Date): Promise<Lesson[]> {
   const enrolled = await db.enrollment.findMany({ where: { userId }, select: { courseId: true } });
-  const events = await db.scheduleEvent.findMany({
-    where: {
-      startsAt: { gte: from, lt: to },
-      OR: [{ userId: null, courseId: { in: enrolled.map((e) => e.courseId) } }, { userId }],
-    },
-    include: { course: { select: { title: true } } },
-    orderBy: { startsAt: "asc" },
-  });
-  return events.map((e) => {
-    const consult = e.kind === "consultation";
-    return {
+  const range = { gte: from, lt: to };
+  const [events, consultations] = await Promise.all([
+    db.scheduleEvent.findMany({
+      where: { startsAt: range, courseId: { in: enrolled.map((e) => e.courseId) } },
+      include: { course: { select: { title: true } } },
+    }),
+    db.consultation.findMany({
+      where: { startsAt: range, signups: { some: { userId } } },
+      include: { course: { select: { title: true } } },
+    }),
+  ]);
+  const lessons: (Lesson & { at: number })[] = [
+    ...events.map((e) => ({
       id: e.id,
+      at: e.startsAt.getTime(),
       date: mskDate(e.startsAt),
       start: mskTime(e.startsAt),
       end: mskTime(e.endsAt),
       title: e.title ?? e.course?.title ?? "",
       format: FORMAT[e.kind as EventKind],
-      place: { label: consult ? "каб." : "ауд.", number: e.room },
+      place: { label: "ауд." as const, number: e.room },
       teacher: e.teacherName,
-      note: e.roomChangedFrom
-        ? { kind: "flag", text: "Новая аудитория" }
-        : e.userId
-          ? { kind: "ok", text: "Записана" }
-          : undefined,
-    } satisfies Lesson;
-  });
+      note: e.roomChangedFrom ? { kind: "flag" as const, text: "Новая аудитория" } : undefined,
+    })),
+    ...consultations.map((c) => ({
+      id: c.id,
+      at: c.startsAt.getTime(),
+      date: mskDate(c.startsAt),
+      start: mskTime(c.startsAt),
+      end: mskTime(c.endsAt),
+      title: `Консультация · ${c.course.title}`,
+      format: "Консультация",
+      place: parsePlace(c.place),
+      teacher: c.teacherName,
+      note: { kind: "ok" as const, text: "Вы записаны" },
+    })),
+  ];
+  return lessons.sort((a, b) => a.at - b.at);
 }
 
 export async function getScheduleForToday(): Promise<{ today: Lesson[]; tomorrow: Lesson | undefined } | null> {

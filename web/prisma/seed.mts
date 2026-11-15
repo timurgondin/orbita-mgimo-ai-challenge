@@ -1,5 +1,7 @@
 import { PrismaClient } from "@prisma/client";
 import { hashPassword, PEPPER_VERSION } from "../src/server/auth/password";
+import { BELLS } from "../src/lib/bells";
+import { randomBytes } from "node:crypto";
 
 const db = new PrismaClient();
 const PASSWORD = "orbita-demo";
@@ -24,10 +26,26 @@ for (const u of users) {
   const data = { ...u, passwordHash, pepperVersion: PEPPER_VERSION, ...(stats[u.login] ?? { courseRank: null, courseSize: null, creditsEarned: null }) };
   await db.user.upsert({ where: { login: u.login }, create: data, update: data });
 }
+// Вымышленные однокурсники для счётчиков записи на консультации. Входа нет: пароль случайный и нигде не хранится.
+const POOL = [
+  ["Беляева", "Дарья"], ["Громова", "Алина"], ["Дьяков", "Артём"], ["Ермолаева", "Полина"], ["Жуков", "Матвей"], ["Захарова", "Вера"],
+  ["Исаев", "Тимур"], ["Кузьмина", "София"], ["Лазарев", "Кирилл"], ["Мельникова", "Анна"], ["Назаров", "Глеб"], ["Осипова", "Мария"],
+] as const;
+const poolIds: string[] = [];
+for (const [i, [lastName, firstName]] of POOL.entries()) {
+  const data = {
+    login: `seed.student${String(i + 1).padStart(2, "0")}`, passwordHash: await hashPassword(randomBytes(24).toString("base64url")), pepperVersion: PEPPER_VERSION, role: "student",
+    firstName, lastName, faculty: "Факультет международного бизнеса", program: "Международный бизнес", course: 2, groupName: "МБ-24-2",
+    avatar: ["sand", "mist", "lilac", "peach"][i % 4], onboardingDone: true,
+  };
+  poolIds.push((await db.user.upsert({ where: { login: data.login }, create: data, update: data })).id);
+}
 const userId = async (login: string) => (await db.user.findUniqueOrThrow({ where: { login } })).id;
 
 // ---------- Учёба: полная пересборка академических таблиц ----------
 await db.notification.deleteMany();
+await db.consultationSignup.deleteMany();
+await db.consultation.deleteMany();
 await db.scheduleEvent.deleteMany();
 await db.studentWork.deleteMany();
 await db.onlineProgress.deleteMany();
@@ -62,18 +80,27 @@ interface CourseDef {
   comps?: Comp[];
 }
 interface Ev {
-  course?: string;
-  user?: string;
+  course: string;
   kind: string;
   d: string;
-  s: string;
-  e: string;
+  p: number; // пара по сетке звонков
   room: string;
-  teacher?: string;
   title?: string;
   topic?: string;
   from?: string;
   comp?: string;
+}
+// Групповая консультация. others — сколько вымышленных студентов уже записано, qs — у скольких из них есть вопрос
+interface ConsDef {
+  course: string;
+  d: string;
+  p: number;
+  place: string;
+  online?: boolean;
+  cap: number;
+  others: number;
+  qs: number;
+  mine?: string; // вопрос владельца (если записан)
 }
 interface Note {
   kind: string;
@@ -88,6 +115,7 @@ interface Person {
   login: string;
   courses: CourseDef[];
   events: Ev[];
+  cons: ConsDef[];
   notes: Note[];
 }
 
@@ -137,7 +165,7 @@ const ALISA: Person = {
     },
     {
       slug: "intl-law-24", title: "Международное право", color: "law", assessment: "exam", credits: 4, kinds: "Лекция · семинар",
-      teacher: "Орлова М. И.", avatar: "stone",
+      teacher: "Орлова М. И.", avatar: "mist",
       comps: [
         { t: "Тест по источникам права", kind: "test", w: 10, due: "2026-11-03T11:00", work: { s: "graded", score: 6, g: "2026-11-03T17:00" } },
         { t: "Коллоквиум", kind: "participation", w: 20, work: { s: "graded", score: 8.7, g: "2026-11-10T12:00" } },
@@ -162,31 +190,45 @@ const ALISA: Person = {
   ],
   events: [
     // Пн 16
-    { course: "econometrics-24", kind: "lecture", d: "2026-11-16", s: "09:30", e: "11:00", room: "1201" },
-    { course: "world-economy-24", kind: "seminar", d: "2026-11-16", s: "11:40", e: "13:10", room: "2302" },
-    { course: "intl-law-24", kind: "lecture", d: "2026-11-16", s: "13:50", e: "15:20", room: "3301" },
+    { course: "econometrics-24", kind: "lecture", d: "2026-11-16", p: 2, room: "1201" },
+    { course: "world-economy-24", kind: "seminar", d: "2026-11-16", p: 3, room: "2302" },
+    { course: "english-b2", kind: "practice", d: "2026-11-16", p: 5, room: "2214" },
     // Вт 17
-    { course: "diplomacy-history-24", kind: "seminar", d: "2026-11-17", s: "11:40", e: "13:10", room: "3204" },
-    { course: "english-b2", kind: "practice", d: "2026-11-17", s: "13:50", e: "15:20", room: "4105" },
+    { course: "intl-law-24", kind: "lecture", d: "2026-11-17", p: 2, room: "101" },
+    { course: "micro-24", kind: "lecture", d: "2026-11-17", p: 3, room: "101" },
+    { course: "diplomacy-history-24", kind: "seminar", d: "2026-11-17", p: 6, room: "3315" },
     // Ср 18
-    { course: "world-economy-24", kind: "lecture", d: "2026-11-18", s: "09:30", e: "11:00", room: "2302" },
-    { course: "intl-law-24", kind: "seminar", d: "2026-11-18", s: "11:40", e: "13:10", room: "3301" },
-    { course: "micro-24", kind: "seminar", d: "2026-11-18", s: "13:50", e: "15:20", room: "3108" },
+    { course: "intl-law-24", kind: "seminar", d: "2026-11-18", p: 3, room: "2410" },
+    { course: "english-b2", kind: "practice", d: "2026-11-18", p: 5, room: "2214" },
     // Чт 19
-    { course: "econometrics-24", kind: "lecture", d: "2026-11-19", s: "09:30", e: "11:00", room: "1201" },
-    { course: "micro-24", kind: "seminar", d: "2026-11-19", s: "11:40", e: "13:10", room: "3108", topic: "Олигополия" },
-    { course: "english-b2", kind: "practice", d: "2026-11-19", s: "13:50", e: "15:20", room: "4105", from: "2214" },
-    { course: "econometrics-24", user: "a.vorontsova", kind: "consultation", d: "2026-11-19", s: "15:30", e: "16:15", room: "518", teacher: "Соколов Д. В.", title: "Консультация по эконометрике" },
+    { course: "econometrics-24", kind: "lecture", d: "2026-11-19", p: 2, room: "1201" },
+    { course: "micro-24", kind: "seminar", d: "2026-11-19", p: 3, room: "3108", topic: "Олигополия" },
+    { course: "english-b2", kind: "practice", d: "2026-11-19", p: 5, room: "4105", from: "2214" },
     // Пт 20
-    { course: "micro-24", kind: "lecture", d: "2026-11-20", s: "09:30", e: "11:00", room: "2201" },
-    { course: "world-economy-24", kind: "seminar", d: "2026-11-20", s: "11:40", e: "13:10", room: "2302" },
-    { course: "english-b2", kind: "practice", d: "2026-11-20", s: "13:50", e: "15:20", room: "4105" },
+    { course: "micro-24", kind: "lecture", d: "2026-11-20", p: 2, room: "101" },
+    { course: "world-economy-24", kind: "seminar", d: "2026-11-20", p: 3, room: "2302" },
     // Сб 21
-    { course: "diplomacy-history-24", kind: "seminar", d: "2026-11-21", s: "10:00", e: "11:30", room: "3204" },
+    { course: "english-b2", kind: "practice", d: "2026-11-21", p: 3, room: "4105" },
     // Следующая неделя
-    { course: "econometrics-24", kind: "test", d: "2026-11-23", s: "09:30", e: "11:00", room: "1201", title: "Контрольная №2", comp: "Контрольная №2" },
-    { course: "micro-24", kind: "lecture", d: "2026-11-24", s: "09:30", e: "11:00", room: "2201" },
-    { course: "intl-law-24", kind: "lecture", d: "2026-11-24", s: "13:50", e: "15:20", room: "3301" },
+    { course: "econometrics-24", kind: "test", d: "2026-11-23", p: 2, room: "1201", title: "Контрольная №2", comp: "Контрольная №2" },
+    { course: "world-economy-24", kind: "seminar", d: "2026-11-23", p: 3, room: "2302" },
+    { course: "english-b2", kind: "practice", d: "2026-11-23", p: 5, room: "4105" },
+    { course: "intl-law-24", kind: "lecture", d: "2026-11-24", p: 2, room: "101" },
+    { course: "micro-24", kind: "lecture", d: "2026-11-24", p: 3, room: "101" },
+    { course: "diplomacy-history-24", kind: "seminar", d: "2026-11-24", p: 6, room: "3315" },
+    { course: "intl-law-24", kind: "seminar", d: "2026-11-25", p: 3, room: "2410" },
+    { course: "english-b2", kind: "practice", d: "2026-11-25", p: 5, room: "4105" },
+    { course: "econometrics-24", kind: "lecture", d: "2026-11-26", p: 2, room: "1201" },
+    { course: "micro-24", kind: "seminar", d: "2026-11-26", p: 3, room: "3108" },
+    { course: "micro-24", kind: "lecture", d: "2026-11-27", p: 2, room: "101" },
+    { course: "world-economy-24", kind: "seminar", d: "2026-11-27", p: 3, room: "2302" },
+  ],
+  cons: [
+    { course: "econometrics-24", d: "2026-11-19", p: 6, place: "Каб. 518", cap: 15, others: 6, qs: 4, mine: "Тест Уайта на гетероскедастичность" },
+    { course: "english-b2", d: "2026-11-20", p: 5, place: "Ауд. 4105", cap: 15, others: 9, qs: 3 },
+    { course: "world-economy-24", d: "2026-11-23", p: 7, place: "Ауд. 2302", cap: 12, others: 12, qs: 8 },
+    { course: "micro-24", d: "2026-11-24", p: 1, place: "Онлайн", online: true, cap: 30, others: 4, qs: 2 },
+    { course: "intl-law-24", d: "2026-11-25", p: 4, place: "Онлайн", online: true, cap: 25, others: 11, qs: 6 },
   ],
   notes: [
     { kind: "grade", title: "Контрольная №1 проверена", body: "Микроэкономика · **8 из 10** · «Хорошо с графиками»", actor: "Петрова Е. А.", avatar: "peach", at: "2026-11-19T10:05" },
@@ -230,7 +272,7 @@ const MAXIM: Person = {
     },
     {
       slug: "intl-security-22", title: "Международная безопасность", color: "micro", assessment: "exam", credits: 3, kinds: "Лекция",
-      teacher: "Фролов И. С.", avatar: "stone",
+      teacher: "Фролов И. С.", avatar: "sand",
       comps: [
         { t: "Реферат", kind: "essay", w: 30, due: "2026-11-05T23:59", work: { s: "graded", score: 8, g: "2026-11-09T14:00", fb: "Чёткая постановка проблемы. Список литературы оформите по ГОСТу." } },
         { t: "Тест", kind: "test", w: 20, due: "2026-11-12T13:50", work: { s: "graded", score: 7.3, g: "2026-11-12T18:00" } },
@@ -251,20 +293,24 @@ const MAXIM: Person = {
       online: { total: 10, provider: "Школа политических данных", done: 4, next: "Урок 5 · Визуализация", minutes: 15 } },
   ],
   events: [
-    { course: "russia-foreign-policy-22", kind: "lecture", d: "2026-11-16", s: "11:40", e: "13:10", room: "5201" },
-    { course: "intl-security-22", kind: "lecture", d: "2026-11-16", s: "13:50", e: "15:20", room: "5301" },
-    { course: "ir-theory-22", kind: "seminar", d: "2026-11-17", s: "09:30", e: "11:00", room: "5101" },
-    { course: "english-c1", kind: "practice", d: "2026-11-17", s: "11:40", e: "13:10", room: "4207" },
-    { course: "conflictology-22", kind: "seminar", d: "2026-11-18", s: "11:40", e: "13:10", room: "5102" },
-    { course: "russia-foreign-policy-22", kind: "seminar", d: "2026-11-18", s: "13:50", e: "15:20", room: "5201" },
-    { course: "ir-theory-22", kind: "lecture", d: "2026-11-19", s: "09:30", e: "11:00", room: "5101" },
-    { course: "conflictology-22", kind: "seminar", d: "2026-11-19", s: "13:50", e: "15:20", room: "5102", from: "5008", topic: "Посредничество в конфликтах" },
-    { course: "english-c1", kind: "practice", d: "2026-11-19", s: "15:30", e: "17:00", room: "4207" },
-    { course: "intl-security-22", user: "m.orlov", kind: "consultation", d: "2026-11-19", s: "17:10", e: "17:50", room: "412", teacher: "Фролов И. С.", title: "Консультация по реферату" },
-    { course: "russia-foreign-policy-22", kind: "seminar", d: "2026-11-20", s: "11:40", e: "13:10", room: "5201" },
-    { course: "intl-security-22", kind: "lecture", d: "2026-11-20", s: "13:50", e: "15:20", room: "5301" },
-    { course: "ir-theory-22", kind: "lecture", d: "2026-11-23", s: "09:30", e: "11:00", room: "5101" },
-    { course: "conflictology-22", kind: "seminar", d: "2026-11-24", s: "11:40", e: "13:10", room: "5102" },
+    { course: "russia-foreign-policy-22", kind: "lecture", d: "2026-11-16", p: 3, room: "5201" },
+    { course: "intl-security-22", kind: "lecture", d: "2026-11-16", p: 4, room: "5301" },
+    { course: "ir-theory-22", kind: "seminar", d: "2026-11-17", p: 2, room: "5101" },
+    { course: "english-c1", kind: "practice", d: "2026-11-17", p: 3, room: "4207" },
+    { course: "conflictology-22", kind: "seminar", d: "2026-11-18", p: 3, room: "5102" },
+    { course: "russia-foreign-policy-22", kind: "seminar", d: "2026-11-18", p: 4, room: "5201" },
+    { course: "ir-theory-22", kind: "lecture", d: "2026-11-19", p: 2, room: "5101" },
+    { course: "conflictology-22", kind: "seminar", d: "2026-11-19", p: 4, room: "5102", from: "5008", topic: "Посредничество в конфликтах" },
+    { course: "english-c1", kind: "practice", d: "2026-11-19", p: 5, room: "4207" },
+    { course: "russia-foreign-policy-22", kind: "seminar", d: "2026-11-20", p: 3, room: "5201" },
+    { course: "intl-security-22", kind: "lecture", d: "2026-11-20", p: 4, room: "5301" },
+    { course: "ir-theory-22", kind: "lecture", d: "2026-11-23", p: 2, room: "5101" },
+    { course: "conflictology-22", kind: "seminar", d: "2026-11-24", p: 3, room: "5102" },
+  ],
+  cons: [
+    { course: "intl-security-22", d: "2026-11-19", p: 7, place: "Каб. 412", cap: 20, others: 6, qs: 3, mine: "Оформление списка литературы по ГОСТу" },
+    { course: "russia-foreign-policy-22", d: "2026-11-20", p: 5, place: "Онлайн", online: true, cap: 20, others: 3, qs: 1, mine: "Какие первичные источники брать для доклада" },
+    { course: "ir-theory-22", d: "2026-11-24", p: 4, place: "Ауд. 5101", cap: 15, others: 5, qs: 2 },
   ],
   notes: [
     { kind: "grade", title: "Аналитическая записка проверена", body: "Внешняя политика России · **8,4 из 10** · «Сильная аргументация»", actor: "Зайцева Л. К.", avatar: "peach", at: "2026-11-19T09:12" },
@@ -303,10 +349,13 @@ const NIKA: Person = {
     },
   ],
   events: [
-    { course: "marketing-intro-26", kind: "lecture", d: "2026-11-19", s: "11:40", e: "13:10", room: "1105" },
-    { course: "english-b1", kind: "practice", d: "2026-11-19", s: "13:50", e: "15:20", room: "4102" },
-    { course: "economics-basics-26", kind: "lecture", d: "2026-11-20", s: "11:40", e: "13:10", room: "1201" },
-    { course: "marketing-intro-26", kind: "seminar", d: "2026-11-20", s: "13:50", e: "15:20", room: "1105" },
+    { course: "marketing-intro-26", kind: "lecture", d: "2026-11-19", p: 3, room: "1105" },
+    { course: "english-b1", kind: "practice", d: "2026-11-19", p: 4, room: "4102" },
+    { course: "economics-basics-26", kind: "lecture", d: "2026-11-20", p: 3, room: "1201" },
+    { course: "marketing-intro-26", kind: "seminar", d: "2026-11-20", p: 4, room: "1105" },
+  ],
+  cons: [
+    { course: "marketing-intro-26", d: "2026-11-23", p: 3, place: "Ауд. 1105", cap: 15, others: 4, qs: 1 },
   ],
   notes: [
     { kind: "grade", title: "Тест 1 проверен", body: "Введение в маркетинг · **8,5 из 10**", actor: "Лебедева Т. Р.", avatar: "peach", at: "2026-11-12T16:05", read: true },
@@ -349,17 +398,43 @@ for (const person of [ALISA, MAXIM, NIKA]) {
     }
   }
 
-  const teacherOf = (slug: string) => person.courses.find((c) => c.slug === slug)!.teacher;
+  const courseOf = (slug: string) => person.courses.find((c) => c.slug === slug)!;
   for (const e of person.events) {
+    const [from, to] = BELLS[e.p];
     await db.scheduleEvent.create({
       data: {
-        courseId: e.course ? courseIds.get(e.course) : null,
-        userId: e.user ? uid : null,
-        componentId: e.comp && e.course ? compIds.get(`${e.course}|${e.comp}`) : null,
-        kind: e.kind, title: e.title, startsAt: at(`${e.d}T${e.s}`), endsAt: at(`${e.d}T${e.e}`), room: e.room,
-        teacherName: e.teacher ?? teacherOf(e.course!), roomChangedFrom: e.from, topic: e.topic,
+        courseId: courseIds.get(e.course),
+        componentId: e.comp ? compIds.get(`${e.course}|${e.comp}`) : null,
+        kind: e.kind, title: e.title, pair: e.p, startsAt: at(`${e.d}T${from}`), endsAt: at(`${e.d}T${to}`), room: e.room,
+        teacherName: courseOf(e.course).teacher, roomChangedFrom: e.from, topic: e.topic,
       },
     });
+  }
+
+  const QUESTIONS = [
+    "Разобрать задачу из домашнего задания", "Не понял вывод формулы с лекции", "Как готовиться к экзамену", "Критерии оценки итоговой работы",
+    "Пример решения типовой задачи", "Какие источники использовать", "Где найти ошибку в расчётах", "Можно ли пересдать контрольную",
+  ];
+  for (const [ci, c] of person.cons.entries()) {
+    const course = courseOf(c.course);
+    const [from, to] = BELLS[c.p];
+    const cons = await db.consultation.create({
+      data: {
+        courseId: courseIds.get(c.course)!, teacherName: course.teacher,
+        teacherId: course.teacherLogin ? await userId(course.teacherLogin) : null,
+        startsAt: at(`${c.d}T${from}`), endsAt: at(`${c.d}T${to}`), pair: c.p, place: c.place, online: !!c.online,
+        meetingUrl: c.online ? `https://meet.orbita.future.edu/c/${randomBytes(9).toString("base64url")}` : null, capacity: c.cap,
+      },
+    });
+    for (const [i, pid] of poolIds.slice(0, c.others).entries()) {
+      await db.enrollment.upsert({
+        where: { userId_courseId: { userId: pid, courseId: cons.courseId } }, create: { userId: pid, courseId: cons.courseId }, update: {},
+      });
+      await db.consultationSignup.create({
+        data: { consultationId: cons.id, userId: pid, question: i < c.qs ? QUESTIONS[(i + ci) % QUESTIONS.length] : null },
+      });
+    }
+    if (c.mine) await db.consultationSignup.create({ data: { consultationId: cons.id, userId: uid, question: c.mine } });
   }
 
   for (const n of person.notes) {
@@ -369,5 +444,5 @@ for (const person of [ALISA, MAXIM, NIKA]) {
   }
 }
 
-console.log(`Seeded ${users.length} users, ${await db.course.count()} courses, ${await db.gradeComponent.count()} components, ${await db.scheduleEvent.count()} events`);
+console.log(`Seeded ${users.length} users, ${await db.course.count()} courses, ${await db.gradeComponent.count()} components, ${await db.scheduleEvent.count()} events, ${await db.consultation.count()} consultations, ${await db.consultationSignup.count()} signups`);
 await db.$disconnect();

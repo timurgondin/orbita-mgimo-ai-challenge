@@ -324,3 +324,20 @@ button {
     animation: none;
   }
 }
+
+/* Время: обложка модалки и анимации */
+.modal-cover {
+  position: relative;
+  height: 112px;
+  flex-shrink: 0;
+  background: color-mix(in srgb, var(--cc) 18%, var(--s2));
+}
+.modal-cover::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(circle, color-mix(in srgb, var(--cc) 75%, transparent) 1.1px, transparent 1.6px);
+  background-size: 11px 11px;
+  -webkit-mask-image: radial-gradient(85% 120% at 100% 0%, #000 0%, transparent 70%);
+  mask-image: radial-gradient(85% 120% at 100% 0%, #000 0%, transparent 70%);
+}

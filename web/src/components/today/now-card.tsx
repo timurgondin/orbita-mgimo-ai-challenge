@@ -4,7 +4,7 @@ import type { Lesson } from "@/server/data/types";
 import { DotField } from "./dot-field";
 
 function meta(l: Lesson) {
-  return [l.format, `${l.place.label} ${l.place.number}`, l.teacher].filter(Boolean).join(" · ");
+  return [l.format, [l.place.label, l.place.number].filter(Boolean).join(" "), l.teacher].filter(Boolean).join(" · ");
 }
 
 /** Карточка «Сейчас» (идёт пара) или «Дальше» (пара ещё не началась). Всё считается из расписания. */

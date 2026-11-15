@@ -1,6 +1,6 @@
-/** Фиксированное «сейчас» для демо: четверг, 19 ноября 2026, 12:29 (Europe/Moscow). */
+/** Фиксированное «сейчас» для демо: четверг, 19 ноября 2026, 11:49 (Europe/Moscow). */
 export const DEMO_DATE = "2026-11-19";
-export const DEMO_MINUTES = 12 * 60 + 29;
+export const DEMO_MINUTES = 11 * 60 + 49;
 const TZ = "Europe/Moscow";
 
 export function toMinutes(hhmm: string): number {
@@ -60,7 +60,7 @@ export function formatDuration(minutes: number): string {
 }
 
 /** «Сейчас» как момент времени. */
-export const DEMO_NOW = new Date(`${DEMO_DATE}T12:29:00+03:00`);
+export const DEMO_NOW = new Date(`${DEMO_DATE}T11:49:00+03:00`);
 
 /** Дата YYYY-MM-DD по Москве. */
 export function mskDate(d: Date): string {

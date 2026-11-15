@@ -17,7 +17,7 @@ export interface Lesson {
   end: string;
   title: string;
   format?: string;
-  place: { label: "ауд." | "каб."; number: string };
+  place: { label: "ауд." | "каб." | ""; number: string };
   teacher: string;
   note?: { kind: "flag" | "ok"; text: string };
 }
@@ -114,4 +114,59 @@ export interface StudyData {
     rows: PerfRowData[];
     exams: ExamData[];
   };
+}
+
+// ---- Время ----
+export interface TimeLesson {
+  id: string;
+  /** YYYY-MM-DD */
+  date: string;
+  pair: number;
+  start: string;
+  end: string;
+  color: string;
+  courseTitle: string;
+  /** Название строки: предмет или «Контрольная №2» */
+  title: string;
+  isTest: boolean;
+  kind: EventKind;
+  kindLabel: string;
+  topic?: string;
+  room: string;
+  roomFrom?: string;
+  teacher: string;
+  teacherInitials: string;
+  teacherGradient: string;
+  test?: { weight: number; score: string | null };
+}
+
+export interface TimeConsultation {
+  id: string;
+  date: string;
+  pair: number;
+  start: string;
+  end: string;
+  color: string;
+  courseId: string;
+  courseTitle: string;
+  teacher: string;
+  teacherInitials: string;
+  teacherGradient: string;
+  place: string;
+  online: boolean;
+  count: number;
+  capacity: number;
+  /** Сколько записавшихся уже прислали вопрос */
+  questions: number;
+  going: boolean;
+  myQuestion: string;
+  past: boolean;
+}
+
+export interface TimeData {
+  /** Понедельник текущей недели, YYYY-MM-DD */
+  baseMonday: string;
+  lessons: TimeLesson[];
+  consultations: TimeConsultation[];
+  syncLink: string;
 }

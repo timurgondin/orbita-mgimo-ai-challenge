@@ -17,7 +17,7 @@ function Row({ lesson }: { lesson: Lesson }) {
       <div>
         <div className="font-medium">{lesson.title}</div>
         <div className="mt-px text-sm text-text-3">
-          {capitalize(lesson.place.label)} {lesson.place.number} · {lesson.teacher}
+          {capitalize([lesson.place.label, lesson.place.number].filter(Boolean).join(" "))} · {lesson.teacher}
         </div>
       </div>
       {lesson.note?.kind === "flag" && (

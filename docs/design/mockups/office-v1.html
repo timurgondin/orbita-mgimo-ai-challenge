@@ -1,0 +1,404 @@
+<!doctype html>
+<html lang="ru" class="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Орбита — Офис (макет v1)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/lucide@0.460.0/dist/umd/lucide.min.js"></script>
+<style>
+  :root{
+    --bg:#131315; --s1:#1B1B1E; --s2:#212124; --s3:#2A2A2E; --hover:rgba(255,255,255,.04);
+    --line:rgba(255,255,255,.07);
+    --text:#EDEDEF; --text-2:#9A9AA2; --text-3:#7E7E87;
+    --accent:#8B8EFF; --urgent:#F2A35E;
+    --st-orange:#F2A35E; --st-blue:#62AEF7; --st-violet:#B39BFB; --st-yellow:#E3C766; --st-green:#5BD891; --st-red:#F58A8A; --st-gray:#9A9AA3;
+    --amber:#E0A75E; --violet:#8F8DF7; --teal:#52BBAA; --rose:#E58091; --sky:#6AA9F2; --green:#4FCB85; --lilac:#C69CF0;
+    --sans:"Onest",system-ui,sans-serif;
+    --ease:cubic-bezier(.22,1,.36,1); --spring:cubic-bezier(.34,1.35,.5,1);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{background:var(--bg);color-scheme:dark}
+  body{font-family:var(--sans);background:var(--bg);color:var(--text);-webkit-font-smoothing:antialiased;font-size:15px;line-height:1.45;font-variant-numeric:tabular-nums}
+  ::selection{background:color-mix(in srgb,var(--accent) 35%,transparent)}
+  :focus-visible{outline:2px solid var(--accent);outline-offset:3px;border-radius:10px}
+  button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
+  a{color:inherit;text-decoration:none}
+  svg.lucide{width:16px;height:16px;stroke-width:1.6;flex-shrink:0}
+
+  /* ---------- Header (F) ---------- */
+  header{position:sticky;top:0;z-index:30;height:72px;display:grid;grid-template-columns:1fr auto 1fr;align-items:center;padding:0 28px;transition:background .25s,box-shadow .25s}
+  header.scrolled{background:color-mix(in srgb,var(--bg) 80%,transparent);backdrop-filter:blur(20px) saturate(1.5);-webkit-backdrop-filter:blur(20px) saturate(1.5);box-shadow:0 .5px 0 var(--line)}
+  .logo{display:flex;align-items:center;gap:9px;width:max-content}
+  .logo span{font-weight:600;font-size:17px;letter-spacing:-.035em}
+  .right{display:flex;justify-content:flex-end;align-items:center;gap:6px}
+  .ib{position:relative;width:36px;height:36px;display:grid;place-items:center;border-radius:50%;color:var(--text-2)}
+  .ib:hover{background:var(--hover);color:var(--text)}
+  .ib .badge{position:absolute;top:8px;right:9px;width:7px;height:7px;border-radius:50%;background:var(--accent);box-shadow:0 0 0 2px var(--bg)}
+  .me{width:32px;height:32px;margin-left:4px;border-radius:50%;background:linear-gradient(140deg,#D6C3AE,#8F7A68);color:#2a211a;display:grid;place-items:center;font-size:12px;font-weight:600}
+  .dock{position:relative;display:flex;align-items:center;height:48px;padding:5px;border-radius:999px;background:rgba(34,34,38,.7);backdrop-filter:blur(28px) saturate(1.7);-webkit-backdrop-filter:blur(28px) saturate(1.7);box-shadow:0 0 0 .5px rgba(255,255,255,.09),inset 0 .5px 0 rgba(255,255,255,.08),0 12px 32px -14px rgba(0,0,0,.7)}
+  .dock .ind{position:absolute;top:5px;bottom:5px;left:0;width:0;border-radius:999px;background:rgba(255,255,255,.09)}
+  .tab{position:relative;z-index:1;display:flex;align-items:center;gap:7px;height:38px;padding:0 16px;border-radius:999px;font-size:13.5px;font-weight:500;color:var(--text-3)}
+  .tab:hover{color:var(--text-2)} .tab.on{color:var(--text)}
+  .tab svg.lucide{width:15px;height:15px}
+  .orbslot{position:relative;z-index:1;width:68px;height:38px;display:grid;place-items:center}
+  .orbslot .ring{position:absolute;width:56px;height:56px;border-radius:50%;background:var(--bg);box-shadow:0 0 0 .5px rgba(255,255,255,.1),0 8px 24px -8px rgba(0,0,0,.8);display:grid;place-items:center;top:50%;left:50%;transform:translate(-50%,-50%)}
+  .orb{position:relative;width:44px;height:44px;border-radius:50%;overflow:hidden;isolation:isolate;background:#2B2D7A;box-shadow:inset 0 0 0 .5px rgba(255,255,255,.25),inset 0 -4px 8px rgba(0,0,0,.35)}
+  .orb i{position:absolute;border-radius:50%;filter:blur(7px);mix-blend-mode:screen}
+  .orb i:nth-child(1){width:70%;height:70%;left:-5%;top:0;background:#7C7FFF;animation:o1 7s ease-in-out infinite}
+  .orb i:nth-child(2){width:60%;height:60%;right:-10%;top:15%;background:#58B4FF;animation:o2 9s ease-in-out infinite}
+  .orb i:nth-child(3){width:55%;height:55%;left:20%;bottom:-15%;background:#D58BFF;animation:o3 8s ease-in-out infinite}
+  .orb::after{content:"";position:absolute;left:18%;top:10%;width:40%;height:28%;border-radius:50%;background:rgba(255,255,255,.55);filter:blur(4px)}
+  @keyframes o1{50%{transform:translate(35%,25%) scale(1.15)}} @keyframes o2{50%{transform:translate(-40%,20%) scale(.9)}} @keyframes o3{50%{transform:translate(10%,-45%) scale(1.2)}}
+
+  /* ---------- Page ---------- */
+  .page{max-width:1180px;margin:0 auto;padding:44px 40px 80px}
+  .head{display:flex;align-items:flex-end;justify-content:space-between;gap:24px}
+  .head h1{font-size:34px;font-weight:500;letter-spacing:-.03em;line-height:1.15}
+  h2{font-size:18px;font-weight:600;letter-spacing:-.02em;margin-bottom:14px;display:flex;align-items:baseline;justify-content:space-between}
+  h2 a{font-size:14px;font-weight:400;color:var(--text-3)} h2 a:hover{color:var(--text)}
+  section{margin-top:44px}
+  .primary{height:42px;padding:0 18px;border-radius:13px;background:var(--text);color:var(--bg);font-weight:600;font-size:14.5px;display:inline-flex;align-items:center;gap:8px;transition:opacity .2s,transform .15s var(--ease)}
+  .primary:hover{opacity:.92} .primary:active{transform:scale(.97)}
+  .primary svg.lucide{width:17px;height:17px;stroke-width:2}
+
+  .tag{display:inline-flex;align-items:center;gap:5px;height:24px;padding:0 9px 0 7px;border-radius:999px;font-size:12.5px;font-weight:500;white-space:nowrap;color:var(--c);background:color-mix(in srgb,var(--c) 13%,transparent)}
+  .tag svg.lucide{width:13px;height:13px;stroke-width:2.1}
+
+  /* ---------- Active requests ---------- */
+  .active{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+  .req{display:flex;flex-direction:column;padding:22px 24px 22px;border-radius:24px;background:var(--s1);cursor:pointer;transition:background .2s}
+  .req:hover{background:var(--s2)}
+  .req .top{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
+  .req .nm{font-size:17px;font-weight:600;letter-spacing:-.02em}
+  .req .sub{font-size:14px;color:var(--text-3);margin-top:2px}
+  .track{display:grid;grid-template-columns:repeat(var(--n),1fr);margin-top:26px;position:relative}
+  .step{position:relative;display:flex;flex-direction:column;gap:8px}
+  .step .bar{height:4px;border-radius:4px;background:var(--s3);margin-right:4px;overflow:hidden}
+  .step .bar i{display:block;height:100%;width:0;border-radius:4px;background:var(--text)}
+  .step.done .bar i{width:100%}
+  .step.cur .bar i{width:50%;animation:prog 2.4s var(--ease) infinite alternate}
+  @keyframes prog{from{width:30%}to{width:65%}}
+  .step b{font-size:13px;font-weight:500;color:var(--text-3)}
+  .step.done b,.step.cur b{color:var(--text)}
+  .step small{font-size:12px;color:var(--text-3);margin-top:-6px}
+  .eta{margin-top:18px;font-size:14px;color:var(--text-2);display:flex;align-items:center;gap:8px}
+  .eta svg.lucide{width:15px;height:15px;color:var(--text-3)}
+
+  /* ---------- Catalog ---------- */
+  .cat{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+  .item{display:flex;flex-direction:column;gap:14px;padding:18px;border-radius:20px;background:var(--s1);text-align:left;transition:background .2s,transform .3s var(--spring)}
+  .item:hover{background:var(--s2)}
+  .item:active{transform:scale(.98)}
+  .item .ic{width:40px;height:40px;border-radius:12px;display:grid;place-items:center;color:var(--c);background:color-mix(in srgb,var(--c) 14%,transparent)}
+  .item .ic svg.lucide{width:20px;height:20px;stroke-width:1.7}
+  .item b{font-size:15px;font-weight:600;letter-spacing:-.01em;line-height:1.25}
+  .item small{display:block;font-size:13px;color:var(--text-3);margin-top:3px}
+
+  /* ---------- Docs list ---------- */
+  .doc{display:grid;grid-template-columns:40px minmax(0,1fr) auto auto;gap:16px;align-items:center;padding:12px 14px;margin:0 -14px;border-radius:16px;cursor:pointer;transition:background .15s}
+  .doc:hover{background:var(--hover)}
+  .doc + .doc{box-shadow:0 -.5px 0 var(--line)}
+  .doc:hover,.doc:hover + .doc{box-shadow:none}
+  .doc .ic{width:40px;height:40px;border-radius:12px;background:var(--s2);display:grid;place-items:center;color:var(--text-2)}
+  .doc .nm{font-weight:500}
+  .doc .sub{font-size:14px;color:var(--text-3)}
+  .doc .when{font-size:14px;color:var(--text-3);white-space:nowrap}
+  .dl{height:34px;padding:0 12px;border-radius:10px;background:var(--s2);font-size:13.5px;font-weight:500;display:inline-flex;align-items:center;gap:6px;transition:background .15s}
+  .dl:hover{background:var(--s3)}
+  .dl svg.lucide{width:15px;height:15px}
+
+  /* ---------- Office contact ---------- */
+  .contact{display:flex;align-items:center;gap:16px;margin-top:44px;padding:18px 22px;border-radius:20px;background:var(--s1)}
+  .contact .ic{width:44px;height:44px;border-radius:14px;background:var(--s2);display:grid;place-items:center;color:var(--text-2)}
+  .contact .m{flex:1}
+  .contact b{font-weight:600}
+  .contact small{display:block;font-size:14px;color:var(--text-3)}
+  .contact .open{display:inline-flex;align-items:center;gap:6px;font-size:13.5px;color:var(--st-green)}
+  .contact .open::before{content:"";width:7px;height:7px;border-radius:50%;background:currentColor}
+
+  /* ---------- Modal ---------- */
+  .scrim{position:fixed;inset:0;z-index:40;background:rgba(10,10,12,.45);backdrop-filter:blur(10px) saturate(1.2);-webkit-backdrop-filter:blur(10px) saturate(1.2);opacity:0;pointer-events:none;transition:opacity .3s var(--ease)}
+  .scrim.open{opacity:1;pointer-events:auto}
+  .modal{position:fixed;z-index:41;left:50%;top:50%;width:min(520px,calc(100vw - 32px));max-height:min(780px,calc(100vh - 48px));border-radius:28px;background:var(--s2);box-shadow:0 0 0 .5px var(--line),0 40px 100px -24px rgba(0,0,0,.85);display:flex;flex-direction:column;overflow:hidden;opacity:0;transform:translate(-50%,-48%) scale(.96);pointer-events:none;transition:opacity .22s var(--ease),transform .45s var(--spring)}
+  .modal.open{opacity:1;transform:translate(-50%,-50%) scale(1);pointer-events:auto}
+  .modal.wide{width:min(760px,calc(100vw - 32px))}
+  .m-close{position:absolute;z-index:2;top:16px;right:16px;width:32px;height:32px;border-radius:50%;display:grid;place-items:center;background:var(--s3);color:var(--text)}
+  .m-body{padding:26px 28px 28px;overflow:auto}
+  .m-kind{font-size:14px;color:var(--text-2)}
+  .m-title{font-size:26px;font-weight:600;letter-spacing:-.03em;line-height:1.15;margin-top:4px;padding-right:40px}
+  .fld{margin-top:20px}
+  .fld > label{display:block;font-size:14px;color:var(--text-2);margin-bottom:8px}
+  .opts{display:flex;flex-wrap:wrap;gap:6px}
+  .opt{height:38px;padding:0 14px;border-radius:12px;background:var(--s1);font-size:14px;font-weight:500;color:var(--text-2);transition:background .15s,color .15s,transform .2s var(--spring)}
+  .opt:hover{color:var(--text)}
+  .opt.on{background:var(--text);color:var(--bg)}
+  .opt:active{transform:scale(.96)}
+  .stepper{display:inline-flex;align-items:center;gap:4px;padding:4px;border-radius:12px;background:var(--s1)}
+  .stepper button{width:32px;height:30px;border-radius:9px;display:grid;place-items:center;color:var(--text-2)}
+  .stepper button:hover{background:var(--s3);color:var(--text)}
+  .stepper b{min-width:28px;text-align:center;font-weight:600}
+  textarea{width:100%;min-height:76px;padding:12px 14px;border-radius:14px;border:none;outline:none;resize:none;background:var(--s1);color:var(--text);font:inherit;font-size:15px}
+  textarea::placeholder{color:var(--text-3)}
+  textarea:focus{box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--accent) 60%,transparent),0 0 0 4px color-mix(in srgb,var(--accent) 14%,transparent)}
+  .m-foot{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:26px;padding-top:20px;border-top:.5px solid var(--line)}
+  .m-foot .sum{font-size:14px;color:var(--text-3)}
+  .m-foot .sum b{display:block;color:var(--text);font-weight:600;font-size:15px}
+  .cta{height:46px;padding:0 22px;border-radius:14px;background:var(--text);color:var(--bg);font-weight:600;font-size:15px;transition:opacity .2s,transform .15s var(--ease)}
+  .cta:active{transform:scale(.97)}
+  .ghost{height:40px;padding:0 14px;border-radius:12px;background:var(--s3);font-weight:500;font-size:14px;display:inline-flex;align-items:center;gap:7px}
+  .ghost svg.lucide{width:15px;height:15px}
+
+  /* timeline */
+  .tl{margin-top:22px;position:relative}
+  .ev{display:grid;grid-template-columns:24px 1fr auto;gap:14px;padding-bottom:18px;position:relative}
+  .ev::before{content:"";position:absolute;left:11.5px;top:24px;bottom:2px;width:1px;background:var(--line)}
+  .ev:last-child::before{display:none}
+  .ev .dt{width:24px;height:24px;border-radius:50%;display:grid;place-items:center;background:var(--s3);color:var(--text-3)}
+  .ev .dt svg.lucide{width:13px;height:13px;stroke-width:2.4}
+  .ev.done .dt{background:var(--text);color:var(--bg)}
+  .ev.cur .dt{background:color-mix(in srgb,var(--st-blue) 20%,transparent);color:var(--st-blue)}
+  .ev b{font-weight:500;display:block}
+  .ev small{font-size:13.5px;color:var(--text-3)}
+  .ev .t{font-size:13px;color:var(--text-3);white-space:nowrap}
+  .ev.todo b{color:var(--text-3)}
+  .msg{display:flex;gap:10px;margin-top:6px;padding:12px 14px;border-radius:14px;background:var(--s1);font-size:14px;color:var(--text-2)}
+  .msg .av{width:24px;height:24px;border-radius:50%;flex-shrink:0;display:grid;place-items:center;font-size:10px;font-weight:600;background:linear-gradient(140deg,#C9E6DD,#7FA699);color:#1d1d20}
+
+  /* document preview */
+  .docview{display:grid;grid-template-columns:1fr 220px;gap:24px;margin-top:20px;align-items:start}
+  .paper{aspect-ratio:1/1.414;border-radius:10px;background:#FBFBF9;color:#1b1b1d;padding:26px 26px 22px;font-size:9.5px;line-height:1.55;box-shadow:0 20px 50px -20px rgba(0,0,0,.6);display:flex;flex-direction:column}
+  .paper .ph{display:flex;align-items:center;gap:7px;font-weight:600;font-size:10px;padding-bottom:10px;border-bottom:.5px solid #ddd}
+  .paper h4{text-align:center;font-size:13px;letter-spacing:.12em;margin:22px 0 4px}
+  .paper .no{text-align:center;color:#777;margin-bottom:16px}
+  .paper p{margin-bottom:8px}
+  .paper .bt{margin-top:auto;display:flex;justify-content:space-between;align-items:flex-end}
+  .paper .sig{font-size:8.5px;color:#555;border:.5px solid #cfd2ff;border-radius:6px;padding:6px 8px;background:#f4f5ff}
+  .paper .sig b{display:block;color:#3a3db8;font-size:9px}
+  .side b{display:block;font-weight:600}
+  .side small{display:block;font-size:13.5px;color:var(--text-3);margin-bottom:14px}
+  .side .ghost{width:100%;justify-content:center;margin-bottom:8px}
+  .verify{display:flex;align-items:center;gap:8px;margin-top:6px;font-size:13.5px;color:var(--st-green)}
+
+  /* success */
+  .done{display:flex;flex-direction:column;align-items:center;text-align:center;padding:28px 0 8px}
+  .done .ck{width:72px;height:72px;border-radius:50%;background:color-mix(in srgb,var(--st-green) 16%,transparent);display:grid;place-items:center;animation:pop .6s var(--spring)}
+  .done .ck svg{width:34px;height:34px;color:var(--st-green);stroke-width:2.4}
+  .done .ck path{stroke-dasharray:30;stroke-dashoffset:30;animation:draw .5s .25s var(--ease) forwards}
+  @keyframes pop{from{transform:scale(.4);opacity:0}to{transform:none;opacity:1}}
+  @keyframes draw{to{stroke-dashoffset:0}}
+  .done h3{font-size:24px;font-weight:600;letter-spacing:-.03em;margin-top:18px}
+  .done p{font-size:15px;color:var(--text-2);margin-top:4px}
+  .done .row{display:flex;gap:8px;margin-top:22px}
+
+  .toast{position:fixed;left:50%;bottom:28px;z-index:50;transform:translate(-50%,20px);opacity:0;padding:12px 18px;border-radius:14px;background:var(--text);color:var(--bg);font-weight:500;font-size:14px;display:flex;gap:8px;align-items:center;transition:opacity .25s var(--ease),transform .4s var(--spring);pointer-events:none}
+  .toast.show{opacity:1;transform:translate(-50%,0)}
+  footer{text-align:center;font-size:12px;color:var(--text-3);padding:0 0 28px}
+</style>
+</head>
+<body>
+
+<header id="hdr">
+  <a class="logo" href="today-desktop-v4.html" aria-label="Орбита — на главную">
+    <svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><defs><mask id="gap"><rect width="24" height="24" fill="#fff"/><circle cx="18.72" cy="5.28" r="4.2" fill="#000"/></mask></defs><circle cx="12" cy="12" r="9.5" fill="none" stroke="currentColor" stroke-width="1.7" mask="url(#gap)"/><circle cx="18.72" cy="5.28" r="2.3" fill="currentColor"/></svg>
+    <span>орбита</span>
+  </a>
+  <nav class="dock" id="dock" aria-label="Основная навигация">
+    <span class="ind" id="ind"></span>
+    <a href="today-desktop-v4.html" class="tab"><i data-lucide="sun"></i>Сегодня</a>
+    <a href="study-v1.html" class="tab"><i data-lucide="graduation-cap"></i>Учёба</a>
+    <button class="orbslot" aria-label="Спросить Орбиту (Ctrl K)"><span class="ring"><span class="orb"><i></i><i></i><i></i></span></span></button>
+    <a href="time-v3.html" class="tab"><i data-lucide="calendar-range"></i>Время</a>
+    <a href="#" class="tab on"><i data-lucide="stamp"></i>Офис</a>
+  </nav>
+  <div class="right">
+    <button class="ib" aria-label="Уведомления"><i data-lucide="bell"></i><span class="badge"></span></button>
+    <button class="me" aria-label="Профиль">АВ</button>
+  </div>
+</header>
+
+<main class="page">
+  <div class="head">
+    <h1>Офис</h1>
+    <button class="primary" id="newBtn"><i data-lucide="plus"></i>Новая заявка</button>
+  </div>
+
+  <section>
+    <h2>В работе</h2>
+    <div class="active" id="active"></div>
+  </section>
+
+  <section>
+    <h2>Заказать</h2>
+    <div class="cat" id="cat"></div>
+  </section>
+
+  <section>
+    <h2>Документы <a href="#">Архив</a></h2>
+    <div id="docs"></div>
+  </section>
+
+  <div class="contact">
+    <span class="ic"><i data-lucide="building-2"></i></span>
+    <div class="m"><b>Учебный офис · Факультет международного бизнеса</b><small>Корпус А, каб. 104, окно 3 · Пн–Пт 10:00–18:00 · office.ib@future.edu</small></div>
+    <span class="open">Открыто до 18:00</span>
+    <button class="ghost" style="margin-left:12px"><i data-lucide="message-circle"></i>Написать</button>
+  </div>
+</main>
+
+<div class="scrim" id="scrim"></div>
+<div class="modal" id="modal" role="dialog" aria-modal="true">
+  <button class="m-close" id="mClose" aria-label="Закрыть"><i data-lucide="x"></i></button>
+  <div class="m-body" id="mBody"></div>
+</div>
+<div class="toast" id="toast"><i data-lucide="circle-check"></i><span id="toastTxt"></span></div>
+
+<footer>Концепт для конкурса MGIMO×AI Challenge. Не официальный сервис, все данные вымышлены.</footer>
+
+<script>
+  // ---------------- data ----------------
+  const CAT = [
+    {id:'study', ic:'file-text', c:'var(--violet)', nm:'Справка об обучении', sub:'PDF с QR · 1 день', kind:'cert'},
+    {id:'visa', ic:'plane', c:'var(--sky)', nm:'Справка для визы', sub:'На английском · 2 дня', kind:'cert'},
+    {id:'grades', ic:'list-checks', c:'var(--green)', nm:'Выписка оценок', sub:'PDF с QR · 1 день', kind:'cert'},
+    {id:'army', ic:'shield', c:'var(--teal)', nm:'Справка в военкомат', sub:'Бумажная · 3 дня', kind:'cert'},
+    {id:'retake', ic:'rotate-ccw', c:'var(--amber)', nm:'Пересдача', sub:'Заявление · 3 дня', kind:'app'},
+    {id:'credit', ic:'arrow-left-right', c:'var(--lilac)', nm:'Перезачёт дисциплины', sub:'Заявление · 5 дней', kind:'app'},
+    {id:'dorm', ic:'bed-double', c:'var(--rose)', nm:'Общежитие', sub:'Заявление · 7 дней', kind:'app'},
+    {id:'leave', ic:'pause', c:'var(--text-3)', nm:'Академический отпуск', sub:'Заявление · 10 дней', kind:'app'},
+  ];
+  const ST = {
+    sent:['Подана','var(--st-violet)','send'], work:['В работе','var(--st-blue)','loader-circle'],
+    review:['На рассмотрении','var(--st-yellow)','scan-search'], ready:['Готово','var(--st-green)','circle-check'],
+    done:['Выдано','var(--st-gray)','archive'], rejected:['Отклонено','var(--st-red)','circle-x'],
+  };
+  let REQS = [
+    {id:'R-2481', cat:'visa', title:'Справка для визы', sub:'На английском · электронная', status:'work', steps:[['Подана','18 нояб'],['Принята','18 нояб'],['Готовится','сейчас'],['Готова','']], cur:2, eta:'Будет готова 21 ноября',
+     log:[['done','Заявка подана','Вы','18 нояб, 14:02'],['done','Принята в работу','Смирнова И. А.','18 нояб, 16:40'],['cur','Готовится','Перевод на английский','сейчас'],['todo','Готова','PDF с QR-кодом','~21 нояб']],
+     msg:'Нужна ли апостиль? Обычно консульства Испании принимают без него.'},
+    {id:'R-2477', cat:'credit', title:'Перезачёт дисциплины', sub:'«Python для анализа данных» → «Информатика»', status:'review', steps:[['Подано','15 нояб'],['Проверка','сейчас'],['Решение','']], cur:1, eta:'Решение до 22 ноября',
+     log:[['done','Заявление подано','Вы','15 нояб, 11:20'],['cur','Проверка программ','Кафедра информатики','сейчас'],['todo','Решение','','~22 нояб']]},
+  ];
+  const DOCS = [
+    {id:'D-2470', nm:'Справка об обучении', sub:'По месту требования · PDF с QR', when:'Вчера', status:'ready', fresh:true},
+    {id:'D-2415', nm:'Выписка оценок за 1 курс', sub:'PDF с QR', when:'2 октября', status:'done'},
+    {id:'D-2398', nm:'Справка в банк', sub:'Бумажная · получена в офисе', when:'14 сентября', status:'done'},
+  ];
+  const tag = s => { const [t,c,i] = ST[s]; return `<span class="tag" style="--c:${c}"><i data-lucide="${i}"></i>${t}</span>`; };
+
+  // ---------------- render ----------------
+  function render(){
+    document.getElementById('active').innerHTML = REQS.map(r => `
+      <div class="req" data-id="${r.id}">
+        <div class="top"><div><div class="nm">${r.title}</div><div class="sub">${r.sub}</div></div>${tag(r.status)}</div>
+        <div class="track" style="--n:${r.steps.length}">${r.steps.map((s, i) => `<div class="step ${i<r.cur?'done':i===r.cur?'cur':''}"><span class="bar"><i></i></span><b>${s[0]}</b><small>${s[1]||'&nbsp;'}</small></div>`).join('')}</div>
+        <div class="eta"><i data-lucide="clock-3"></i>${r.eta}</div>
+      </div>`).join('');
+    document.getElementById('cat').innerHTML = CAT.map(c => `<button class="item" data-id="${c.id}" style="--c:${c.c}"><span class="ic"><i data-lucide="${c.ic}"></i></span><span><b>${c.nm}</b><small>${c.sub}</small></span></button>`).join('');
+    document.getElementById('docs').innerHTML = DOCS.map(d => `
+      <div class="doc" data-id="${d.id}"><span class="ic"><i data-lucide="file-badge"></i></span>
+        <div><div class="nm">${d.nm}</div><div class="sub">${d.sub}</div></div>
+        <span class="when">${d.fresh?tag('ready'):d.when}</span>
+        <button class="dl" data-dl="${d.id}"><i data-lucide="download"></i>PDF</button></div>`).join('');
+    document.querySelectorAll('.req').forEach(el => el.onclick = () => openReq(el.dataset.id));
+    document.querySelectorAll('.item').forEach(el => el.onclick = () => openForm(el.dataset.id));
+    document.querySelectorAll('.doc').forEach(el => el.onclick = e => { if (e.target.closest('[data-dl]')) { e.stopPropagation(); toast('Скачивание началось'); return; } openDoc(el.dataset.id); });
+    lucide.createIcons();
+  }
+
+  // ---------------- modal ----------------
+  const modal = document.getElementById('modal'), scrim = document.getElementById('scrim'), mBody = document.getElementById('mBody');
+  const show = (wide=false) => { modal.classList.toggle('wide', wide); modal.classList.add('open'); scrim.classList.add('open'); lucide.createIcons(); };
+  const close = () => { modal.classList.remove('open'); scrim.classList.remove('open'); };
+  scrim.onclick = close; document.getElementById('mClose').onclick = close;
+  addEventListener('keydown', e => { if (e.key === 'Escape') close(); });
+
+  function openReq(id){
+    const r = REQS.find(x => x.id === id);
+    mBody.innerHTML = `<div class="m-kind">Заявка ${r.id}</div><div class="m-title">${r.title}</div>
+      <div style="margin-top:10px;display:flex;gap:8px;align-items:center">${tag(r.status)}<span style="font-size:14px;color:var(--text-3)">${r.eta}</span></div>
+      <div class="tl">${r.log.map(([s, t, w, at]) => `<div class="ev ${s}"><span class="dt"><i data-lucide="${s==='done'?'check':s==='cur'?'loader-circle':'circle'}"></i></span><div><b>${t}</b><small>${w}</small></div><span class="t">${at}</span></div>`).join('')}</div>
+      ${r.msg?`<div class="msg"><span class="av">ИС</span><div><b style="color:var(--text);font-weight:500">Смирнова И. А.</b><br>${r.msg}</div></div>`:''}
+      <div class="m-foot"><button class="ghost" style="background:transparent;color:var(--text-3)">Отозвать заявку</button><button class="ghost"><i data-lucide="message-circle"></i>Ответить</button></div>`;
+    show();
+  }
+
+  function openForm(id){
+    const c = CAT.find(x => x.id === id), cert = c.kind === 'cert';
+    const st = {purpose:'По месту требования', lang:id==='visa'?'Английский':'Русский', format:'Электронная с QR', copies:1};
+    const purposes = id==='visa' ? ['Посольство','Консульство','Визовый центр'] : ['По месту требования','Работодатель','Банк','Соцзащита'];
+    const draw = () => {
+      mBody.innerHTML = `<div class="m-kind">${cert?'Справка':'Заявление'}</div><div class="m-title">${c.nm}</div>
+        ${cert ? `
+        <div class="fld"><label>Куда</label><div class="opts" data-k="purpose">${purposes.map(p => `<button class="opt ${st.purpose===p?'on':''}">${p}</button>`).join('')}</div></div>
+        <div class="fld"><label>Язык</label><div class="opts" data-k="lang">${['Русский','Английский'].map(p => `<button class="opt ${st.lang===p?'on':''}">${p}</button>`).join('')}</div></div>
+        <div class="fld"><label>Формат</label><div class="opts" data-k="format">${['Электронная с QR','Бумажная'].map(p => `<button class="opt ${st.format===p?'on':''}">${p}</button>`).join('')}</div></div>
+        ${st.format==='Бумажная'?`<div class="fld"><label>Экземпляров</label><div class="stepper"><button data-d="-1" aria-label="Меньше"><i data-lucide="minus"></i></button><b>${st.copies}</b><button data-d="1" aria-label="Больше"><i data-lucide="plus"></i></button></div></div>`:''}
+        ` : `
+        <div class="fld"><label>Дисциплина</label><div class="opts" data-k="purpose">${['Микроэкономика','Эконометрика','Международное право'].map(p => `<button class="opt ${st.purpose===p?'on':''}">${p}</button>`).join('')}</div></div>
+        <div class="fld"><label>Комментарий</label><textarea placeholder="Причина"></textarea></div>
+        <div class="fld"><label>Файлы</label><button class="ghost"><i data-lucide="paperclip"></i>Прикрепить</button></div>
+        `}
+        <div class="m-foot"><div class="sum"><b>${c.sub.split(' · ').pop()}</b>${cert?(st.format==='Бумажная'?'Получение в окне 3':'Придёт сюда и на почту'):'Решение придёт уведомлением'}</div><button class="cta" id="send">Отправить</button></div>`;
+      mBody.querySelectorAll('.opts').forEach(g => g.querySelectorAll('.opt').forEach(b => b.onclick = () => { st[g.dataset.k] = b.textContent; draw(); }));
+      mBody.querySelectorAll('.stepper button').forEach(b => b.onclick = () => { st.copies = Math.min(5, Math.max(1, st.copies + +b.dataset.d)); draw(); });
+      document.getElementById('send').onclick = () => {
+        const nid = 'R-' + (2482 + REQS.length);
+        REQS.unshift({id:nid, cat:c.id, title:c.nm, sub:cert?`${st.lang} · ${st.format.toLowerCase()}`:st.purpose, status:'sent',
+          steps:cert?[['Подана','сейчас'],['Принята',''],['Готовится',''],['Готова','']]:[['Подано','сейчас'],['Проверка',''],['Решение','']], cur:0, eta:'Ответ сегодня',
+          log:[['done','Заявка подана','Вы','сейчас'],['todo','Принята в работу','','']]});
+        mBody.innerHTML = `<div class="done"><span class="ck"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span><h3>Заявка отправлена</h3><p>${c.nm} · ${nid}</p><div class="row"><button class="ghost" id="ok">Готово</button></div></div>`;
+        document.getElementById('ok').onclick = close; render();
+      };
+      lucide.createIcons();
+    };
+    draw(); show();
+  }
+
+  function qr(seed){
+    const N = 25, cell = 4; let s = seed, r = () => (s = (s * 9301 + 49297) % 233280) / 233280; let rects = '';
+    const finder = (x, y) => `<rect x="${x*cell}" y="${y*cell}" width="${7*cell}" height="${7*cell}" fill="#1b1b1d"/><rect x="${(x+1)*cell}" y="${(y+1)*cell}" width="${5*cell}" height="${5*cell}" fill="#fff"/><rect x="${(x+2)*cell}" y="${(y+2)*cell}" width="${3*cell}" height="${3*cell}" fill="#1b1b1d"/>`;
+    for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) {
+      const inF = (x<8&&y<8)||(x>N-9&&y<8)||(x<8&&y>N-9); if (inF) continue;
+      if (r() > .52) rects += `<rect x="${x*cell}" y="${y*cell}" width="${cell}" height="${cell}"/>`;
+    }
+    return `<svg viewBox="0 0 ${N*cell} ${N*cell}" width="64" height="64" style="background:#fff"><g fill="#1b1b1d">${rects}</g>${finder(0,0)}${finder(N-7,0)}${finder(0,N-7)}</svg>`;
+  }
+  function openDoc(id){
+    const d = DOCS.find(x => x.id === id);
+    mBody.innerHTML = `<div class="m-kind">Документ ${d.id}</div><div class="m-title">${d.nm}</div>
+      <div class="docview">
+        <div class="paper">
+          <div class="ph"><svg width="14" height="14" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9.5" fill="none" stroke="#1b1b1d" stroke-width="2"/><circle cx="18.7" cy="5.3" r="2.6" fill="#1b1b1d"/></svg>Университет Будущего</div>
+          <h4>СПРАВКА</h4><div class="no">№ ${d.id} от 18.11.2026</div>
+          <p>Дана Воронцовой Алисе Сергеевне, 2006 г. р., в том, что она действительно является студенткой 2 курса очной формы обучения факультета международного бизнеса Университета Будущего по программе бакалавриата «Международный бизнес».</p>
+          <p>Срок обучения: 01.09.2025 — 30.06.2029.</p>
+          <p>Справка выдана для предоставления по месту требования.</p>
+          <div class="bt"><div class="sig"><b>Подписано электронной подписью</b>Смирнова И. А., учебный офис<br>18.11.2026 16:41</div>${qr(id.length*7919)}</div>
+        </div>
+        <div class="side">
+          <b>${d.nm}</b><small>${d.sub}</small>
+          <button class="ghost"><i data-lucide="download"></i>Скачать PDF</button>
+          <button class="ghost"><i data-lucide="share"></i>Отправить</button>
+          <button class="ghost"><i data-lucide="link"></i>Ссылка для проверки</button>
+          <div class="verify"><i data-lucide="shield-check"></i>Подлинность подтверждена</div>
+        </div>
+      </div>`;
+    show(true);
+    mBody.querySelectorAll('.side .ghost').forEach((b, i) => b.onclick = () => toast(['Скачивание началось','Ссылка скопирована','Ссылка скопирована'][i]));
+  }
+
+  document.getElementById('newBtn').onclick = () => document.getElementById('cat').scrollIntoView({behavior:'smooth', block:'center'});
+
+  // ---------------- misc ----------------
+  function toast(txt){ const t = document.getElementById('toast'); document.getElementById('toastTxt').textContent = txt; t.classList.add('show'); clearTimeout(toast.h); toast.h = setTimeout(() => t.classList.remove('show'), 2200); }
+  const slide = (ind, el) => { ind.style.left = el.offsetLeft + 'px'; ind.style.width = el.offsetWidth + 'px'; };
+  const init = () => slide(document.getElementById('ind'), document.querySelector('.tab.on'));
+  init(); document.fonts && document.fonts.ready.then(init);
+  const hdr = document.getElementById('hdr');
+  addEventListener('scroll', () => hdr.classList.toggle('scrolled', scrollY > 4), { passive: true });
+  render();
+</script>
+</body>
+</html>

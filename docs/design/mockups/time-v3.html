@@ -1,0 +1,516 @@
+<!doctype html>
+<html lang="ru" class="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Орбита — Время (макет v3)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/lucide@0.460.0/dist/umd/lucide.min.js"></script>
+<style>
+  :root{
+    --bg:#131315; --s1:#1B1B1E; --s2:#212124; --s3:#2A2A2E; --hover:rgba(255,255,255,.04);
+    --line:rgba(255,255,255,.07); --line-2:rgba(255,255,255,.045);
+    --text:#EDEDEF; --text-2:#9A9AA2; --text-3:#7E7E87;
+    --accent:#8B8EFF; --urgent:#F2A35E; --green:#5BD891;
+    --c-micro:#E0A75E; --c-econ:#8F8DF7; --c-world:#E58091; --c-eng:#52BBAA; --c-law:#6AA9F2; --c-hist:#C69CF0;
+    --sans:"Onest",system-ui,sans-serif;
+    --ease:cubic-bezier(.22,1,.36,1); --spring:cubic-bezier(.34,1.35,.5,1);
+    --hour:58px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{background:var(--bg);color-scheme:dark}
+  body{font-family:var(--sans);background:var(--bg);color:var(--text);-webkit-font-smoothing:antialiased;font-size:15px;line-height:1.45;font-variant-numeric:tabular-nums}
+  ::selection{background:color-mix(in srgb,var(--accent) 35%,transparent)}
+  :focus-visible{outline:2px solid var(--accent);outline-offset:3px;border-radius:10px}
+  button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
+  a{color:inherit;text-decoration:none}
+  svg.lucide{width:16px;height:16px;stroke-width:1.6;flex-shrink:0}
+
+  /* ---------- Header (F) ---------- */
+  header{position:sticky;top:0;z-index:30;height:72px;display:grid;grid-template-columns:1fr auto 1fr;align-items:center;padding:0 28px;transition:background .25s,box-shadow .25s}
+  header.scrolled{background:color-mix(in srgb,var(--bg) 80%,transparent);backdrop-filter:blur(20px) saturate(1.5);-webkit-backdrop-filter:blur(20px) saturate(1.5);box-shadow:0 .5px 0 var(--line)}
+  .logo{display:flex;align-items:center;gap:9px;width:max-content}
+  .logo span{font-weight:600;font-size:17px;letter-spacing:-.035em}
+  .right{display:flex;justify-content:flex-end;align-items:center;gap:6px}
+  .ib{position:relative;width:36px;height:36px;display:grid;place-items:center;border-radius:50%;color:var(--text-2)}
+  .ib:hover{background:var(--hover);color:var(--text)}
+  .ib .badge{position:absolute;top:8px;right:9px;width:7px;height:7px;border-radius:50%;background:var(--accent);box-shadow:0 0 0 2px var(--bg)}
+  .me{width:32px;height:32px;margin-left:4px;border-radius:50%;background:linear-gradient(140deg,#D6C3AE,#8F7A68);color:#2a211a;display:grid;place-items:center;font-size:12px;font-weight:600}
+  .dock{position:relative;display:flex;align-items:center;height:48px;padding:5px;border-radius:999px;background:rgba(34,34,38,.7);backdrop-filter:blur(28px) saturate(1.7);-webkit-backdrop-filter:blur(28px) saturate(1.7);box-shadow:0 0 0 .5px rgba(255,255,255,.09),inset 0 .5px 0 rgba(255,255,255,.08),0 12px 32px -14px rgba(0,0,0,.7)}
+  .dock .ind{position:absolute;top:5px;bottom:5px;left:0;width:0;border-radius:999px;background:rgba(255,255,255,.09)}
+  .tab{position:relative;z-index:1;display:flex;align-items:center;gap:7px;height:38px;padding:0 16px;border-radius:999px;font-size:13.5px;font-weight:500;color:var(--text-3)}
+  .tab:hover{color:var(--text-2)} .tab.on{color:var(--text)}
+  .tab svg.lucide{width:15px;height:15px}
+  .orbslot{position:relative;z-index:1;width:68px;height:38px;display:grid;place-items:center}
+  .orbslot .ring{position:absolute;width:56px;height:56px;border-radius:50%;background:var(--bg);box-shadow:0 0 0 .5px rgba(255,255,255,.1),0 8px 24px -8px rgba(0,0,0,.8);display:grid;place-items:center;top:50%;left:50%;transform:translate(-50%,-50%)}
+  .orb{position:relative;width:44px;height:44px;border-radius:50%;overflow:hidden;isolation:isolate;background:#2B2D7A;box-shadow:inset 0 0 0 .5px rgba(255,255,255,.25),inset 0 -4px 8px rgba(0,0,0,.35)}
+  .orb i{position:absolute;border-radius:50%;filter:blur(7px);mix-blend-mode:screen}
+  .orb i:nth-child(1){width:70%;height:70%;left:-5%;top:0;background:#7C7FFF;animation:o1 7s ease-in-out infinite}
+  .orb i:nth-child(2){width:60%;height:60%;right:-10%;top:15%;background:#58B4FF;animation:o2 9s ease-in-out infinite}
+  .orb i:nth-child(3){width:55%;height:55%;left:20%;bottom:-15%;background:#D58BFF;animation:o3 8s ease-in-out infinite}
+  .orb::after{content:"";position:absolute;left:18%;top:10%;width:40%;height:28%;border-radius:50%;background:rgba(255,255,255,.55);filter:blur(4px)}
+  @keyframes o1{50%{transform:translate(35%,25%) scale(1.15)}} @keyframes o2{50%{transform:translate(-40%,20%) scale(.9)}} @keyframes o3{50%{transform:translate(10%,-45%) scale(1.2)}}
+
+  /* ---------- Page ---------- */
+  .page{max-width:1180px;margin:0 auto;padding:44px 40px 80px}
+  .head{display:flex;align-items:flex-end;justify-content:space-between;gap:24px}
+  .head h1{font-size:34px;font-weight:500;letter-spacing:-.03em;line-height:1.15}
+  .seg{position:relative;display:flex;padding:4px;border-radius:14px;background:var(--s1)}
+  .seg .si{position:absolute;top:4px;bottom:4px;left:0;width:0;border-radius:10px;background:var(--s3);box-shadow:0 1px 2px rgba(0,0,0,.3);transition:left .45s var(--spring),width .45s var(--spring)}
+  .seg button{position:relative;z-index:1;height:36px;padding:0 16px;border-radius:10px;font-size:14px;font-weight:500;color:var(--text-3);transition:color .2s}
+  .seg button:hover{color:var(--text-2)} .seg button.on{color:var(--text)}
+  .view{display:none;margin-top:32px;animation:fade .35s var(--ease)} .view.on{display:block}
+  @keyframes fade{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+  .icon{width:36px;height:36px;border-radius:11px;display:grid;place-items:center;color:var(--text-2);transition:background .15s,color .15s}
+  .icon:hover{background:var(--s1);color:var(--text)}
+
+  /* ---------- Week strip ---------- */
+  .wk-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+  .wk-nav{display:flex;align-items:center;gap:4px}
+  .wk-nav b{font-size:17px;font-weight:600;letter-spacing:-.02em;min-width:150px;text-align:center}
+  .wk-tools{display:flex;align-items:center;gap:6px}
+  .sub{position:relative;display:flex;padding:3px;border-radius:11px;background:var(--s1)}
+  .sub .si2{position:absolute;top:3px;bottom:3px;left:0;width:0;border-radius:8px;background:var(--s3);transition:left .45s var(--spring),width .45s var(--spring)}
+  .sub button{position:relative;z-index:1;width:34px;height:30px;border-radius:8px;color:var(--text-3);display:grid;place-items:center}
+  .sub button.on{color:var(--text)} .sub button svg.lucide{width:16px;height:16px}
+  .week{display:grid;grid-template-columns:repeat(6,1fr);gap:4px;padding:4px;border-radius:20px;background:var(--s1)}
+  .wd{position:relative;padding:10px 0 14px;border-radius:16px;display:flex;flex-direction:column;align-items:center;gap:2px;transition:background .2s,color .2s;color:var(--text-2)}
+  .wd:hover{background:var(--hover)}
+  .wd small{font-size:12.5px;font-weight:500;color:var(--text-3)}
+  .wd b{font-size:20px;font-weight:500;letter-spacing:-.02em;line-height:1.2}
+  .wd.past b{color:var(--text-3)}
+  .wd.on{background:var(--s3);color:var(--text);box-shadow:0 1px 3px rgba(0,0,0,.25)}
+  .wd.today b{color:var(--accent)}
+  .wd .n{position:absolute;bottom:5px;display:flex;gap:3px}
+  .wd .n i{width:4px;height:4px;border-radius:50%;background:var(--text-3)}
+  .wd.on .n i{background:var(--text-2)}
+
+  /* ---------- Day (bell grid) ---------- */
+  .days{margin-top:30px}
+  .day{margin-bottom:36px}
+  .day-h{display:flex;align-items:baseline;gap:10px;margin-bottom:6px}
+  .day-h b{font-size:20px;font-weight:600;letter-spacing:-.02em}
+  .day-h span{font-size:15px;color:var(--text-3)}
+  .slot{display:grid;grid-template-columns:44px 96px minmax(0,1fr) auto;gap:14px;align-items:center;padding:14px 16px;margin:0 -16px;border-radius:18px;cursor:pointer;transition:background .15s}
+  .slot:hover{background:var(--hover)}
+  .slot + .slot{box-shadow:0 -.5px 0 var(--line)}
+  .slot:hover,.slot:hover + .slot,.slot.live,.slot.live + .slot{box-shadow:none}
+  .slot .no{font-size:24px;font-weight:500;letter-spacing:-.03em;color:var(--text-3);text-align:center}
+  .slot .tm{font-size:14px;color:var(--text-2);line-height:1.3}
+  .slot .tm small{display:block;color:var(--text-3)}
+  .slot .nm{font-size:16px;font-weight:600;letter-spacing:-.015em;display:flex;align-items:center;gap:9px}
+  .slot .nm i.cd{width:8px;height:8px;border-radius:50%;background:var(--cc);flex-shrink:0}
+  .slot .nm svg.lucide{width:15px;height:15px;color:var(--cc)}
+  .slot .meta{font-size:14px;color:var(--text-3);margin-top:2px;padding-left:17px}
+  .slot .meta s{color:var(--text-3)} .slot .meta .chg{color:var(--urgent);font-weight:500}
+  .slot .st{font-size:13.5px;color:var(--text-3);text-align:right;white-space:nowrap}
+  .slot .st.live{color:var(--text)} .slot .st.mine{color:var(--green)} .slot .st.hot{color:var(--urgent)}
+  .slot.past .nm,.slot.past .meta,.slot.past .no,.slot.past .tm{opacity:.5}
+  .slot.live{background:var(--s1)}
+  .slot.live .no{color:var(--text)}
+  .slot .pg{grid-column:3 / -1;height:3px;border-radius:3px;background:var(--s3);overflow:hidden;margin-top:2px}
+  .slot .pg i{display:block;height:100%;background:var(--text);border-radius:3px}
+  .slot.empty{cursor:default;padding-top:10px;padding-bottom:10px}
+  .slot.empty:hover{background:none}
+  .slot.empty .nm{font-size:14px;font-weight:400;color:var(--text-3)}
+  .slot.sc .nm{color:color-mix(in srgb,var(--accent) 40%,var(--text))}
+  .free{padding:18px 0;color:var(--text-3)}
+
+  /* ---------- Week grid ---------- */
+  .cal{border-radius:24px;background:var(--s1);overflow:hidden;margin-top:16px}
+  .grid{position:relative;display:grid;grid-template-columns:56px repeat(6,1fr);height:calc(var(--hour) * 11)}
+  .hours span{position:absolute;right:10px;transform:translateY(-50%);font-size:11.5px;color:var(--text-3)}
+  .hours{position:relative}
+  .col{position:relative;border-left:.5px solid var(--line-2)}
+  .col.today{background:color-mix(in srgb,var(--accent) 3%,transparent)}
+  .hline{position:absolute;left:56px;right:0;height:.5px;background:var(--line-2)}
+  .ev{position:absolute;left:4px;right:4px;border-radius:10px;padding:7px 9px;overflow:hidden;cursor:pointer;background:color-mix(in srgb,var(--cc) 16%,var(--s1))}
+  .ev:hover{background:color-mix(in srgb,var(--cc) 24%,var(--s1))}
+  .ev .t{font-size:13px;font-weight:600;line-height:1.25;color:color-mix(in srgb,var(--cc) 40%,var(--text))}
+  .ev .s{font-size:12px;color:var(--text-2);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .ev.past{opacity:.45}
+  .now{position:absolute;height:2px;background:var(--accent);z-index:3}
+  .now::before{content:"";position:absolute;left:-4px;top:-3px;width:8px;height:8px;border-radius:50%;background:var(--accent)}
+
+  /* ---------- Consultations ---------- */
+  .chips{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:26px}
+  .chip{height:34px;padding:0 14px;border-radius:999px;background:var(--s1);font-size:14px;font-weight:500;color:var(--text-2);display:inline-flex;align-items:center;gap:8px;transition:background .15s,color .15s}
+  .chip i{width:8px;height:8px;border-radius:50%;background:var(--cc)}
+  .chip:hover{color:var(--text)}
+  .chip.on{background:var(--text);color:var(--bg)}
+  .cday{margin-bottom:30px}
+  .cday h3{font-size:18px;font-weight:600;letter-spacing:-.02em;margin-bottom:8px}
+  .cday h3 span{font-weight:400;color:var(--text-3);font-size:15px;margin-left:6px}
+  .cons{display:grid;grid-template-columns:96px minmax(0,1fr) auto auto;gap:18px;align-items:center;padding:14px 16px;margin:0 -16px;border-radius:18px;cursor:pointer;transition:background .15s}
+  .cons:hover{background:var(--hover)}
+  .cons + .cons{box-shadow:0 -.5px 0 var(--line)}
+  .cons:hover,.cons:hover + .cons{box-shadow:none}
+  .cons .tm b{display:block;font-size:17px;font-weight:600;letter-spacing:-.02em}
+  .cons .tm small{font-size:13.5px;color:var(--text-3)}
+  .who{display:flex;align-items:center;gap:12px;min-width:0}
+  .av{width:40px;height:40px;border-radius:50%;flex-shrink:0;display:grid;place-items:center;font-size:13px;font-weight:600;color:#1d1d20}
+  .who b{display:block;font-weight:600;font-size:15.5px}
+  .who small{display:flex;align-items:center;gap:6px;font-size:14px;color:var(--text-3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .who small svg.lucide{width:14px;height:14px}
+  .who small i.cd{width:7px;height:7px;border-radius:50%;background:var(--cc)}
+  .ppl{display:flex;align-items:center;gap:10px;font-size:13.5px;color:var(--text-3);white-space:nowrap}
+  .stack{display:flex}
+  .stack span{width:24px;height:24px;border-radius:50%;margin-left:-7px;box-shadow:0 0 0 2px var(--bg)}
+  .stack span:first-child{margin-left:0}
+  .cta{height:38px;padding:0 16px;border-radius:12px;background:var(--s2);font-weight:600;font-size:14px;white-space:nowrap;display:inline-flex;align-items:center;gap:6px;transition:background .15s,transform .15s var(--ease)}
+  .cta:hover{background:var(--s3)}
+  .cta:active{transform:scale(.97)}
+  .cta.going{background:color-mix(in srgb,var(--green) 14%,transparent);color:var(--green)}
+  .cta.full{color:var(--text-3);pointer-events:none;background:transparent;box-shadow:inset 0 0 0 1px var(--line)}
+  .cta svg.lucide{width:15px;height:15px}
+  .cta.white{background:var(--text);color:var(--bg);height:46px;padding:0 22px;border-radius:14px;font-size:15px}
+
+  /* ---------- Modal ---------- */
+  .scrim{position:fixed;inset:0;z-index:40;background:rgba(10,10,12,.45);backdrop-filter:blur(10px) saturate(1.2);-webkit-backdrop-filter:blur(10px) saturate(1.2);opacity:0;pointer-events:none;transition:opacity .3s var(--ease)}
+  .scrim.open{opacity:1;pointer-events:auto}
+  .modal{position:fixed;z-index:41;left:50%;top:50%;width:min(480px,calc(100vw - 32px));max-height:min(740px,calc(100vh - 48px));border-radius:28px;background:var(--s2);box-shadow:0 0 0 .5px var(--line),0 40px 100px -24px rgba(0,0,0,.85);display:flex;flex-direction:column;overflow:hidden;opacity:0;transform:translate(-50%,-48%) scale(.96);pointer-events:none;transition:opacity .22s var(--ease),transform .45s var(--spring)}
+  .modal.open{opacity:1;transform:translate(-50%,-50%) scale(1);pointer-events:auto}
+  .m-cover{position:relative;height:112px;flex-shrink:0;background:color-mix(in srgb,var(--cc) 18%,var(--s2))}
+  .m-cover::before{content:"";position:absolute;inset:0;background-image:radial-gradient(circle,color-mix(in srgb,var(--cc) 75%,transparent) 1.1px,transparent 1.6px);background-size:11px 11px;-webkit-mask-image:radial-gradient(85% 120% at 100% 0%,#000 0%,transparent 70%);mask-image:radial-gradient(85% 120% at 100% 0%,#000 0%,transparent 70%)}
+  .m-close{position:absolute;z-index:2;top:14px;right:14px;width:32px;height:32px;border-radius:50%;display:grid;place-items:center;background:rgba(0,0,0,.25);color:var(--text)}
+  .m-body{padding:20px 24px 24px;overflow:auto;flex:1}
+  .m-kind{font-size:14px;color:var(--text-2)}
+  .m-title{font-size:26px;font-weight:600;letter-spacing:-.03em;line-height:1.15;margin-top:4px}
+  .m-time{font-size:15px;color:var(--text-2);margin-top:6px}
+  .alert{display:flex;gap:10px;align-items:center;margin-top:16px;padding:12px 14px;border-radius:14px;background:color-mix(in srgb,var(--urgent) 12%,transparent);color:var(--urgent);font-size:14px;font-weight:500}
+  .rows{margin-top:16px}
+  .r{display:flex;align-items:center;gap:14px;padding:12px 0;border-top:.5px solid var(--line)}
+  .r:first-child{border-top:none}
+  .r .ic{width:36px;height:36px;border-radius:11px;background:var(--s3);display:grid;place-items:center;color:var(--text-2);flex-shrink:0}
+  .r .ic.av{border-radius:50%;color:#1d1d20;font-size:12px;font-weight:600}
+  .r .m{flex:1;min-width:0}
+  .r .m b{display:block;font-weight:500}
+  .r .m small{font-size:13px;color:var(--text-3)}
+  .r .act{height:32px;padding:0 12px;border-radius:9px;background:var(--s3);font-size:13px;font-weight:500;display:inline-flex;align-items:center;gap:6px}
+  .r .act:disabled{opacity:.45;cursor:default}
+  .r .act svg.lucide{width:14px;height:14px}
+  .r.link{cursor:pointer} .r .chev{color:var(--text-3)}
+  textarea{width:100%;min-height:84px;margin-top:6px;padding:12px 14px;border-radius:14px;border:none;outline:none;resize:none;background:var(--s1);color:var(--text);font:inherit;font-size:15px}
+  textarea::placeholder{color:var(--text-3)}
+  textarea:focus{box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--accent) 60%,transparent),0 0 0 4px color-mix(in srgb,var(--accent) 14%,transparent)}
+  .lbl{font-size:14px;color:var(--text-2);margin-top:18px}
+  .m-foot{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-top:20px}
+  .m-foot .link2{font-size:14px;color:var(--text-3)}
+  .m-foot .link2:hover{color:var(--text)}
+  .opt{display:flex;align-items:center;justify-content:space-between;padding:13px 0;border-top:.5px solid var(--line);font-size:15px}
+  .opt:first-of-type{border-top:none}
+  .tg{width:44px;height:26px;border-radius:999px;background:var(--s3);position:relative;transition:background .2s}
+  .tg::after{content:"";position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:#fff;transition:transform .3s var(--spring)}
+  .tg.on{background:var(--green)} .tg.on::after{transform:translateX(18px)}
+  .sync{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:18px}
+  .sync button{height:48px;border-radius:14px;background:var(--s1);font-weight:500;display:flex;align-items:center;justify-content:center;gap:9px;transition:background .15s}
+  .sync button:hover{background:var(--s3)}
+  .ical{display:flex;align-items:center;gap:8px;margin-top:8px;height:48px;padding:0 6px 0 14px;border-radius:14px;background:var(--s1)}
+  .ical code{flex:1;font:13px ui-monospace,SFMono-Regular,Menlo,monospace;color:var(--text-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .ical button{height:36px;padding:0 12px;border-radius:10px;background:var(--s3);font-size:13.5px;font-weight:500}
+  .sel{height:34px;padding:0 10px;border-radius:10px;background:var(--s3);color:var(--text);font:inherit;font-size:14px;border:none}
+  .toast{position:fixed;left:50%;bottom:28px;z-index:50;transform:translate(-50%,20px);opacity:0;padding:12px 18px;border-radius:14px;background:var(--text);color:var(--bg);font-weight:500;font-size:14px;display:flex;gap:8px;align-items:center;transition:opacity .25s var(--ease),transform .4s var(--spring);pointer-events:none}
+  .toast.show{opacity:1;transform:translate(-50%,0)}
+  footer{text-align:center;font-size:12px;color:var(--text-3);padding:0 0 28px}
+</style>
+</head>
+<body>
+
+<header id="hdr">
+  <a class="logo" href="today-desktop-v4.html" aria-label="Орбита — на главную">
+    <svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><defs><mask id="gap"><rect width="24" height="24" fill="#fff"/><circle cx="18.72" cy="5.28" r="4.2" fill="#000"/></mask></defs><circle cx="12" cy="12" r="9.5" fill="none" stroke="currentColor" stroke-width="1.7" mask="url(#gap)"/><circle cx="18.72" cy="5.28" r="2.3" fill="currentColor"/></svg>
+    <span>орбита</span>
+  </a>
+  <nav class="dock" id="dock" aria-label="Основная навигация">
+    <span class="ind" id="ind"></span>
+    <a href="today-desktop-v4.html" class="tab"><i data-lucide="sun"></i>Сегодня</a>
+    <a href="study-v1.html" class="tab"><i data-lucide="graduation-cap"></i>Учёба</a>
+    <button class="orbslot" aria-label="Спросить Орбиту (Ctrl K)"><span class="ring"><span class="orb"><i></i><i></i><i></i></span></span></button>
+    <a href="#" class="tab on"><i data-lucide="calendar-range"></i>Время</a>
+    <a href="#" class="tab"><i data-lucide="stamp"></i>Офис</a>
+  </nav>
+  <div class="right">
+    <button class="ib" aria-label="Уведомления"><i data-lucide="bell"></i><span class="badge"></span></button>
+    <button class="me" aria-label="Профиль">АВ</button>
+  </div>
+</header>
+
+<main class="page">
+  <div class="head">
+    <h1>Время</h1>
+    <div class="seg" id="seg" role="tablist">
+      <span class="si" id="si"></span>
+      <button class="on" data-v="sched" role="tab">Расписание</button>
+      <button data-v="cons" role="tab">Консультации</button>
+    </div>
+  </div>
+
+  <!-- ================= Расписание ================= -->
+  <div class="view on" id="v-sched">
+    <div class="wk-top">
+      <div class="wk-nav">
+        <button class="icon" id="prev" aria-label="Предыдущая неделя"><i data-lucide="chevron-left"></i></button>
+        <b id="wkTitle"></b>
+        <button class="icon" id="next" aria-label="Следующая неделя"><i data-lucide="chevron-right"></i></button>
+      </div>
+      <div class="wk-tools">
+        <div class="sub" id="sub">
+          <span class="si2" id="si2"></span>
+          <button class="on" data-m="list" aria-label="Список" title="Список"><i data-lucide="rows-3"></i></button>
+          <button data-m="grid" aria-label="Неделя" title="Неделя"><i data-lucide="calendar-days"></i></button>
+        </div>
+        <button class="icon" id="syncBtn" aria-label="Синхронизация календаря" title="Синхронизация календаря"><i data-lucide="rss"></i></button>
+      </div>
+    </div>
+    <div class="week" id="week"></div>
+    <div id="m-list" class="days"></div>
+    <div id="m-grid" style="display:none"><div class="cal"><div class="grid" id="grid"></div></div></div>
+  </div>
+
+  <!-- ================= Консультации ================= -->
+  <div class="view" id="v-cons">
+    <div class="chips" id="chips"></div>
+    <div id="consList"></div>
+  </div>
+</main>
+
+<div class="scrim" id="scrim"></div>
+<div class="modal" id="modal" role="dialog" aria-modal="true">
+  <button class="m-close" id="mClose" aria-label="Закрыть"><i data-lucide="x"></i></button>
+  <div class="m-cover"></div>
+  <div class="m-body" id="mBody"></div>
+</div>
+<div class="toast" id="toast"><i data-lucide="circle-check"></i><span id="toastTxt"></span></div>
+
+<footer>Концепт для конкурса MGIMO×AI Challenge. Не официальный сервис, все данные вымышлены.</footer>
+
+<script>
+  // ---------------- data ----------------
+  const BELLS = [null,['08:00','09:20'],['09:30','10:50'],['11:10','12:30'],['13:00','14:20'],['14:40','16:00'],['16:20','17:40'],['18:10','19:30'],['19:40','21:00']];
+  const T = {
+    micro:{nm:'Микроэкономика', c:'var(--c-micro)', who:'Петрова Е. А.', av:'ЕП', g:'#E7CDB4,#A88A70'},
+    econ:{nm:'Эконометрика', c:'var(--c-econ)', who:'Соколов Д. В.', av:'ДС', g:'#C9D3E6,#7F8BA6'},
+    world:{nm:'Мировая экономика', c:'var(--c-world)', who:'Ким А. С.', av:'АК', g:'#E6C9C9,#A67F86'},
+    eng:{nm:'Английский язык B2', c:'var(--c-eng)', who:'Morgan K.', av:'KM', g:'#C9E6DD,#7FA699'},
+    law:{nm:'Международное право', c:'var(--c-law)', who:'Орлова М. И.', av:'МО', g:'#C9D8E6,#7F95A6'},
+    hist:{nm:'История дипломатии', c:'var(--c-hist)', who:'Белов Г. Н.', av:'ГБ', g:'#D9C2E4,#9878A8'},
+  };
+  const K = {lecture:'Лекция', seminar:'Семинар', practice:'Практика', test:'Контрольная'};
+  // [pair, course, kind, room, extra]
+  const weeks = [
+    { start:16, label:'16 – 21 ноября', days:[
+      [[2,'econ','lecture','1201'],[3,'world','seminar','2302'],[5,'eng','practice','2214']],
+      [[2,'law','lecture','101'],[3,'micro','lecture','101'],[6,'hist','seminar','3315']],
+      [[3,'law','seminar','2410'],[5,'eng','practice','2214']],
+      [[2,'econ','lecture','1201'],[3,'micro','seminar','3108',{topic:'Олигополия'}],[5,'eng','practice','4105',{from:'2214'}],[6,'cons:econ']],
+      [[2,'micro','lecture','101'],[3,'world','seminar','2302']],
+      [[3,'eng','practice','4105']],
+    ]},
+    { start:23, label:'23 – 28 ноября', days:[
+      [[2,'econ','test','1201',{test:'Контрольная №2'}],[3,'world','seminar','2302'],[5,'eng','practice','4105'],[7,'cons:world']],
+      [[2,'law','lecture','101'],[3,'micro','lecture','101'],[6,'hist','seminar','3315']],
+      [[3,'law','seminar','2410'],[4,'cons:law'],[5,'eng','practice','4105']],
+      [[2,'econ','lecture','1201'],[3,'micro','seminar','3108']],
+      [[2,'micro','lecture','101'],[3,'world','seminar','2302']],
+      [],
+    ]},
+  ];
+  const DOW = ['Пн','Вт','Ср','Чт','Пт','Сб'], DOWL = ['понедельник','вторник','среда','четверг','пятница','суббота'];
+  const TODAY = {w:0, d:3}, NOW = 11*60+49;
+  const m = t => { const [h, mm] = t.split(':').map(Number); return h*60+mm; };
+  // consultations (group)
+  const CONS = {
+    econ: {id:'econ', k:'econ', day:'Чт', n:19, w:0, d:3, pair:6, place:'Каб. 518', online:false, cap:15, count:7, going:true, q:'Тест Уайта на гетероскедастичность', qs:5},
+    eng:  {id:'eng', k:'eng', day:'Пт', n:20, w:0, d:4, pair:5, place:'Ауд. 4105', online:false, cap:15, count:9, going:false, qs:3},
+    world:{id:'world', k:'world', day:'Пн', n:23, w:1, d:0, pair:7, place:'Ауд. 2302', online:false, cap:12, count:12, going:false, qs:8},
+    micro:{id:'micro', k:'micro', day:'Вт', n:24, w:1, d:1, pair:1, place:'Онлайн', online:true, cap:30, count:4, going:false, qs:2},
+    law:  {id:'law', k:'law', day:'Ср', n:25, w:1, d:2, pair:4, place:'Онлайн', online:true, cap:25, count:11, going:false, qs:6},
+  };
+  const relDay = (w, d) => w===TODAY.w ? (d===TODAY.d ? 'Сегодня' : d===TODAY.d+1 ? 'Завтра' : d===TODAY.d-1 ? 'Вчера' : null) : null;
+  const status = (w, d, s, e) => {
+    if (w < TODAY.w || (w===TODAY.w && d < TODAY.d)) return ['past','Прошла',''];
+    if (w===TODAY.w && d===TODAY.d) {
+      if (m(e) <= NOW) return ['past','Прошла',''];
+      if (m(s) <= NOW) return ['live',`Идёт · ещё ${m(e)-NOW} мин`,'live'];
+      const x = m(s)-NOW; return ['', x>=60?`Через ${Math.floor(x/60)} ч ${x%60} мин`:`Через ${x} мин`, x<=30?'hot':''];
+    }
+    return ['','',''];
+  };
+
+  // ---------------- schedule ----------------
+  let wi = 0, sel = TODAY.d, mode = 'list';
+  function renderWeek(){
+    const w = weeks[wi];
+    document.getElementById('wkTitle').textContent = w.label;
+    document.getElementById('week').innerHTML = w.days.map((evs, d) => {
+      const past = wi < TODAY.w || (wi===TODAY.w && d < TODAY.d), today = wi===TODAY.w && d===TODAY.d;
+      return `<button class="wd ${past?'past':''} ${today?'today':''} ${d===sel&&mode==='list'?'on':''}" data-d="${d}"><small>${DOW[d]}</small><b>${w.start+d}</b><span class="n">${evs.map(()=>'<i></i>').join('')}</span></button>`;
+    }).join('');
+    document.querySelectorAll('.wd').forEach(b => b.onclick = () => { sel = +b.dataset.d; if (mode!=='list') setMode('list'); renderWeek(); renderList(); });
+  }
+  function slotRow(w, d, ev){
+    const [p, key, kind, room, o={}] = ev, [s, e] = BELLS[p];
+    if (key.startsWith('cons:')) {
+      const c = CONS[key.slice(5)], t = T[c.k], [cls, txt] = status(w, d, s, e);
+      return `<div class="slot sc ${cls}" style="--cc:var(--accent)" data-cons="${c.id}">
+        <span class="no">${p}</span><span class="tm">${s}<small>${e}</small></span>
+        <div><div class="nm"><i class="cd"></i>Консультация · ${t.nm}</div><div class="meta">${c.place} · ${t.who} · ${c.count} из ${c.cap}</div></div>
+        <span class="st ${c.going?'mine':''}">${c.going?'Вы записаны':txt}</span></div>`;
+    }
+    const t = T[key], [cls, txt, stc] = status(w, d, s, e);
+    const name = kind==='test' ? `<i data-lucide="target"></i>${o.test}` : `<i class="cd"></i>${t.nm}`;
+    const meta = `${K[kind]}${o.topic?' · '+o.topic:''} · ${o.from?`<s>${o.from}</s> <span class="chg">→ ${room}</span>`:'ауд. '+room} · ${t.who}`;
+    const pg = cls==='live' ? `<span class="pg"><i style="width:${Math.round((NOW-m(s))/(m(e)-m(s))*100)}%"></i></span>` : '';
+    return `<div class="slot ${cls}" style="--cc:${t.c}" data-w="${w}" data-d="${d}" data-p="${p}">
+      <span class="no">${p}</span><span class="tm">${s}<small>${e}</small></span>
+      <div><div class="nm">${name}</div><div class="meta">${meta}</div></div>
+      <span class="st ${stc}">${txt}</span>${pg}</div>`;
+  }
+  function renderList(){
+    const w = weeks[wi]; let html = '';
+    for (let d = sel; d < Math.min(6, sel + 3); d++){
+      const evs = w.days[d].slice().sort((a,b) => a[0]-b[0]), rel = relDay(wi, d);
+      html += `<div class="day"><div class="day-h"><b>${rel || DOWL[d][0].toUpperCase()+DOWL[d].slice(1)}</b><span>${rel?DOWL[d]+', ':''}${w.start+d} ноября</span></div>`;
+      if (!evs.length) { html += '<div class="free">Пар нет</div></div>'; continue; }
+      const first = evs[0][0], last = evs[evs.length-1][0];
+      for (let p = first; p <= last; p++){
+        const ev = evs.find(x => x[0]===p);
+        html += ev ? slotRow(wi, d, ev) : `<div class="slot empty"><span class="no">${p}</span><span class="tm">${BELLS[p][0]}<small>${BELLS[p][1]}</small></span><div><div class="nm">Нет пары</div></div><span></span></div>`;
+      }
+      html += '</div>';
+    }
+    document.getElementById('m-list').innerHTML = html;
+    document.querySelectorAll('.slot[data-p]').forEach(el => el.onclick = () => openLesson(+el.dataset.w, +el.dataset.d, +el.dataset.p));
+    document.querySelectorAll('.slot[data-cons]').forEach(el => el.onclick = () => openCons(el.dataset.cons));
+    lucide.createIcons();
+  }
+  function renderGrid(){
+    const w = weeks[wi], hp = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--hour')), H0 = 8;
+    let html = '<div class="hours">' + Array.from({length:11}, (_,i) => i ? `<span style="top:${i*hp}px">${H0+i}:00</span>` : '').join('') + '</div>';
+    html += Array.from({length:10}, (_,i) => `<div class="hline" style="top:${(i+1)*hp}px"></div>`).join('');
+    w.days.forEach((evs, d) => {
+      html += `<div class="col ${wi===TODAY.w&&d===TODAY.d?'today':''}">` + evs.map(ev => {
+        const [p, key, kind, room] = ev, [s, e] = BELLS[p], top = (m(s)-H0*60)/60*hp, h = (m(e)-m(s))/60*hp;
+        const cons = key.startsWith('cons:'), t = cons ? T[CONS[key.slice(5)].k] : T[key], [cls] = status(wi, d, s, e);
+        return `<div class="ev ${cls==='past'?'past':''}" style="--cc:${cons?'var(--accent)':t.c};top:${top}px;height:${h-3}px" ${cons?`data-cons="${key.slice(5)}"`:`data-d="${d}" data-p="${p}"`}><div class="t">${cons?'Консультация':kind==='test'?'Контрольная №2':t.nm}</div><div class="s">${p} пара · ${cons?CONS[key.slice(5)].place:room}</div></div>`;
+      }).join('') + '</div>';
+    });
+    if (wi===TODAY.w) { const y = (NOW-H0*60)/60*hp; html += `<div class="now" style="top:${y}px;left:calc(56px + (100% - 56px) / 6 * ${TODAY.d});width:calc((100% - 56px) / 6)"></div>`; }
+    const g = document.getElementById('grid'); g.innerHTML = html;
+    g.querySelectorAll('.ev[data-p]').forEach(el => el.onclick = () => openLesson(wi, +el.dataset.d, +el.dataset.p));
+    g.querySelectorAll('.ev[data-cons]').forEach(el => el.onclick = () => openCons(el.dataset.cons));
+  }
+  function setMode(md){
+    mode = md; const sub = document.getElementById('sub');
+    sub.querySelectorAll('button').forEach(x => x.classList.toggle('on', x.dataset.m===md)); slide(document.getElementById('si2'), sub.querySelector('.on'));
+    document.getElementById('m-list').style.display = md==='list' ? '' : 'none';
+    document.getElementById('m-grid').style.display = md==='grid' ? '' : 'none';
+    renderWeek(); md==='list' ? renderList() : renderGrid();
+  }
+
+  // ---------------- modal ----------------
+  const modal = document.getElementById('modal'), scrim = document.getElementById('scrim'), mBody = document.getElementById('mBody');
+  function show(cc){ modal.style.setProperty('--cc', cc); modal.classList.add('open'); scrim.classList.add('open'); lucide.createIcons(); }
+  const close = () => { modal.classList.remove('open'); scrim.classList.remove('open'); };
+  scrim.onclick = close; document.getElementById('mClose').onclick = close;
+  addEventListener('keydown', e => { if (e.key==='Escape') close(); });
+  function openLesson(w, d, p){
+    const [, key, kind, room, o={}] = weeks[w].days[d].find(x => x[0]===p), t = T[key], [s, e] = BELLS[p];
+    mBody.innerHTML = `<div class="m-kind">${p} пара · ${K[kind]}${o.topic?' · '+o.topic:''}</div>
+      <div class="m-title">${kind==='test'?o.test:t.nm}</div>
+      <div class="m-time">${DOWL[d][0].toUpperCase()+DOWL[d].slice(1)}, ${weeks[w].start+d} ноября · ${s}–${e}</div>
+      ${o.from?`<div class="alert"><i data-lucide="arrow-right-left"></i>Аудитория изменена: ${o.from} → ${room}</div>`:''}
+      <div class="rows">
+        <div class="r"><span class="ic"><i data-lucide="map-pin"></i></span><span class="m"><b>Аудитория ${room}</b><small>Корпус Б · 3 этаж</small></span><button class="act"><i data-lucide="navigation"></i>Как пройти</button></div>
+        <div class="r"><span class="ic av" style="background:linear-gradient(140deg,${t.g})">${t.av}</span><span class="m"><b>${t.who}</b><small>Преподаватель</small></span><button class="act"><i data-lucide="mail"></i>Написать</button></div>
+        ${kind==='test'?`<div class="r link"><span class="ic"><i data-lucide="target"></i></span><span class="m"><b>20% итоговой оценки</b><small>Сейчас 7,4 · для итоговой 8 нужно 8,5+</small></span><i data-lucide="chevron-right" class="chev"></i></div><div class="r link"><span class="ic"><i data-lucide="file-search"></i></span><span class="m"><b>Демо-вариант</b><small>PDF · 4 задачи</small></span><i data-lucide="chevron-right" class="chev"></i></div>`:''}
+        <div class="r link"><span class="ic"><i data-lucide="folder-open"></i></span><span class="m"><b>Материалы к занятию</b><small>3 файла</small></span><i data-lucide="chevron-right" class="chev"></i></div>
+        <div class="r link"><span class="ic"><i data-lucide="book-open"></i></span><span class="m"><b>${t.nm}</b><small>Страница курса</small></span><i data-lucide="chevron-right" class="chev"></i></div>
+      </div>`;
+    show(t.c);
+  }
+  function openCons(id){
+    const c = CONS[id], t = T[c.k], [s, e] = BELLS[c.pair], full = c.count >= c.cap && !c.going;
+    mBody.innerHTML = `<div class="m-kind">Консультация · ${t.nm}</div>
+      <div class="m-title">${t.who}</div>
+      <div class="m-time">${DOWL[c.d][0].toUpperCase()+DOWL[c.d].slice(1)}, ${c.n} ноября · ${s}–${e}</div>
+      <div class="rows">
+        <div class="r"><span class="ic"><i data-lucide="${c.online?'video':'map-pin'}"></i></span><span class="m"><b>${c.place}</b><small>${c.online?'Видеовстреча':'Корпус Б · 5 этаж'}</small></span>${c.online?`<button class="act" disabled><i data-lucide="video"></i>Подключиться</button>`:`<button class="act"><i data-lucide="navigation"></i>Как пройти</button>`}</div>
+        <div class="r"><span class="ic"><i data-lucide="users-round"></i></span><span class="m"><b>${c.count} из ${c.cap}</b><small>${c.qs} вопросов уже прислали</small></span></div>
+      </div>
+      <div class="lbl">Ваш вопрос</div>
+      <textarea id="q" placeholder="Что хотите разобрать">${c.q||''}</textarea>
+      <div class="m-foot">${c.going?`<button class="link2" id="cancel">Отменить запись</button><button class="cta white" id="save">Сохранить</button>`:full?`<span></span><button class="cta full">Мест нет</button>`:`<span></span><button class="cta white" id="go">Записаться</button>`}</div>`;
+    show('var(--accent)');
+    const go = document.getElementById('go'), save = document.getElementById('save'), cancel = document.getElementById('cancel');
+    if (go) go.onclick = () => { c.going = true; c.count++; c.q = document.getElementById('q').value; close(); refresh(); toast('Вы записаны'); };
+    if (save) save.onclick = () => { c.q = document.getElementById('q').value; close(); toast('Вопрос сохранён'); };
+    if (cancel) cancel.onclick = () => { c.going = false; c.count--; close(); refresh(); toast('Запись отменена'); };
+  }
+
+  // ---------------- consultations list ----------------
+  let filter = 'all';
+  function renderCons(){
+    const keys = [...new Set(Object.values(CONS).map(c => c.k))];
+    document.getElementById('chips').innerHTML = `<button class="chip ${filter==='all'?'on':''}" data-f="all">Все курсы</button>` + keys.map(k => `<button class="chip ${filter===k?'on':''}" data-f="${k}" style="--cc:${T[k].c}"><i></i>${T[k].nm}</button>`).join('');
+    document.querySelectorAll('.chip').forEach(b => b.onclick = () => { filter = b.dataset.f; renderCons(); });
+    const list = Object.values(CONS).filter(c => filter==='all' || c.k===filter).sort((a,b) => a.w-b.w || a.d-b.d || a.pair-b.pair);
+    const groups = {}; list.forEach(c => (groups[`${c.w}-${c.d}`] ||= []).push(c));
+    const av = ['#D6C3AE,#8F7A68','#C9D3E6,#7F8BA6','#D9C2E4,#9878A8','#C9E6DD,#7FA699'];
+    document.getElementById('consList').innerHTML = Object.values(groups).map(g => {
+      const c0 = g[0], rel = relDay(c0.w, c0.d);
+      return `<div class="cday"><h3>${rel || DOWL[c0.d][0].toUpperCase()+DOWL[c0.d].slice(1)}<span>${rel?DOWL[c0.d]+', ':''}${c0.n} ноября</span></h3>` + g.map(c => {
+        const t = T[c.k], [s, e] = BELLS[c.pair], full = c.count >= c.cap && !c.going;
+        return `<div class="cons" data-id="${c.id}" style="--cc:${t.c}">
+          <div class="tm"><b>${s}</b><small>до ${e}</small></div>
+          <div class="who"><span class="av" style="background:linear-gradient(140deg,${t.g})">${t.av}</span><div style="min-width:0"><b>${t.who}</b><small><i class="cd"></i>${t.nm} · ${c.online?'<i data-lucide="video"></i>Онлайн':c.place}</small></div></div>
+          <div class="ppl"><span class="stack">${av.slice(0, Math.min(3, c.count)).map(x => `<span style="background:linear-gradient(140deg,${x})"></span>`).join('')}</span>${c.count} из ${c.cap}</div>
+          ${c.going?`<button class="cta going"><i data-lucide="check"></i>Вы идёте</button>`:full?`<button class="cta full">Мест нет</button>`:`<button class="cta">Записаться</button>`}
+        </div>`;
+      }).join('') + '</div>';
+    }).join('');
+    document.querySelectorAll('.cons').forEach(el => el.onclick = () => openCons(el.dataset.id));
+    lucide.createIcons();
+  }
+  function refresh(){ renderCons(); mode==='list' ? renderList() : renderGrid(); }
+
+  // ---------------- sync modal ----------------
+  document.getElementById('syncBtn').onclick = () => {
+    mBody.innerHTML = `<div class="m-title" style="margin-top:0">Синхронизация календаря</div>
+      <div class="sync"><button><i data-lucide="calendar"></i>Google</button><button><i data-lucide="apple"></i>Apple</button></div>
+      <div class="lbl">Ссылка для подписки</div>
+      <div class="ical"><code>webcal://orbita.future.edu/cal/7f3a9c…/alisa.ics</code><button id="copy">Скопировать</button></div>
+      <div class="rows" style="margin-top:14px">
+        <div class="opt">Пары<span class="tg on"></span></div>
+        <div class="opt">Консультации<span class="tg on"></span></div>
+        <div class="opt">Дедлайны<span class="tg on"></span></div>
+        <div class="opt">Напоминание<select class="sel"><option>За 15 минут</option><option>За 30 минут</option><option>За час</option><option>Без напоминания</option></select></div>
+      </div>`;
+    show('var(--accent)');
+    modal.querySelector('.m-cover').style.display = 'none';
+    mBody.querySelectorAll('.tg').forEach(t => t.onclick = () => t.classList.toggle('on'));
+    document.getElementById('copy').onclick = () => toast('Ссылка скопирована');
+    const restore = () => { modal.querySelector('.m-cover').style.display = ''; scrim.removeEventListener('click', restore); };
+    scrim.addEventListener('click', restore); document.getElementById('mClose').addEventListener('click', restore, {once:true});
+  };
+
+  // ---------------- misc ----------------
+  function toast(txt){ const t = document.getElementById('toast'); document.getElementById('toastTxt').textContent = txt; t.classList.add('show'); clearTimeout(toast.h); toast.h = setTimeout(() => t.classList.remove('show'), 2200); }
+  const slide = (ind, el) => { ind.style.left = el.offsetLeft + 'px'; ind.style.width = el.offsetWidth + 'px'; };
+  const dock = document.getElementById('dock'), seg = document.getElementById('seg');
+  const init = () => { slide(document.getElementById('ind'), dock.querySelector('.tab.on')); slide(document.getElementById('si'), seg.querySelector('.on')); slide(document.getElementById('si2'), document.querySelector('#sub .on')); };
+  init(); document.fonts && document.fonts.ready.then(init);
+  seg.querySelectorAll('button').forEach(b => b.onclick = () => {
+    seg.querySelectorAll('button').forEach(x => x.classList.remove('on')); b.classList.add('on'); slide(document.getElementById('si'), b);
+    document.querySelectorAll('.view').forEach(v => v.classList.toggle('on', v.id === 'v-' + b.dataset.v));
+  });
+  document.querySelectorAll('#sub button').forEach(b => b.onclick = () => setMode(b.dataset.m));
+  document.getElementById('prev').onclick = () => { if (wi > 0) { wi--; sel = 0; refresh(); renderWeek(); } };
+  document.getElementById('next').onclick = () => { if (wi < weeks.length-1) { wi++; sel = 0; refresh(); renderWeek(); } };
+  const hdr = document.getElementById('hdr');
+  addEventListener('scroll', () => hdr.classList.toggle('scrolled', scrollY > 4), { passive: true });
+  renderWeek(); renderList(); renderCons();
+</script>
+</body>
+</html>
