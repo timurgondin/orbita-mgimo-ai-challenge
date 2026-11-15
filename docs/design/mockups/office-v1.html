@@ -75,13 +75,13 @@
   .req .sub{font-size:14px;color:var(--text-3);margin-top:2px}
   .track{display:grid;grid-template-columns:repeat(var(--n),1fr);margin-top:26px;position:relative}
   .step{position:relative;display:flex;flex-direction:column;gap:8px}
-  .step .bar{height:4px;border-radius:4px;background:var(--s3);margin-right:4px;overflow:hidden}
+  .step .bar{display:block;height:4px;border-radius:4px;background:var(--s3);margin-right:4px;overflow:hidden}
   .step .bar i{display:block;height:100%;width:0;border-radius:4px;background:var(--text)}
-  .step.done .bar i{width:100%}
+  .step.fin .bar i{width:100%}
   .step.cur .bar i{width:50%;animation:prog 2.4s var(--ease) infinite alternate}
   @keyframes prog{from{width:30%}to{width:65%}}
   .step b{font-size:13px;font-weight:500;color:var(--text-3)}
-  .step.done b,.step.cur b{color:var(--text)}
+  .step.fin b,.step.cur b{color:var(--text)}
   .step small{font-size:12px;color:var(--text-3);margin-top:-6px}
   .eta{margin-top:18px;font-size:14px;color:var(--text-2);display:flex;align-items:center;gap:8px}
   .eta svg.lucide{width:15px;height:15px;color:var(--text-3)}
@@ -157,7 +157,7 @@
   .ev:last-child::before{display:none}
   .ev .dt{width:24px;height:24px;border-radius:50%;display:grid;place-items:center;background:var(--s3);color:var(--text-3)}
   .ev .dt svg.lucide{width:13px;height:13px;stroke-width:2.4}
-  .ev.done .dt{background:var(--text);color:var(--bg)}
+  .ev.fin .dt{background:var(--text);color:var(--bg)}
   .ev.cur .dt{background:color-mix(in srgb,var(--st-blue) 20%,transparent);color:var(--st-blue)}
   .ev b{font-weight:500;display:block}
   .ev small{font-size:13.5px;color:var(--text-3)}
@@ -292,7 +292,7 @@
     document.getElementById('active').innerHTML = REQS.map(r => `
       <div class="req" data-id="${r.id}">
         <div class="top"><div><div class="nm">${r.title}</div><div class="sub">${r.sub}</div></div>${tag(r.status)}</div>
-        <div class="track" style="--n:${r.steps.length}">${r.steps.map((s, i) => `<div class="step ${i<r.cur?'done':i===r.cur?'cur':''}"><span class="bar"><i></i></span><b>${s[0]}</b><small>${s[1]||'&nbsp;'}</small></div>`).join('')}</div>
+        <div class="track" style="--n:${r.steps.length}">${r.steps.map((s, i) => `<div class="step ${i<r.cur?'fin':i===r.cur?'cur':''}"><span class="bar"><i></i></span><b>${s[0]}</b><small>${s[1]||'&nbsp;'}</small></div>`).join('')}</div>
         <div class="eta"><i data-lucide="clock-3"></i>${r.eta}</div>
       </div>`).join('');
     document.getElementById('cat').innerHTML = CAT.map(c => `<button class="item" data-id="${c.id}" style="--c:${c.c}"><span class="ic"><i data-lucide="${c.ic}"></i></span><span><b>${c.nm}</b><small>${c.sub}</small></span></button>`).join('');
@@ -318,7 +318,7 @@
     const r = REQS.find(x => x.id === id);
     mBody.innerHTML = `<div class="m-kind">Заявка ${r.id}</div><div class="m-title">${r.title}</div>
       <div style="margin-top:10px;display:flex;gap:8px;align-items:center">${tag(r.status)}<span style="font-size:14px;color:var(--text-3)">${r.eta}</span></div>
-      <div class="tl">${r.log.map(([s, t, w, at]) => `<div class="ev ${s}"><span class="dt"><i data-lucide="${s==='done'?'check':s==='cur'?'loader-circle':'circle'}"></i></span><div><b>${t}</b><small>${w}</small></div><span class="t">${at}</span></div>`).join('')}</div>
+      <div class="tl">${r.log.map(([s, t, w, at]) => `<div class="ev ${s==='done'?'fin':s}"><span class="dt"><i data-lucide="${s==='done'?'check':s==='cur'?'loader-circle':'circle'}"></i></span><div><b>${t}</b><small>${w}</small></div><span class="t">${at}</span></div>`).join('')}</div>
       ${r.msg?`<div class="msg"><span class="av">ИС</span><div><b style="color:var(--text);font-weight:500">Смирнова И. А.</b><br>${r.msg}</div></div>`:''}
       <div class="m-foot"><button class="ghost" style="background:transparent;color:var(--text-3)">Отозвать заявку</button><button class="ghost"><i data-lucide="message-circle"></i>Ответить</button></div>`;
     show();

@@ -36,6 +36,8 @@ model User {
   teaches             Course[]
   signups             ConsultationSignup[]
   consultationsHosted Consultation[]
+  officeRequests      OfficeRequest[]
+  documents           Document[]
 }
 
 model Session {
@@ -206,4 +208,72 @@ model Notification {
   user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId, createdAt])
+}
+
+// ---- Офис. Тип заявки — константа в src/lib/office-catalog.ts, в БД только его id ----
+
+model OfficeRequest {
+  id        String           @id @default(cuid())
+  number    String           @unique // «R-2481»
+  userId    String
+  typeId    String
+  params    String // JSON, проверен по каталогу
+  status    String // sent | work | review | ready | done | rejected | withdrawn
+  stage     Int // индекс текущего этапа; события до него выполнены
+  eta       DateTime?
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
+  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  events    RequestEvent[]
+  messages  RequestMessage[]
+  documents Document[]
+
+  @@index([userId, createdAt])
+}
+
+model RequestEvent {
+  id        String        @id @default(cuid())
+  requestId String
+  order     Int
+  title     String
+  actorName String        @default("")
+  note      String?
+  at        DateTime? // null — этап ещё впереди
+  request   OfficeRequest @relation(fields: [requestId], references: [id], onDelete: Cascade)
+
+  @@index([requestId, order])
+}
+
+model RequestMessage {
+  id         String        @id @default(cuid())
+  requestId  String
+  authorName String
+  authorRole String // student | staff
+  body       String // до 1000 символов
+  createdAt  DateTime      @default(now())
+  request    OfficeRequest @relation(fields: [requestId], references: [id], onDelete: Cascade)
+
+  @@index([requestId, createdAt])
+}
+
+// Выданный документ. Содержимое — снимок на момент выдачи; verifyToken открывает публичную страницу /verify/<token>
+model Document {
+  id            String         @id @default(cuid())
+  number        String         @unique // «D-2470»
+  userId        String
+  requestId     String?
+  typeId        String // id из каталога: study | grades | …
+  title         String
+  subtitle      String
+  holderDative  String // «Воронцовой Алисе Сергеевне»
+  holderMask    String // «Воронцова А. С.» — единственное, что видно на публичной странице
+  paragraphs    String // JSON: массив абзацев текста
+  issuedAt      DateTime
+  signedBy      String
+  verifyToken   String         @unique
+  status        String // ready | done
+  user          User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  request       OfficeRequest? @relation(fields: [requestId], references: [id], onDelete: SetNull)
+
+  @@index([userId, issuedAt])
 }

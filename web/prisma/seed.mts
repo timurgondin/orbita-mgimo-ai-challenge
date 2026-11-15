@@ -7,9 +7,9 @@ const db = new PrismaClient();
 const PASSWORD = "orbita-demo";
 
 const users = [
-  { login: "a.vorontsova", role: "student", firstName: "Алиса", lastName: "Воронцова", faculty: "Факультет международного бизнеса", program: "Международный бизнес", course: 2, groupName: "МБ-24-1", avatar: "sand", onboardingDone: true },
-  { login: "m.orlov", role: "student", firstName: "Максим", lastName: "Орлов", faculty: "Факультет международных отношений", program: "Мировая политика", course: 4, groupName: "МП-22-2", avatar: "mist", onboardingDone: true },
-  { login: "n.lanskaya", role: "student", firstName: "Ника", lastName: "Ланская", faculty: "Факультет международного бизнеса", program: "Маркетинг", course: 1, groupName: "МК-26-1", avatar: "lilac", onboardingDone: false },
+  { login: "a.vorontsova", role: "student", firstName: "Алиса", middleName: "Сергеевна", lastName: "Воронцова", faculty: "Факультет международного бизнеса", program: "Международный бизнес", course: 2, groupName: "МБ-24-1", avatar: "sand", onboardingDone: true },
+  { login: "m.orlov", role: "student", firstName: "Максим", middleName: "Андреевич", lastName: "Орлов", faculty: "Факультет международных отношений", program: "Мировая политика", course: 4, groupName: "МП-22-2", avatar: "mist", onboardingDone: true },
+  { login: "n.lanskaya", role: "student", firstName: "Ника", middleName: "Игоревна", lastName: "Ланская", faculty: "Факультет международного бизнеса", program: "Маркетинг", course: 1, groupName: "МК-26-1", avatar: "lilac", onboardingDone: false },
   { login: "e.petrova", role: "teacher", firstName: "Елена", middleName: "Андреевна", lastName: "Петрова", faculty: "Кафедра экономики", position: "Преподаватель", avatar: "peach", onboardingDone: true },
   { login: "office", role: "staff", firstName: "Ирина", lastName: "Смирнова", position: "Учебный офис", avatar: "stone", onboardingDone: true },
 ];
@@ -442,6 +442,76 @@ for (const person of [ALISA, MAXIM, NIKA]) {
       data: { userId: uid, kind: n.kind, title: n.title, body: n.body, actorName: n.actor, actorAvatar: n.avatar, createdAt: at(n.at), readAt: n.read ? at(n.at) : null },
     });
   }
+}
+
+// ---------- Офис: заявки и документы. Токены проверки у существующих документов сохраняются (QR в выданных PDF остаются рабочими) ----------
+interface SeedEvent { title: string; actor?: string; note?: string; at?: string }
+interface SeedReq {
+  login: string; number: string; typeId: string; params: object; status: string; stage: number; eta: string; created: string;
+  events: SeedEvent[]; messages?: { author: string; role: "student" | "staff"; body: string; at: string }[];
+}
+interface SeedDoc {
+  login: string; number: string; typeId: string; title: string; subtitle: string; issued: string; status: string; request?: string;
+}
+const PEOPLE: Record<string, { dative: string; mask: string; birth: number; fem: boolean; start: string; end: string; faculty: string; program: string; course: number }> = {
+  "a.vorontsova": { dative: "Воронцовой Алисе Сергеевне", mask: "Воронцова А. С.", birth: 2006, fem: true, start: "01.09.2025", end: "30.06.2029", faculty: "международного бизнеса", program: "Международный бизнес", course: 2 },
+  "m.orlov": { dative: "Орлову Максиму Андреевичу", mask: "Орлов М. А.", birth: 2004, fem: false, start: "01.09.2023", end: "30.06.2027", faculty: "международных отношений", program: "Мировая политика", course: 4 },
+};
+const SIGNER = "Смирнова И. А., учебный офис";
+
+const SEED_REQS: SeedReq[] = [
+  { login: "a.vorontsova", number: "R-2481", typeId: "visa", params: { purpose: "Посольство", lang: "Английский", format: "Электронная с QR", copies: 1 }, status: "work", stage: 2, eta: "2026-11-21", created: "2026-11-18T14:02",
+    events: [{ title: "Заявка подана", actor: "Вы", at: "2026-11-18T14:02" }, { title: "Принята в работу", actor: "Смирнова И. А.", at: "2026-11-18T16:40" }, { title: "Готовится", note: "Перевод на английский" }, { title: "Готова", note: "PDF с QR-кодом" }],
+    messages: [{ author: "Смирнова И. А.", role: "staff", body: "Нужна ли апостиль? Обычно консульства Испании принимают без него.", at: "2026-11-18T17:10" }] },
+  { login: "a.vorontsova", number: "R-2477", typeId: "credit", params: { subject: "«Python для анализа данных» → «Информатика»", comment: "" }, status: "review", stage: 1, eta: "2026-11-22", created: "2026-11-15T11:20",
+    events: [{ title: "Заявление подано", actor: "Вы", at: "2026-11-15T11:20" }, { title: "Проверка программ", note: "Кафедра информатики" }, { title: "Решение" }] },
+  { login: "m.orlov", number: "R-2479", typeId: "army", params: { purpose: "Военкомат", lang: "Русский", format: "Бумажная", copies: 1 }, status: "work", stage: 2, eta: "2026-11-20", created: "2026-11-17T10:15",
+    events: [{ title: "Заявка подана", actor: "Вы", at: "2026-11-17T10:15" }, { title: "Принята в работу", actor: "Смирнова И. А.", at: "2026-11-17T12:30" }, { title: "Готовится", note: "Печать и подпись" }, { title: "Готова", note: "Бумажная справка" }] },
+];
+const SEED_DOCS: SeedDoc[] = [
+  { login: "a.vorontsova", number: "D-2470", typeId: "study", title: "Справка об обучении", subtitle: "По месту требования · PDF с QR", issued: "2026-11-18T16:41", status: "ready" },
+  { login: "a.vorontsova", number: "D-2415", typeId: "grades", title: "Выписка оценок за 1 курс", subtitle: "PDF с QR", issued: "2026-10-02T12:10", status: "done" },
+  { login: "a.vorontsova", number: "D-2398", typeId: "study", title: "Справка в банк", subtitle: "Бумажная · получена в офисе", issued: "2026-09-14T15:30", status: "done" },
+  { login: "m.orlov", number: "D-2441", typeId: "study", title: "Справка об обучении", subtitle: "По месту требования · PDF с QR", issued: "2026-10-05T11:00", status: "done" },
+  { login: "m.orlov", number: "D-2402", typeId: "grades", title: "Выписка оценок за 3 курс", subtitle: "PDF с QR", issued: "2026-09-12T13:20", status: "done" },
+];
+
+function paragraphs(d: SeedDoc): string[] {
+  const p = PEOPLE[d.login];
+  const who = p.fem ? "студенткой" : "студентом";
+  const base = `Дана ${p.dative}, ${p.birth} г. р., в том, что ${p.fem ? "она" : "он"} действительно является ${who} ${p.course} курса очной формы обучения факультета ${p.faculty} Университета Будущего по программе бакалавриата «${p.program}».`;
+  if (d.typeId === "grades") {
+    return [base, `По итогам ${p.course - 1} курса ${p.fem ? "ей" : "ему"} зачтено 60 кредитов, средний балл 8,3 по десятибалльной шкале. Подробная выписка по дисциплинам приложена к электронной версии.`, "Выписка выдана для предоставления по месту требования."];
+  }
+  return [base, `Срок обучения: ${p.start} — ${p.end}.`, d.subtitle.startsWith("Бумажная") ? "Справка выдана для предоставления в банк." : "Справка выдана для предоставления по месту требования."];
+}
+
+const keepReqs = SEED_REQS.map((r) => r.number);
+await db.officeRequest.deleteMany({ where: { number: { notIn: keepReqs } } });
+await db.document.deleteMany({ where: { number: { notIn: SEED_DOCS.map((d) => d.number) } } });
+for (const r of SEED_REQS) {
+  const data = {
+    userId: await userId(r.login), typeId: r.typeId, params: JSON.stringify(r.params), status: r.status, stage: r.stage, eta: at(r.eta), createdAt: at(r.created),
+  };
+  const saved = await db.officeRequest.upsert({ where: { number: r.number }, create: { number: r.number, ...data }, update: data });
+  await db.requestEvent.deleteMany({ where: { requestId: saved.id } });
+  await db.requestMessage.deleteMany({ where: { requestId: saved.id } });
+  for (const [order, e] of r.events.entries()) {
+    await db.requestEvent.create({ data: { requestId: saved.id, order, title: e.title, actorName: e.actor ?? "", note: e.note, at: e.at ? at(e.at) : null } });
+  }
+  for (const m of r.messages ?? []) {
+    await db.requestMessage.create({ data: { requestId: saved.id, authorName: m.author, authorRole: m.role, body: m.body, createdAt: at(m.at) } });
+  }
+}
+for (const d of SEED_DOCS) {
+  const p = PEOPLE[d.login];
+  const data = {
+    userId: await userId(d.login), typeId: d.typeId, title: d.title, subtitle: d.subtitle, holderDative: p.dative, holderMask: p.mask,
+    paragraphs: JSON.stringify(paragraphs(d)), issuedAt: at(d.issued), signedBy: SIGNER, status: d.status,
+  };
+  const existing = await db.document.findUnique({ where: { number: d.number } });
+  if (existing) await db.document.update({ where: { number: d.number }, data });
+  else await db.document.create({ data: { number: d.number, verifyToken: randomBytes(32).toString("base64url"), ...data } });
 }
 
 console.log(`Seeded ${users.length} users, ${await db.course.count()} courses, ${await db.gradeComponent.count()} components, ${await db.scheduleEvent.count()} events, ${await db.consultation.count()} consultations, ${await db.consultationSignup.count()} signups`);

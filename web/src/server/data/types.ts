@@ -170,3 +170,58 @@ export interface TimeData {
   consultations: TimeConsultation[];
   syncLink: string;
 }
+
+// ---- Офис ----
+export interface OfficeStep {
+  label: string;
+  /** «18 нояб», «сейчас» или пусто */
+  when: string;
+  state: "fin" | "cur" | "todo";
+}
+export interface OfficeEvent {
+  state: "fin" | "cur" | "todo";
+  title: string;
+  small: string;
+  at: string;
+}
+export interface OfficeMessage {
+  id: string;
+  authorName: string;
+  initials: string;
+  staff: boolean;
+  body: string;
+}
+export interface OfficeRequestView {
+  id: string;
+  number: string;
+  typeId: string;
+  title: string;
+  subtitle: string;
+  status: string;
+  eta: string;
+  steps: OfficeStep[];
+  events: OfficeEvent[];
+  messages: OfficeMessage[];
+  canWithdraw: boolean;
+}
+export interface OfficeDocView {
+  id: string;
+  number: string;
+  title: string;
+  subtitle: string;
+  status: string;
+  /** «Вчера», «2 октября» */
+  when: string;
+  heading: string;
+  issuedDate: string; // 18.11.2026
+  issuedTime: string; // 16:41
+  paragraphs: string[];
+  signedBy: string;
+  verifyUrl: string;
+  qrSvg: string;
+}
+export interface OfficeData {
+  requests: OfficeRequestView[];
+  documents: OfficeDocView[];
+  open: boolean;
+}

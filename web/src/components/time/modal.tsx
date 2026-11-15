@@ -10,6 +10,7 @@ export function Modal({
   onClose,
   accent,
   cover = true,
+  width = 480,
   title,
   children,
 }: {
@@ -18,6 +19,8 @@ export function Modal({
   /** CSS-цвет обложки */
   accent: string;
   cover?: boolean;
+  /** Ширина панели, px */
+  width?: number;
   title: string;
   children: React.ReactNode;
 }) {
@@ -66,9 +69,9 @@ export function Modal({
         aria-label={title}
         aria-hidden={!open}
         inert={!open}
-        style={{ "--cc": accent } as React.CSSProperties}
+        style={{ "--cc": accent, "--mw": `${width}px` } as React.CSSProperties}
         className={cn(
-          "fixed top-1/2 left-1/2 z-41 flex max-h-[min(740px,calc(100dvh-48px))] w-[min(480px,calc(100vw-32px))] flex-col overflow-hidden rounded-[28px] bg-s2 shadow-[0_0_0_.5px_var(--line),0_40px_100px_-24px_rgba(0,0,0,.85)] transition-[opacity,transform] duration-[220ms,450ms] ease-[var(--ease),var(--spring)]",
+          "fixed top-1/2 left-1/2 z-41 flex max-h-[min(740px,calc(100dvh-48px))] w-[min(var(--mw),calc(100vw-32px))] flex-col overflow-hidden rounded-[28px] bg-s2 shadow-[0_0_0_.5px_var(--line),0_40px_100px_-24px_rgba(0,0,0,.85)] transition-[opacity,transform] duration-[220ms,450ms] ease-[var(--ease),var(--spring)]",
           open ? "-translate-x-1/2 -translate-y-1/2 scale-100 opacity-100" : "pointer-events-none -translate-x-1/2 -translate-y-[48%] scale-[.96] opacity-0",
         )}
       >

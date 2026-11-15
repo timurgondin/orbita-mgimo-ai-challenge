@@ -2,7 +2,7 @@
 
 > Короткая **актуальная** дизайн-система. Читай перед любой работой с интерфейсом.
 > История решений и отклонённые версии — в `docs/design.md` (только для контекста, не как образец).
-> Эталон вживую — сам сайт (`web/`) и утверждённые макеты: `today-desktop-v4.html`, `study-v1.html`, `time-v3.html`, `login-v1.html` в `docs/design/mockups/`.
+> Эталон вживую — сам сайт (`web/`) и утверждённые макеты: `today-desktop-v4.html`, `study-v1.html`, `time-v3.html`, `office-v1.html`, `login-v1.html` в `docs/design/mockups/`.
 
 ## 1. Суть стиля
 
@@ -53,7 +53,10 @@
 | Заголовок секции со ссылкой «Все ›» | `components/today/section-header.tsx` |
 | Строки списков (время/дата слева, 2 строки текста, справа статус/время) | `components/today/soon-list.tsx`, `news-list.tsx`, `components/time/schedule-view.tsx` |
 | Карточка с обложкой цвета курса и точечным узором | `components/study/courses-view.tsx` |
-| Модалка по центру на размытом фоне | `components/time/modal.tsx` |
+| Модалка по центру на размытом фоне (проп `width`) | `components/time/modal.tsx` |
+| Тост внизу по центру | `components/ui/toast.tsx` |
+| Трекер этапов «как у посылки» | `components/office/request-card.tsx` |
+| Превью документа (лист, подпись, QR) | `components/office/doc-modal.tsx` |
 | Точечное поле (фирменный мотив) | `components/today/dot-field.tsx`, `components/login/orbit-canvas.tsx` |
 | Пустая страница-заглушка | `components/shell/page-placeholder.tsx` |
 

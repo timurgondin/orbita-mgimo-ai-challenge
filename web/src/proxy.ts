@@ -16,6 +16,6 @@ export function proxy(req: NextRequest) {
 }
 
 export const config = {
-  // всё, кроме /login, служебных путей Next и статических файлов
-  matcher: ["/((?!login|_next|favicon.ico|.*\\..*).*)"],
+  // всё, кроме /login, публичной проверки документов /verify, служебных путей Next и статических файлов
+  matcher: ["/((?!login|verify(?:/|$)|_next|favicon.ico|.*\\..*).*)"],
 };
