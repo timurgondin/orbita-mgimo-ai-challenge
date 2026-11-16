@@ -56,7 +56,11 @@ export interface Lesson {
 export interface SoonItem {
   id: string;
   title: string;
-  subtitle: string;
+  course: string;
+  /** ключ цвета курса */
+  color: string;
+  /** «черновик», «на проверке» или «20% оценки» */
+  note: string;
   /** Метка срока */
   due: string;
   today: boolean;

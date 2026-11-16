@@ -47,7 +47,7 @@ async function eventsBetween(userId: string, from: Date, to: Date): Promise<Less
       date: mskDate(c.startsAt),
       start: mskTime(c.startsAt),
       end: mskTime(c.endsAt),
-      title: `Консультация · ${c.course.title}`,
+      title: c.course.title,
       format: "Консультация",
       place: parsePlace(c.place),
       teacher: c.teacherName,
@@ -91,7 +91,7 @@ export async function getSoon(): Promise<SoonItem[]> {
         course: { enrollments: { some: { userId: user.id } } },
       },
     },
-    include: { component: { include: { course: { select: { title: true } } } } },
+    include: { component: { include: { course: { select: { title: true, color: true } } } } },
   });
   return works
     .sort(
@@ -105,7 +105,10 @@ export async function getSoon(): Promise<SoonItem[]> {
       return {
         id: w.id,
         title: w.component.title,
-        subtitle: `${w.component.course.title} · ${STATUS_NOTE[w.status as WorkStatus] ?? `${w.component.weight}% итоговой оценки`}`,
+        course: w.component.course.title,
+        color: w.component.course.color,
+        // справа под сроком: где работа сейчас или её вес
+        note: STATUS_NOTE[w.status as WorkStatus] ?? `${w.component.weight}% оценки`,
         due: due.label,
         today: due.today,
       };

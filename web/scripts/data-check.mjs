@@ -52,7 +52,7 @@ try {
   const aToday = await text(page);
   check("Alisa Today: greeting + Микроэкономика now", aToday.includes("Алиса") && aToday.includes("Микроэкономика") && aToday.includes("3108"));
   check("Alisa Today: tomorrow line", aToday.includes("Завтра первая пара в 09:30"));
-  check("Alisa Today: now card live «ещё 41 мин», later list has English (4105) and her consultation", aToday.includes("ещё 41 мин") && aToday.includes("4105") && aToday.includes("Консультация · Эконометрика") && aToday.includes("Вы записаны"));
+  check("Alisa Today: now card live «ещё 41 мин», later list has English (4105) and her consultation", aToday.includes("ещё 41 мин") && aToday.includes("4105") && /Консультация в каб\.\s518/.test(aToday) && aToday.includes("Эконометрика") && aToday.includes("Вы записаны"));
   await page.goto(BASE + "/study");
   await page.waitForSelector("#tab-courses");
   const aStudy = await text(page);

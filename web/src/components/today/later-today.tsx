@@ -1,11 +1,8 @@
 import Link from "next/link";
 import { SectionHeader } from "./section-header";
 import { Check } from "lucide-react";
+import { kindAt } from "@/lib/phrases";
 import type { Lesson } from "@/server/data/types";
-
-function capitalize(s: string) {
-  return s.charAt(0).toUpperCase() + s.slice(1);
-}
 
 function Row({ lesson }: { lesson: Lesson }) {
   return (
@@ -16,17 +13,15 @@ function Row({ lesson }: { lesson: Lesson }) {
       <span className="text-[15px] text-text-2">{lesson.start}</span>
       <div>
         <div className="font-medium">{lesson.title}</div>
-        <div className="mt-px text-sm text-text-3">
-          {capitalize([lesson.place.label, lesson.place.number].filter(Boolean).join(" "))} · {lesson.teacher}
-        </div>
+        <div className="mt-px text-sm text-text-3">{kindAt(lesson.format, lesson.place)}</div>
       </div>
       {lesson.note?.kind === "flag" && (
-        <span className="inline-flex items-center gap-1.5 text-[13px] whitespace-nowrap text-urgent before:size-1.5 before:rounded-full before:bg-current before:content-['']">
+        <span className="inline-flex items-center gap-1.5 text-[13px] whitespace-nowrap text-urgent max-sm:col-start-2 max-sm:-mt-1.5 before:size-1.5 before:rounded-full before:bg-current before:content-['']">
           {lesson.note.text}
         </span>
       )}
       {lesson.note?.kind === "ok" && (
-        <span className="inline-flex items-center gap-1 text-[13px] text-text-3">
+        <span className="inline-flex items-center gap-1 text-[13px] text-text-3 max-sm:col-start-2 max-sm:-mt-1.5">
           <Check size={14} strokeWidth={1.6} />
           {lesson.note.text}
         </span>
