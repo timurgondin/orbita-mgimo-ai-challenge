@@ -1,13 +1,14 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { Check, Circle, LoaderCircle, MessageCircle } from "lucide-react";
+import { Check, Circle, LoaderCircle, MessageCircle, Pause } from "lucide-react";
+import { UploadBox, UploadedFiles } from "./upload-box";
 import { cn } from "@/lib/utils";
 import { replyToRequest, withdrawRequest } from "@/server/office/actions";
 import type { OfficeRequestView } from "@/server/data/types";
 import { MAX_MESSAGE } from "@/lib/office-catalog";
-import type { Toast } from "@/components/ui/toast";
 import { AVATAR_GRADIENTS } from "@/lib/user-view";
+import type { Toast } from "@/components/ui/toast";
 import { OfficeTag, ghostBtn, whiteBtn } from "./icons";
 
 export function RequestContent({ req, toast, onClose }: { req: OfficeRequestView; toast: Toast; onClose: () => void }) {
@@ -38,9 +39,12 @@ export function RequestContent({ req, toast, onClose }: { req: OfficeRequestView
       <div className="text-sm text-text-2">Заявка {req.number}</div>
       <div className="mt-1 pr-10 text-[26px] leading-[1.15] font-semibold tracking-[-.03em]">{req.title}</div>
       <div className="mt-2.5 flex items-center gap-2">
-        <OfficeTag status={req.status} />
-        <span className="text-sm text-text-3">{req.eta}</span>
+        <OfficeTag status={req.waiting ? "waiting" : req.status} />
+        {!req.waiting && <span className="text-sm text-text-3">{req.eta}</span>}
       </div>
+
+      {req.waiting && <UploadBox req={req} toast={toast} />}
+      {req.files.length > 0 && <UploadedFiles files={req.files} />}
 
       <div className="mt-[22px]">
         {req.events.map((e, i) => (
@@ -49,14 +53,14 @@ export function RequestContent({ req, toast, onClose }: { req: OfficeRequestView
             <span
               className={cn(
                 "grid size-6 place-items-center rounded-full",
-                e.state === "fin" ? "bg-text text-bg" : e.state === "cur" ? "bg-[color-mix(in_srgb,var(--st-blue)_20%,transparent)] text-(--st-blue)" : "bg-s3 text-text-3",
+                e.state === "fin" ? "bg-text text-bg" : e.state === "cur" && req.waiting ? "bg-[color-mix(in_srgb,var(--urgent)_20%,transparent)] text-urgent" : e.state === "cur" ? "bg-[color-mix(in_srgb,var(--st-blue)_20%,transparent)] text-(--st-blue)" : "bg-s3 text-text-3",
               )}
             >
-              {e.state === "fin" ? <Check size={13} strokeWidth={2.4} /> : e.state === "cur" ? <LoaderCircle size={13} strokeWidth={2.4} /> : <Circle size={13} strokeWidth={2.4} />}
+              {e.state === "fin" ? <Check size={13} strokeWidth={2.4} /> : e.state === "cur" && req.waiting ? <Pause size={12} strokeWidth={2.6} /> : e.state === "cur" ? <LoaderCircle size={13} strokeWidth={2.4} /> : <Circle size={13} strokeWidth={2.4} />}
             </span>
             <div>
               <b className={cn("block font-medium", e.state === "todo" && "text-text-3")}>{e.title}</b>
-              <small className="text-[13.5px] text-text-3">{e.small}</small>
+              <small className={cn("text-[13.5px]", e.state === "cur" && req.waiting ? "text-urgent" : "text-text-3")}>{e.small}</small>
             </div>
             <span className="text-[13px] whitespace-nowrap text-text-3">{e.at}</span>
           </div>

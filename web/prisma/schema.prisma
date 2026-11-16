@@ -221,6 +221,7 @@ model Notification {
   actionKind  String? // resolve — выполняется на сервере и решает уведомление; link — ведёт на link
   dueAt       DateTime? // срок для «нужно действие»: ≤ 24 ч — полоса наверху «Сегодня»
   resolvedAt  DateTime? // «решено» ≠ «прочитано»: action висит, пока не решено
+  refId       String? // связанный объект, напр. номер заявки «R-2481» — решается вместе с ним
   actorName   String?
   actorAvatar String?
   createdAt   DateTime
@@ -241,12 +242,17 @@ model OfficeRequest {
   status    String // sent | work | review | ready | done | rejected | withdrawn
   stage     Int // индекс текущего этапа; события до него выполнены
   eta       DateTime?
+  // офис ждёт документ от студента: что нужно, до какого срока, когда получен
+  needDoc        String?
+  needDocDue     DateTime?
+  docReceivedAt  DateTime?
   createdAt DateTime         @default(now())
   updatedAt DateTime         @updatedAt
   user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
   events    RequestEvent[]
   messages  RequestMessage[]
   documents Document[]
+  files     RequestFile[]
 
   @@index([userId, createdAt])
 }
@@ -262,6 +268,20 @@ model RequestEvent {
   request   OfficeRequest @relation(fields: [requestId], references: [id], onDelete: Cascade)
 
   @@index([requestId, order])
+}
+
+// Файл, загруженный студентом к заявке. Лежит вне public (storage/uploads) под случайным именем; отдаётся только офису (позже).
+model RequestFile {
+  id        String        @id @default(cuid())
+  requestId String
+  name      String // исходное имя, до 120 символов, только для показа
+  size      Int
+  mime      String // application/pdf | image/jpeg | image/png — по сигнатуре файла
+  storedAs  String // случайное имя на диске
+  createdAt DateTime      @default(now())
+  request   OfficeRequest @relation(fields: [requestId], references: [id], onDelete: Cascade)
+
+  @@index([requestId])
 }
 
 model RequestMessage {

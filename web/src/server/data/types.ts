@@ -241,6 +241,8 @@ export interface OfficeStep {
   /** «18 нояб», «сейчас» или пусто */
   when: string;
   state: "fin" | "cur" | "todo";
+  /** этап на паузе: офис ждёт документ от студента */
+  wait?: boolean;
 }
 export interface OfficeEvent {
   state: "fin" | "cur" | "todo";
@@ -267,6 +269,9 @@ export interface OfficeRequestView {
   events: OfficeEvent[];
   messages: OfficeMessage[];
   canWithdraw: boolean;
+  /** офис ждёт документ от студента */
+  waiting: { doc: string; due: string | null } | null;
+  files: { id: string; label: string; name: string; size: string; at: string }[];
 }
 export interface OfficeDocView {
   id: string;

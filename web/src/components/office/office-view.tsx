@@ -1,6 +1,7 @@
 "use client";
 
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Building2, Download, FileBadge, MessageCircle, Plus, MapPin, Clock3 } from "lucide-react";
 import { Modal } from "@/components/time/modal";
 import { useToast } from "@/components/ui/toast";
@@ -24,11 +25,23 @@ export function OfficeView({ data }: { data: OfficeData }) {
   const { toast, node } = useToast();
   const catalog = useRef<HTMLElement>(null);
 
-  const openModal = (m: NonNullable<ModalState>) => {
+  const openModal = useCallback((m: NonNullable<ModalState>) => {
     setShown(m);
     setOpen(true);
-  };
+  }, []);
   const close = useCallback(() => setOpen(false), []);
+
+  // ?request=R-2481 — открыть заявку сразу (так ведёт уведомление «Загрузить»); адрес чистим
+  const params = useSearchParams();
+  const router = useRouter();
+  const wanted = params.get("request");
+  useEffect(() => {
+    if (!wanted) return;
+    const r = data.requests.find((x) => x.number === wanted);
+    // через кадр: страница успевает отрисоваться, окно открывается с обычной анимацией
+    requestAnimationFrame(() => r && openModal({ type: "req", id: r.id, snap: r }));
+    router.replace("/office", { scroll: false });
+  }, [wanted, data.requests, router, openModal]);
 
   const req = shown?.type === "req" ? (data.requests.find((r) => r.id === shown.id) ?? shown.snap) : undefined;
   const doc = shown?.type === "doc" ? (data.documents.find((d) => d.id === shown.id) ?? shown.snap) : undefined;

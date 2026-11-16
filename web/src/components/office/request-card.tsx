@@ -1,4 +1,4 @@
-import { Clock3 } from "lucide-react";
+import { Clock3, Paperclip } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { OfficeRequestView } from "@/server/data/types";
 
@@ -18,16 +18,16 @@ export function RequestCard({ req, onOpen }: { req: OfficeRequestView; onOpen: (
         {req.steps.map((s) => (
           <span key={s.label} className="flex flex-col gap-2">
             <span className="mr-1 block h-1 overflow-hidden rounded bg-s3">
-              <i className={cn("block h-full rounded bg-text", s.state === "fin" ? "w-full" : s.state === "cur" ? "step-cur" : "w-0")} />
+              <i className={cn("block h-full rounded bg-text", s.state === "fin" ? "w-full" : s.wait ? "w-1/2 bg-urgent" : s.state === "cur" ? "step-cur" : "w-0")} />
             </span>
             <b className={cn("text-[13px] font-medium", s.state === "todo" ? "text-text-3" : "text-text")}>{s.label}</b>
-            <small className="-mt-1.5 text-xs text-text-3">{s.when || " "}</small>
+            <small className={cn("-mt-1.5 text-xs", s.wait ? "text-urgent" : "text-text-3")}>{s.when || " "}</small>
           </span>
         ))}
       </span>
       {req.eta && (
-        <span className="mt-[18px] flex items-center gap-2 text-sm text-text-2">
-          <Clock3 size={15} strokeWidth={1.6} className="text-text-3" />
+        <span className={cn("mt-[18px] flex items-center gap-2 text-sm", req.waiting ? "font-medium text-urgent" : "text-text-2")}>
+          {req.waiting ? <Paperclip size={15} strokeWidth={1.8} /> : <Clock3 size={15} strokeWidth={1.6} className="text-text-3" />}
           {req.eta}
         </span>
       )}

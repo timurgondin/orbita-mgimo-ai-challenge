@@ -121,6 +121,7 @@ interface Note {
   action?: string;
   actionKind?: "resolve" | "link";
   due?: string;
+  ref?: string;
   actor?: string;
   avatar?: string;
   at: string;
@@ -247,7 +248,7 @@ const ALISA: Person = {
   ],
   notes: [
     { kind: "library", category: "library", level: "action", title: "Верните «Экономикс» в библиотеку", body: "Или продлите ещё на две недели", action: "Продлить", actionKind: "resolve", due: "2026-11-20T10:00", link: "/", at: "2026-11-19T09:00" },
-    { kind: "office", category: "office", level: "action", title: "Загрузите скан загранпаспорта", body: "Для справки для визы", action: "Загрузить", actionKind: "link", due: "2026-11-21T18:00", link: "/office", at: "2026-11-18T12:30" },
+    { kind: "office", category: "office", level: "action", title: "Загрузите скан загранпаспорта", body: "Для справки для визы", action: "Загрузить", actionKind: "link", due: "2026-11-21T18:00", link: "/office?request=R-2481", ref: "R-2481", at: "2026-11-18T12:30" },
     { kind: "grade", category: "study", level: "important", title: "8 из 10 за контрольную по микроэкономике", body: "«Хорошо с графиками»", actor: "Петрова Е. А.", avatar: "peach", link: "/study?tab=tasks", at: "2026-11-19T10:05" },
     { kind: "schedule", category: "schedule", level: "important", title: "Английский переехал в ауд. 4105", body: "Сегодня в 14:40, вместо **2214**", link: "/time", at: "2026-11-19T08:30" },
     { kind: "document", category: "office", level: "important", title: "Справка об обучении готова", body: "PDF с QR-кодом уже в «Офисе»", action: "Открыть", actionKind: "link", link: "/office", at: "2026-11-18T15:00" },
@@ -463,7 +464,7 @@ for (const person of [ALISA, MAXIM, NIKA]) {
     await db.notification.create({
       data: {
         userId: uid, kind: n.kind, category: n.category, level: n.level, title: n.title, body: n.body, link: n.link,
-        actionLabel: n.action, actionKind: n.actionKind, dueAt: n.due ? at(n.due) : null,
+        actionLabel: n.action, actionKind: n.actionKind, dueAt: n.due ? at(n.due) : null, refId: n.ref,
         actorName: n.actor, actorAvatar: n.avatar, createdAt: at(n.at), readAt: n.read ? at(n.at) : null,
       },
     });
@@ -475,6 +476,7 @@ interface SeedEvent { title: string; actor?: string; note?: string; at?: string 
 interface SeedReq {
   login: string; number: string; typeId: string; params: object; status: string; stage: number; eta: string; created: string;
   events: SeedEvent[]; messages?: { author: string; role: "student" | "staff"; body: string; at: string }[];
+  needDoc?: string; needDocDue?: string;
 }
 interface SeedDoc {
   login: string; number: string; typeId: string; title: string; subtitle: string; issued: string; status: string; request?: string;
@@ -488,7 +490,8 @@ const SIGNER = "Смирнова И. А., учебный офис";
 const SEED_REQS: SeedReq[] = [
   { login: "a.vorontsova", number: "R-2481", typeId: "visa", params: { purpose: "Посольство", lang: "Английский", format: "Электронная с QR", copies: 1 }, status: "work", stage: 2, eta: "2026-11-21", created: "2026-11-18T14:02",
     events: [{ title: "Заявка подана", actor: "Вы", at: "2026-11-18T14:02" }, { title: "Принята в работу", actor: "Смирнова И. А.", at: "2026-11-18T16:40" }, { title: "Готовится", note: "Перевод на английский" }, { title: "Готова", note: "PDF с QR-кодом" }],
-    messages: [{ author: "Смирнова И. А.", role: "staff", body: "Нужна ли апостиль? Обычно консульства Испании принимают без него.", at: "2026-11-18T17:10" }] },
+    needDoc: "Скан загранпаспорта", needDocDue: "2026-11-21T18:00",
+    messages: [{ author: "Смирнова И. А.", role: "staff", body: "Для посольства Испании нужен скан загранпаспорта: разворот с фотографией. Как загрузите — продолжим.", at: "2026-11-18T12:30" }] },
   { login: "a.vorontsova", number: "R-2477", typeId: "credit", params: { subject: "«Python для анализа данных» → «Информатика»", comment: "" }, status: "review", stage: 1, eta: "2026-11-22", created: "2026-11-15T11:20",
     events: [{ title: "Заявление подано", actor: "Вы", at: "2026-11-15T11:20" }, { title: "Проверка программ", note: "Кафедра информатики" }, { title: "Решение" }] },
   { login: "m.orlov", number: "R-2479", typeId: "army", params: { purpose: "Военкомат", lang: "Русский", format: "Бумажная", copies: 1 }, status: "work", stage: 2, eta: "2026-11-20", created: "2026-11-17T10:15",
@@ -518,10 +521,12 @@ await db.document.deleteMany({ where: { number: { notIn: SEED_DOCS.map((d) => d.
 for (const r of SEED_REQS) {
   const data = {
     userId: await userId(r.login), typeId: r.typeId, params: JSON.stringify(r.params), status: r.status, stage: r.stage, eta: at(r.eta), createdAt: at(r.created),
+    needDoc: r.needDoc ?? null, needDocDue: r.needDocDue ? at(r.needDocDue) : null, docReceivedAt: null,
   };
   const saved = await db.officeRequest.upsert({ where: { number: r.number }, create: { number: r.number, ...data }, update: data });
   await db.requestEvent.deleteMany({ where: { requestId: saved.id } });
   await db.requestMessage.deleteMany({ where: { requestId: saved.id } });
+  await db.requestFile.deleteMany({ where: { requestId: saved.id } });
   for (const [order, e] of r.events.entries()) {
     await db.requestEvent.create({ data: { requestId: saved.id, order, title: e.title, actorName: e.actor ?? "", note: e.note, at: e.at ? at(e.at) : null } });
   }

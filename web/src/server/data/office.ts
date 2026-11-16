@@ -21,6 +21,9 @@ function docWhen(d: Date): string {
 const ddmmyyyy = (d: Date) => mskDate(d).split("-").reverse().join(".");
 
 /** Заявки и документы текущего студента (userId — только из сессии). */
+/** «840 КБ», «2,4 МБ» */
+const fileSize = (b: number) => (b < 1024 * 1024 ? `${Math.max(1, Math.round(b / 1024))} КБ` : `${(b / 1024 / 1024).toFixed(1).replace(".", ",")} МБ`);
+
 export async function getOfficeData(): Promise<OfficeData | null> {
   const user = await getStudent();
   if (!user) return null;
@@ -29,7 +32,7 @@ export async function getOfficeData(): Promise<OfficeData | null> {
     db.officeRequest.findMany({
       where: { userId: user.id, status: { in: [...ACTIVE_STATUSES] } },
       orderBy: { createdAt: "desc" },
-      include: { events: { orderBy: { order: "asc" } }, messages: { orderBy: { createdAt: "asc" } } },
+      include: { events: { orderBy: { order: "asc" } }, messages: { orderBy: { createdAt: "asc" } }, files: { orderBy: { createdAt: "asc" } } },
     }),
     db.document.findMany({ where: { userId: user.id }, orderBy: { issuedAt: "desc" } }),
   ]);
@@ -37,18 +40,25 @@ export async function getOfficeData(): Promise<OfficeData | null> {
   const requests: OfficeRequestView[] = reqs.flatMap((r) => {
     const type = getType(r.typeId);
     if (!type) return [];
+    const waiting = r.needDoc && !r.docReceivedAt ? { doc: r.needDoc, due: r.needDocDue ? formatDayMonth(r.needDocDue) : null } : null;
     const state = (i: number) => (i < r.stage ? "fin" : i === r.stage ? "cur" : "todo") as "fin" | "cur" | "todo";
     const steps: OfficeStep[] = type.steps.map((label, i) => {
       const at = r.events[i]?.at;
+      // офис ждёт документ — текущий этап на паузе
+      if (waiting && state(i) === "cur") return { label, state: "cur" as const, when: "ждёт вас", wait: true };
       return { label, state: state(i), when: state(i) === "cur" ? "сейчас" : state(i) === "fin" && at ? short(at) : "" };
     });
     const events: OfficeEvent[] = r.events.map((e, i) => ({
       state: state(i),
       title: e.title,
-      small: e.note ?? e.actorName,
+      small: waiting && state(i) === "cur" ? `Ждём ${waiting.doc.toLowerCase()}` : (e.note ?? e.actorName),
       at: state(i) === "cur" ? "сейчас" : state(i) === "fin" && e.at ? shortTime(e.at) : i === r.events.length - 1 && r.eta ? `~${short(r.eta)}` : "",
     }));
-    const etaText = r.eta ? `${type.kind === "cert" ? "Будет готова" : "Решение до"} ${formatDayMonth(r.eta)}` : "";
+    const etaText = waiting
+      ? `Ждём ${waiting.doc.toLowerCase()}${waiting.due ? ` до ${waiting.due}` : ""}`
+      : r.eta
+        ? `${type.kind === "cert" ? "Будет готова" : "Решение до"} ${formatDayMonth(r.eta)}`
+        : "";
     let params: unknown = {};
     try {
       params = JSON.parse(r.params);
@@ -66,6 +76,8 @@ export async function getOfficeData(): Promise<OfficeData | null> {
         events,
         messages: r.messages.map((m) => ({ id: m.id, authorName: m.authorName, initials: initials(m.authorName), staff: m.authorRole === "staff", body: m.body })),
         canWithdraw: true,
+        waiting,
+        files: r.files.map((f) => ({ id: f.id, label: r.needDoc ?? "Файл", name: f.name, size: fileSize(f.size), at: shortTime(f.createdAt) })),
       },
     ];
   });

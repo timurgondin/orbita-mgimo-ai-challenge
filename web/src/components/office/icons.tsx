@@ -1,10 +1,10 @@
-import { Archive, ArrowLeftRight, BedDouble, CircleCheck, CircleX, FileText, ListChecks, LoaderCircle, Pause, Plane, RotateCcw, ScanSearch, Send, Shield, Undo2, type LucideIcon } from "lucide-react";
+import { Archive, ArrowLeftRight, Paperclip, BedDouble, CircleCheck, CircleX, FileText, ListChecks, LoaderCircle, Pause, Plane, RotateCcw, ScanSearch, Send, Shield, Undo2, type LucideIcon } from "lucide-react";
 import { STATUS_TAGS } from "@/lib/office-catalog";
 
 const ICONS: Record<string, LucideIcon> = {
   "file-text": FileText, plane: Plane, "list-checks": ListChecks, shield: Shield, "rotate-ccw": RotateCcw,
   "arrow-left-right": ArrowLeftRight, "bed-double": BedDouble, pause: Pause,
-  send: Send, "loader-circle": LoaderCircle, "scan-search": ScanSearch, "circle-check": CircleCheck, archive: Archive, "circle-x": CircleX, "undo-2": Undo2,
+  send: Send, "loader-circle": LoaderCircle, "scan-search": ScanSearch, "circle-check": CircleCheck, archive: Archive, "circle-x": CircleX, "undo-2": Undo2, paperclip: Paperclip,
 };
 
 /** Иконка по имени из каталога. */

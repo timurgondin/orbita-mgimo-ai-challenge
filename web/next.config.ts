@@ -4,6 +4,8 @@ const nextConfig: NextConfig = {
   /* config options here */
   cacheComponents: true,
   partialPrefetching: true,
+  // загрузка документа к заявке — до 8 МБ (проверка размера и типа — в uploadRequestFile)
+  experimental: { serverActions: { bodySizeLimit: "10mb" } },
   async headers() {
     return [
       {

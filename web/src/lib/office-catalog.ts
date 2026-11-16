@@ -89,6 +89,7 @@ export const STATUS_TAGS: Record<string, { label: string; color: string; icon: s
   sent: { label: "Подана", color: "var(--st-violet)", icon: "send" },
   work: { label: "В работе", color: "var(--st-blue)", icon: "loader-circle" },
   review: { label: "На рассмотрении", color: "var(--st-yellow)", icon: "scan-search" },
+  waiting: { label: "Ждёт вас", color: "var(--st-orange)", icon: "paperclip" },
   ready: { label: "Готово", color: "var(--st-green)", icon: "circle-check" },
   done: { label: "Выдано", color: "var(--st-gray)", icon: "archive" },
   rejected: { label: "Отклонено", color: "var(--st-red)", icon: "circle-x" },

@@ -1,7 +1,8 @@
 // Запуск: npm run build && PORT=3101 node scripts/notifications-check.mjs  (сам поднимает next start)
 // Центр уведомлений: колокольчик, шторка, «Новое», полоса срочного, «прочитано ≠ решено», подделки.
 import { execSync, spawn } from "node:child_process";
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync, rmSync } from "node:fs";
+import { join } from "node:path";
 import { chromium } from "playwright";
 import { PrismaClient } from "@prisma/client";
 
@@ -19,7 +20,7 @@ await db.loginAttempt.deleteMany();
 await db.session.deleteMany();
 
 const manifest = JSON.parse(readFileSync(new URL("../.next/server/server-reference-manifest.json", import.meta.url), "utf8")).node;
-const actionId = (name) => Object.entries(manifest).find(([, v]) => v.exportedName === name && v.filename.includes("notifications"))?.[0];
+const actionId = (name, file = "notifications") => Object.entries(manifest).find(([, v]) => v.exportedName === name && v.filename.includes(file))?.[0];
 
 const server = spawn("node", ["node_modules/next/dist/bin/next", "start", "-p", String(PORT)], { env: { ...process.env, COOKIE_SECURE: "false" }, stdio: "ignore" });
 for (let i = 0; i < 60; i++) {
@@ -52,7 +53,7 @@ const notes = (login) => db.notification.findMany({ where: { user: { login } }, 
 const bell = (page) => page.getAttribute("[data-bell]", "data-bell");
 
 try {
-  check("action ids found", !!actionId("markSeen") && !!actionId("resolveNotification"));
+  check("action ids found", !!actionId("markSeen") && !!actionId("resolveNotification") && !!actionId("uploadRequestFile", "office"));
 
   const maximBefore = await notes("m.orlov");
   const { ctx, page } = await login("a.vorontsova");
@@ -68,7 +69,9 @@ try {
   await page.waitForSelector("[role=dialog][aria-label='Уведомления']:not([inert])");
   await page.waitForTimeout(800);
   const drawer = (await page.textContent("[role=dialog][aria-label='Уведомления']")) ?? "";
-  check("drawer: «Нужно действие» + day groups", drawer.includes("Нужно действие") && drawer.includes("Сегодня") && drawer.includes("Вчера") && drawer.includes("Ранее"));
+  check("center: «Нужно действие», «Новые» (unread at open) and «Ранее»", drawer.includes("Нужно действие") && drawer.includes("Новые") && drawer.includes("Ранее"));
+  check("center shows types: Оценка, Расписание, Безопасность", drawer.includes("Оценка") && drawer.includes("Расписание") && drawer.includes("Безопасность"));
+  check("unread rows marked, read rows not", (await page.locator("[role=dialog] [data-unread]").count()) === 4 && (await page.locator("[role=dialog] [data-note]:not([data-unread])").count()) >= 3);
   const afterSeen = await notes("a.vorontsova");
   check("opening marks all as read", afterSeen.every((n) => n.readAt));
   check("read ≠ resolved: actions still pending", afterSeen.filter((n) => n.level === "action" && !n.resolvedAt).length === 2);
@@ -102,6 +105,58 @@ try {
   check("link-action cannot be «resolved» by request", f2.body.includes("не требует действия") && !(await db.notification.findUniqueOrThrow({ where: { id: linkNote.id } })).resolvedAt);
   check("double resolve rejected", f3.body.includes("Уже сделано"));
   check("garbage / object id rejected", f4.body.includes("Уведомление не найдено") && f5.body.includes("Уведомление не найдено"));
+
+  // ---- заявка ждёт скан: ссылка «Загрузить» → окно заявки → загрузка
+  const visa = await db.officeRequest.findUniqueOrThrow({ where: { number: "R-2481" } });
+  const maxReq = await db.officeRequest.findUniqueOrThrow({ where: { number: "R-2479" } });
+  // Подделка запроса к server action из браузера — тем же кодированием, что у клиента (React encodeReply):
+  // в FormData сначала «_1_file», потом «0» с аргументами [id, "$K1"]. kind: pdf | exe (не PDF внутри) | big (9 МБ)
+  const upload = (pg, reqId, kind = "pdf") =>
+    pg.evaluate(
+      async ({ action, reqId, kind }) => {
+        const bytes = kind === "exe" ? new TextEncoder().encode("MZ fake exe") : new Uint8Array(kind === "big" ? 9 * 1024 * 1024 : 64);
+        if (kind !== "exe") bytes.set([0x25, 0x50, 0x44, 0x46, 0x2d]); // %PDF-
+        const fd = new FormData();
+        fd.append("_1_file", new File([bytes], "scan.pdf", { type: "application/pdf" }));
+        fd.append("0", JSON.stringify([reqId, "$K1"]));
+        const r = await fetch("/office", { method: "POST", headers: { "Next-Action": action, Accept: "text/x-component" }, body: fd });
+        return r.text();
+      },
+      { action: actionId("uploadRequestFile", "office"), reqId, kind },
+    );
+  const PDF = Buffer.from("%PDF-1.4\n%demo\n%%EOF\n");
+  const { page: mpage } = await login("m.orlov");
+  const u1 = await upload(mpage, visa.id);
+  check("Maxim cannot upload to Alisa's request", u1.includes("Заявка не найдена") && (await db.requestFile.count({ where: { requestId: visa.id } })) === 0, u1.slice(0, 80));
+  const u2 = await upload(page, maxReq.id);
+  check("Alisa cannot upload to Maxim's request", u2.includes("Заявка не найдена"));
+  const u3 = await upload(page, visa.id, "exe");
+  check("non-PDF content with .pdf name rejected (signature)", u3.includes("Нужен PDF, JPG или PNG"), u3.slice(0, 80));
+  const u4 = await upload(page, visa.id, "big");
+  check("file over 8 MB rejected", u4.includes("Файл больше 8 МБ"), u4.slice(0, 80));
+  const reqB = (await db.officeRequest.findFirst({ where: { number: "R-2477" } }));
+  const u5 = await upload(page, reqB.id);
+  check("upload where office does not wait — rejected", u5.includes("не ждёт документов"));
+  check("still nothing stored", (await db.requestFile.count()) === 0);
+
+  await page.goto(BASE + "/office?request=R-2481");
+  await page.waitForSelector("[data-upload]");
+  const cardText = (await page.textContent('[data-request="R-2481"]')) ?? "";
+  check("office card shows «ждёт вас» and what is awaited", cardText.includes("ждёт вас") && cardText.includes("Ждём скан загранпаспорта"));
+  await page.setInputFiles("[data-upload] input[type=file]", { name: "passport.pdf", mimeType: "application/pdf", buffer: PDF });
+  await page.click("button:has-text('Отправить в офис')");
+  await page.waitForSelector("[data-file]");
+  const visaAfter = await db.officeRequest.findUniqueOrThrow({ where: { id: visa.id }, include: { files: true } });
+  const officeNote = (await notes("a.vorontsova")).find((n) => n.refId === "R-2481");
+  check("upload via UI: file stored, request no longer waiting", visaAfter.files.length === 1 && !!visaAfter.docReceivedAt && visaAfter.files[0].mime === "application/pdf");
+  check("upload resolves the «Загрузите скан» notification", !!officeNote.resolvedAt);
+  check("file on disk under random name", existsSync(join("storage", "uploads", visaAfter.files[0].storedAs)) && /^[a-f0-9]{32}\.pdf$/.test(visaAfter.files[0].storedAs));
+  const u6 = await upload(page, visa.id);
+  check("second upload rejected", u6.includes("не ждёт документов"));
+  await page.keyboard.press("Escape");
+  await page.waitForTimeout(500);
+  check("bell: no pending actions left", ((await bell(page)) ?? "") !== "2" && ((await bell(page)) ?? "") !== "1", String(await bell(page)));
+  for (const f of visaAfter.files) rmSync(join("storage", "uploads", f.storedAs), { force: true });
 
   // без входа
   const anonCtx = await browser.newContext();
