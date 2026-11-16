@@ -85,7 +85,7 @@ export function TimeView({ data }: { data: TimeData }) {
         />
       </div>
 
-      <div key={tab} className="view-in mt-8">
+      <div key={tab} role="tabpanel" aria-label={TABS.find((t) => t.id === tab)?.label} className="view-in mt-8">
         {tab === "sched" ? (
           <ScheduleView
             monday={monday}

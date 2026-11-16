@@ -89,7 +89,6 @@ export function StudyTabs({
               type="button"
               role="tab"
               aria-selected={tab === t.id}
-              aria-controls={`panel-${t.id}`}
               tabIndex={tab === t.id ? 0 : -1}
               onClick={() => select(t.id)}
               onKeyDown={(e) => onKey(e, i)}

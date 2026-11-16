@@ -2,11 +2,12 @@
 
 import { useEffect, useRef } from "react";
 import { useTheme } from "next-themes";
+import { animateWhileVisible } from "@/lib/animate-visible";
 
 const GAP = 12;
 const MASK = "radial-gradient(70% 90% at 100% 0%, #000 0%, transparent 72%)";
 
-/** Точечное поле: точки «дышат» волной. По умолчанию монохромное; `rgb` — цвет точек («r,g,b»). При prefers-reduced-motion рисуется один кадр. */
+/** Точечное поле: точки «дышат» волной. По умолчанию монохромное; `rgb` — цвет точек («r,g,b»). При prefers-reduced-motion рисуется один кадр, вне экрана — пауза. */
 export function DotField({ rgb, mask = MASK, peak }: { rgb?: string; mask?: string; peak?: number } = {}) {
   const ref = useRef<HTMLCanvasElement>(null);
   const { resolvedTheme } = useTheme();
@@ -22,8 +23,6 @@ export function DotField({ rgb, mask = MASK, peak }: { rgb?: string; mask?: stri
     const top = peak ?? (light ? 0.16 : 0.2);
     let w = 0;
     let h = 0;
-    let raf = 0;
-
     const draw = (ms: number) => {
       const t = ms / 1000;
       ctx.clearRect(0, 0, w, h);
@@ -36,7 +35,6 @@ export function DotField({ rgb, mask = MASK, peak }: { rgb?: string; mask?: stri
           ctx.fill();
         }
       }
-      if (!reduce) raf = requestAnimationFrame(draw);
     };
 
     const fit = () => {
@@ -52,11 +50,11 @@ export function DotField({ rgb, mask = MASK, peak }: { rgb?: string; mask?: stri
     const ro = new ResizeObserver(fit);
     ro.observe(canvas);
     fit();
-    if (!reduce) raf = requestAnimationFrame(draw);
+    const stop = reduce ? undefined : animateWhileVisible(canvas, draw);
 
     return () => {
       ro.disconnect();
-      cancelAnimationFrame(raf);
+      stop?.();
     };
   }, [light, rgb, peak]);
 

@@ -4,6 +4,7 @@ import { kindAt } from "@/lib/phrases";
 import { TeacherAvatar } from "@/components/ui/teacher-avatar";
 import type { Lesson } from "@/server/data/types";
 import { DotField } from "./dot-field";
+import { ProgressBar } from "@/components/ui/progress";
 
 /** Карточка «Сейчас» (идёт пара) или «Дальше» (пара ещё не началась). Всё считается из расписания. */
 export function NowCard({ lesson, nowMinutes }: { lesson: Lesson; nowMinutes: number }) {
@@ -40,9 +41,7 @@ export function NowCard({ lesson, nowMinutes }: { lesson: Lesson; nowMinutes: nu
         )}
       </div>
       <div className="relative mt-[22px]">
-        <div className="h-[3px] overflow-hidden rounded-[3px] bg-s3">
-          <div className="h-full rounded-[3px] bg-text" style={{ width: `${progress}%` }} />
-        </div>
+        <ProgressBar value={progress} label="Прошло от пары" />
         <div className="mt-2 flex justify-between text-[13px] text-text-3">
           <span>{lesson.start}</span>
           <span>{lesson.end}</span>

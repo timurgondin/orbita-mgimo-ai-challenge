@@ -156,6 +156,32 @@ button {
   cursor: pointer;
 }
 
+/* Поля ввода. Многострочное поле растёт по тексту (field-sizing), до 40% экрана; min-h задают утилиты. */
+@layer base {
+  /* Переносы: заголовки — ровными строками, абзацы — без «висящего» последнего слова */
+  h1,
+  h2,
+  h3 {
+    text-wrap: balance;
+  }
+  p {
+    text-wrap: pretty;
+  }
+  textarea {
+    field-sizing: content;
+    max-height: 40vh;
+  }
+}
+/* iOS увеличивает страницу при фокусе на поле с текстом мельче 16px — на iPhone/iPad поля не мельче 1rem.
+   Вне слоёв, чтобы перекрыть утилиты text-[15px]. */
+@supports (-webkit-touch-callout: none) {
+  input,
+  textarea,
+  select {
+    font-size: max(1rem, 16px);
+  }
+}
+
 ::selection {
   background: color-mix(in srgb, var(--accent) 35%, transparent);
 }
@@ -541,7 +567,15 @@ html.page-in body {
   }
 }
 
-/* Прокрутка под модалкой: без overflow:hidden на body — сдерживаем прокрутку самого окна и фона */
+/* Прокрутка под модалкой. overscroll-behavior сдерживает прокрутку окна и фона, но Safari (и Firefox < 150)
+   его на непрокручиваемом фоне не соблюдают — поэтому, пока открыто окно, фиксируем и сам корень.
+   scrollbar-gutter держит место под полосу прокрутки, чтобы вёрстка не прыгала. */
+html {
+  scrollbar-gutter: stable;
+}
+html:has(dialog:modal) {
+  overflow: hidden;
+}
 dialog:modal {
   overscroll-behavior: contain;
 }
@@ -636,9 +670,8 @@ dialog::backdrop {
 }
 
 /* Шапка (components/shell/scroll-header.tsx): стиль «прилипла» — по scroll-state, запасной — [data-stuck] */
-html {
-  scroll-padding-top: 68px; /* фокус и якоря не уходят под липкую шапку */
-}
+/* scroll-padding-top под шапку не ставим: в Chromium фокус на кнопках самой шапки (колокольчик, аватар)
+   тогда прокручивает страницу наверх. */
 .topbar {
   container: topbar / scroll-state;
 }
@@ -658,4 +691,40 @@ html {
   background: color-mix(in srgb, var(--bg) 80%, transparent);
   box-shadow: 0 0.5px 0 var(--line);
   backdrop-filter: blur(20px) saturate(1.5);
+}
+
+/* Режим высокой контрастности (Windows): фон-«таблетка» у выбранной вкладки и кнопки там исчезает — даём рамку */
+@media (forced-colors: active) {
+  [role="tab"][aria-selected="true"],
+  [aria-pressed="true"],
+  [aria-current="page"] {
+    outline: 2px solid Highlight;
+    outline-offset: -2px;
+  }
+}
+
+/* Полоска прогресса (components/ui/progress.tsx). -webkit- и -moz- — отдельными правилами: в одном списке браузер выбросит всё правило. */
+@layer components {
+  progress.bar {
+    appearance: none;
+    display: block;
+    width: 100%;
+    height: 3px;
+    border: 0;
+    border-radius: 3px;
+    overflow: clip;
+    background: var(--track, var(--s3));
+  }
+  progress.bar::-webkit-progress-bar {
+    background: var(--track, var(--s3));
+  }
+  progress.bar::-webkit-progress-value {
+    background: var(--fill, var(--text));
+    border-radius: 3px;
+    transition: inline-size 0.2s ease-out;
+  }
+  progress.bar::-moz-progress-bar {
+    background: var(--fill, var(--text));
+    border-radius: 3px;
+  }
 }

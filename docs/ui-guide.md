@@ -55,6 +55,7 @@
 | Карточка с обложкой цвета курса и точечным узором | `components/study/courses-view.tsx` |
 | Модалка по центру на размытом фоне (проп `width`) | `components/time/modal.tsx` (основа — нативный `<dialog>`: `components/ui/dialog.tsx`) |
 | Тост внизу по центру (`popover="manual"`, виден поверх модалки) | `components/ui/toast.tsx` |
+| Полоска прогресса (нативный `<progress>`, цвет — `fill`) | `components/ui/progress.tsx` |
 | Трекер этапов «как у посылки» | `components/office/request-card.tsx` |
 | Превью документа (лист, подпись, QR) | `components/office/doc-modal.tsx` |
 | Точечное поле (фирменный мотив) | `components/today/dot-field.tsx`, `components/login/orbit-canvas.tsx` |
@@ -101,6 +102,7 @@
 - Номера недели, реальных имён, логотипов вузов. Данные только вымышленные.
 - Новых шрифтов, цветов, размеров радиусов вне этого гайда.
 - Самодельных оверлеев: `div role="dialog"`, ловушек фокуса, своих обработчиков Esc, `overflow: hidden` на `body`, `z-index` для «поверх всего». Окна — `ui/dialog.tsx` (`<dialog>` + `showModal()`), меню и подсказки — `popover`, тосты — `popover="manual"`. Состояние по прокрутке — CSS (`scroll-state`, scroll-driven), не слушатель `scroll`. Сверяйся с `github.com/GoogleChrome/modern-web-guidance`.
+- Полей ввода без `autoComplete`, `enterKeyHint` и нужного `type`/`inputMode`. Логины и коды — с `autoCapitalize="none"`, `autoCorrect="off"`, `spellCheck={false}` (иначе iOS пишет первую букву заглавной). Canvas-анимации — через `lib/animate-visible.ts` (вне экрана на паузе).
 
 ## 8. Как работать
 

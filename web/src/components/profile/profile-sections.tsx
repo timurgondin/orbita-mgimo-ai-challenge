@@ -78,6 +78,10 @@ function EditableRow({ k, field, initial, placeholder }: { k: string; field: Con
             value={draft}
             maxLength={40}
             placeholder={placeholder}
+            enterKeyHint="done"
+            {...(field === "phone"
+              ? { type: "tel", autoComplete: "tel" }
+              : { autoComplete: "nickname", autoCapitalize: "none", autoCorrect: "off", spellCheck: false })}
             disabled={pending}
             onChange={(e) => setDraft(e.target.value)}
             onKeyDown={(e) => {

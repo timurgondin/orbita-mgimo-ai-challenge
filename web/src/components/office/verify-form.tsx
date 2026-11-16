@@ -18,9 +18,16 @@ export function VerifyForm() {
       <input
         value={code}
         onChange={(e) => setCode(e.target.value)}
+        name="code"
         aria-label="Код документа"
         placeholder="Код из QR-кода"
         maxLength={200}
+        required
+        autoComplete="off"
+        autoCapitalize="none"
+        autoCorrect="off"
+        spellCheck={false}
+        enterKeyHint="go"
         className="h-12 min-w-0 flex-1 rounded-[14px] bg-s1 px-4 text-[15px] text-text outline-none placeholder:text-text-3 focus:shadow-[inset_0_0_0_1px_color-mix(in_srgb,var(--accent)_60%,transparent)]"
       />
       <button type="submit" className="h-12 rounded-[14px] bg-text px-5 text-[15px] font-semibold text-bg transition-transform duration-150 active:scale-[.97]">

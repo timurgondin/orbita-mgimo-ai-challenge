@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import { useTheme } from "next-themes";
+import { animateWhileVisible } from "@/lib/animate-visible";
 
 const G = 12;
 const TILT = -0.42;
@@ -28,7 +29,6 @@ export function OrbitCanvas() {
     const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
     let W = 0;
     let H = 0;
-    let raf = 0;
     const ct = Math.cos(TILT);
     const st = Math.sin(TILT);
     function draw(ms: number) {
@@ -72,7 +72,6 @@ export function OrbitCanvas() {
           ctx!.fill();
         }
       }
-      if (!reduce) raf = requestAnimationFrame(draw);
     }
     const fit = () => {
       const d = devicePixelRatio || 1;
@@ -86,9 +85,9 @@ export function OrbitCanvas() {
     const ro = new ResizeObserver(fit);
     ro.observe(cv);
     fit();
-    if (!reduce) raf = requestAnimationFrame(draw);
+    const stop = reduce ? undefined : animateWhileVisible(cv, draw);
     return () => {
-      cancelAnimationFrame(raf);
+      stop?.();
       ro.disconnect();
     };
   }, [resolvedTheme]);

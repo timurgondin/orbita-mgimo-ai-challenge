@@ -8,6 +8,7 @@ import { Segmented } from "@/components/ui/segmented";
 import { TeacherAvatar } from "@/components/ui/teacher-avatar";
 import type { TimeConsultation, TimeLesson } from "@/server/data/types";
 import { ACCENT, DOW, DOWL, cap, cc, dayMonth, dayNumber, relDay, slotStatus, weekDates, weekTitle } from "./helpers";
+import { ProgressBar } from "@/components/ui/progress";
 
 export type Item = { type: "lesson"; pair: number; lesson: TimeLesson } | { type: "cons"; pair: number; cons: TimeConsultation };
 export type View = "list" | "week";
@@ -86,9 +87,7 @@ function Slot({ item, date, onOpen }: { item: Item; date: string; onOpen: (item:
         {mine ? "Вы записаны" : st.text}
       </span>
       {st.state === "live" && (
-        <span className="col-[3/-1] mt-0.5 h-[3px] overflow-hidden rounded-[3px] bg-s3">
-          <i className="block h-full rounded-[3px] bg-text" style={{ width: `${st.progress}%` }} />
-        </span>
+        <ProgressBar value={st.progress ?? 0} label="Прошло от пары" className="col-[3/-1] mt-0.5" />
       )}
     </button>
   );

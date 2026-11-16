@@ -82,7 +82,12 @@ export function LoginForm() {
             name="login"
             autoComplete="username"
             placeholder="i.familiya"
+            // логин — не текст: без автозаглавной (iOS превращает a.vorontsova в A.vorontsova) и автозамены
+            autoCapitalize="none"
+            autoCorrect="off"
             spellCheck={false}
+            enterKeyHint="next"
+            required
             maxLength={64}
             value={login}
             onChange={(e) => {
@@ -104,6 +109,8 @@ export function LoginForm() {
               type={show ? "text" : "password"}
               autoComplete="current-password"
               placeholder="••••••••"
+              enterKeyHint="go"
+              required
               maxLength={256}
               value={password}
               onChange={(e) => {

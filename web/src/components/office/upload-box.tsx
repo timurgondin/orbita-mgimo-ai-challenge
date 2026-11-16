@@ -8,6 +8,7 @@ import type { Toast } from "@/components/ui/toast";
 import type { OfficeRequestView } from "@/server/data/types";
 import { uploadRequestFile } from "@/server/office/actions";
 import { whiteBtn } from "./icons";
+import { ProgressBar } from "@/components/ui/progress";
 
 const MAX = 8 * 1024 * 1024;
 const ACCEPT = ".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png";
@@ -99,9 +100,7 @@ export function UploadBox({ req, toast }: { req: OfficeRequestView; toast: Toast
             )}
           </div>
           {progress > 0 && (
-            <div className="mt-3 h-1 overflow-hidden rounded bg-s3">
-              <div className="h-full rounded bg-accent transition-[width] duration-200 ease-out" style={{ width: `${progress}%` }} />
-            </div>
+            <ProgressBar value={progress} label="Загрузка файла" fill="var(--accent)" className="mt-3 h-1" />
           )}
           <button type="button" disabled={pending || progress === 100} onClick={send} className={cn(whiteBtn, "mt-3.5 h-11 w-full text-[14.5px]")}>
             {pending ? "Отправляем" : "Отправить в офис"}

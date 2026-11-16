@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { CourseCardData } from "@/server/data/types";
+import { ProgressBar } from "@/components/ui/progress";
 
 const SEG = {
   done: "bg-(--cc)",
@@ -35,9 +36,7 @@ function Card({ c }: { c: CourseCardData }) {
           )}
         </div>
         {c.progress != null ? (
-          <div className="mt-3 h-1 overflow-hidden rounded bg-s3">
-            <i className="block h-full rounded bg-(--cc)" style={{ width: `${c.progress}%` }} />
-          </div>
+          <ProgressBar value={c.progress} label="Курс пройден" fill="var(--cc)" className="mt-3 h-1" />
         ) : (
           <div className="mt-3 flex h-1 gap-[3px]" aria-hidden="true">
             {c.formula.map((s, i) => (
