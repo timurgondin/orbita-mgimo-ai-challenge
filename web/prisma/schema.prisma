@@ -211,10 +211,16 @@ model OnlineProgress {
 model Notification {
   id          String    @id @default(cuid())
   userId      String
-  kind        String // grade | document | announcement | schedule
+  kind        String // grade | document | announcement | schedule | library | material | security | office — значок
+  category    String    @default("study") // study | schedule | office | library | announcement | security — вкладки
+  level       String    @default("info") // action (нужно действие) | important | info — docs/notifications.md
   title       String
   body        String // **выделение** в тексте
   link        String?
+  actionLabel String? // действие прямо в строке: «Продлить», «Загрузить», «Скачать»
+  actionKind  String? // resolve — выполняется на сервере и решает уведомление; link — ведёт на link
+  dueAt       DateTime? // срок для «нужно действие»: ≤ 24 ч — полоса наверху «Сегодня»
+  resolvedAt  DateTime? // «решено» ≠ «прочитано»: action висит, пока не решено
   actorName   String?
   actorAvatar String?
   createdAt   DateTime

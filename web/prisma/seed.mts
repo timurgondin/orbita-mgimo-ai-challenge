@@ -113,8 +113,14 @@ interface ConsDef {
 }
 interface Note {
   kind: string;
+  category: "study" | "schedule" | "office" | "library" | "announcement" | "security";
+  level: "action" | "important" | "info";
   title: string;
   body: string;
+  link?: string;
+  action?: string;
+  actionKind?: "resolve" | "link";
+  due?: string;
   actor?: string;
   avatar?: string;
   at: string;
@@ -240,9 +246,15 @@ const ALISA: Person = {
     { course: "intl-law-24", d: "2026-11-25", p: 4, place: "Онлайн", online: true, cap: 25, others: 11, qs: 6 },
   ],
   notes: [
-    { kind: "grade", title: "8 из 10 за контрольную по микроэкономике", body: "«Хорошо с графиками»", actor: "Петрова Е. А.", avatar: "peach", at: "2026-11-19T10:05" },
-    { kind: "document", title: "Справка об обучении готова", body: "PDF с QR-кодом уже в «Офисе»", at: "2026-11-18T15:00" },
-    { kind: "announcement", title: "Открыта запись на элективы", body: "Запись идёт до 30 ноября", at: "2026-11-17T11:00", read: true },
+    { kind: "library", category: "library", level: "action", title: "Верните «Экономикс» в библиотеку", body: "Или продлите ещё на две недели", action: "Продлить", actionKind: "resolve", due: "2026-11-20T10:00", link: "/", at: "2026-11-19T09:00" },
+    { kind: "office", category: "office", level: "action", title: "Загрузите скан загранпаспорта", body: "Для справки для визы", action: "Загрузить", actionKind: "link", due: "2026-11-21T18:00", link: "/office", at: "2026-11-18T12:30" },
+    { kind: "grade", category: "study", level: "important", title: "8 из 10 за контрольную по микроэкономике", body: "«Хорошо с графиками»", actor: "Петрова Е. А.", avatar: "peach", link: "/study?tab=tasks", at: "2026-11-19T10:05" },
+    { kind: "schedule", category: "schedule", level: "important", title: "Английский переехал в ауд. 4105", body: "Сегодня в 14:40, вместо **2214**", link: "/time", at: "2026-11-19T08:30" },
+    { kind: "document", category: "office", level: "important", title: "Справка об обучении готова", body: "PDF с QR-кодом уже в «Офисе»", action: "Открыть", actionKind: "link", link: "/office", at: "2026-11-18T15:00" },
+    { kind: "material", category: "study", level: "info", title: "3 новых материала по эконометрике", body: "Слайды и задачи к лекции 12", link: "/study", at: "2026-11-18T19:20" },
+    { kind: "announcement", category: "announcement", level: "info", title: "Открыта запись на элективы", body: "Запись идёт до 30 ноября", at: "2026-11-17T11:00", read: true },
+    { kind: "security", category: "security", level: "info", title: "Вход с нового устройства", body: "iPhone, Москва", link: "/profile", at: "2026-11-16T21:14", read: true },
+    { kind: "schedule", category: "study", level: "important", title: "Problem set 6 можно сдать до субботы", body: "Срок сдвинут с четверга", link: "/study?tab=tasks", at: "2026-11-15T13:00", read: true },
   ],
 };
 
@@ -322,9 +334,10 @@ const MAXIM: Person = {
     { course: "ir-theory-22", d: "2026-11-24", p: 4, place: "Ауд. 5101", cap: 15, others: 5, qs: 2 },
   ],
   notes: [
-    { kind: "grade", title: "8,4 из 10 за записку по внешней политике", body: "«Сильная аргументация»", actor: "Зайцева Л. К.", avatar: "peach", at: "2026-11-19T09:12" },
-    { kind: "schedule", title: "Конфликтология переехала", body: "В четверг в **ауд. 5102** вместо 5008", at: "2026-11-18T18:40" },
-    { kind: "announcement", title: "Открыта запись на элективы", body: "Запись идёт до 30 ноября", at: "2026-11-17T11:00", read: true },
+    { kind: "library", category: "library", level: "action", title: "Верните «Мировую политику» в библиотеку", body: "Или продлите ещё на две недели", action: "Продлить", actionKind: "resolve", due: "2026-11-26T18:00", link: "/", at: "2026-11-19T09:00" },
+    { kind: "grade", category: "study", level: "important", title: "8,4 из 10 за записку по внешней политике", body: "«Сильная аргументация»", actor: "Зайцева Л. К.", avatar: "peach", link: "/study?tab=tasks", at: "2026-11-19T09:12" },
+    { kind: "schedule", category: "schedule", level: "important", title: "Конфликтология переехала", body: "В четверг в **ауд. 5102** вместо 5008", link: "/time", at: "2026-11-18T18:40" },
+    { kind: "announcement", category: "announcement", level: "info", title: "Открыта запись на элективы", body: "Запись идёт до 30 ноября", at: "2026-11-17T11:00", read: true },
   ],
 };
 
@@ -367,8 +380,8 @@ const NIKA: Person = {
     { course: "marketing-intro-26", d: "2026-11-23", p: 3, place: "Ауд. 1105", cap: 15, others: 4, qs: 1 },
   ],
   notes: [
-    { kind: "grade", title: "8,5 из 10 за тест по маркетингу", body: "«Уверенно, так держать»", actor: "Лебедева Т. Р.", avatar: "peach", at: "2026-11-12T16:05", read: true },
-    { kind: "announcement", title: "Добро пожаловать в Орбиту", body: "Письмо от учебного офиса", at: "2026-11-16T09:00" },
+    { kind: "grade", category: "study", level: "important", title: "8,5 из 10 за тест по маркетингу", body: "«Уверенно, так держать»", actor: "Лебедева Т. Р.", avatar: "peach", link: "/study?tab=tasks", at: "2026-11-12T16:05", read: true },
+    { kind: "announcement", category: "announcement", level: "info", title: "Добро пожаловать в Орбиту", body: "Письмо от учебного офиса", at: "2026-11-16T09:00" },
   ],
 };
 
@@ -448,7 +461,11 @@ for (const person of [ALISA, MAXIM, NIKA]) {
 
   for (const n of person.notes) {
     await db.notification.create({
-      data: { userId: uid, kind: n.kind, title: n.title, body: n.body, actorName: n.actor, actorAvatar: n.avatar, createdAt: at(n.at), readAt: n.read ? at(n.at) : null },
+      data: {
+        userId: uid, kind: n.kind, category: n.category, level: n.level, title: n.title, body: n.body, link: n.link,
+        actionLabel: n.action, actionKind: n.actionKind, dueAt: n.due ? at(n.due) : null,
+        actorName: n.actor, actorAvatar: n.avatar, createdAt: at(n.at), readAt: n.read ? at(n.at) : null,
+      },
     });
   }
 }

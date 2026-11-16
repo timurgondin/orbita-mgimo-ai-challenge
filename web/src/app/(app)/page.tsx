@@ -12,13 +12,15 @@ import {
 } from "@/lib/demo-clock";
 import { requireUser } from "@/server/auth/session";
 import { getStudentCard } from "@/server/data/profile";
-import { getNews, getScheduleForToday, getSoon } from "@/server/data/today";
+import { getTopNews } from "@/server/data/notifications";
+import { getScheduleForToday, getSoon } from "@/server/data/today";
+import { UrgentStrip } from "@/components/notifications/urgent-strip";
 
 export default async function TodayPage() {
   const user = await requireUser();
   const student = user.role === "student";
   const [schedule, soon, news, card] = student
-    ? await Promise.all([getScheduleForToday(), getSoon(), getNews(), getStudentCard()])
+    ? await Promise.all([getScheduleForToday(), getSoon(), getTopNews(), getStudentCard()])
     : [null, [], [], null];
   const today = schedule?.today ?? [];
   const tomorrow = schedule?.tomorrow;
@@ -42,6 +44,7 @@ export default async function TodayPage() {
         <p className="mt-8 text-[15px] text-text-2">Кабинет сотрудника появится здесь</p>
       ) : (
         <>
+      <UrgentStrip />
       <div className="mt-8 grid grid-cols-[minmax(0,1fr)] items-stretch gap-12 min-[900px]:grid-cols-[minmax(0,1.25fr)_minmax(0,1fr)]">
         {current && <NowCard lesson={current} nowMinutes={DEMO_MINUTES} />}
         <LaterToday lessons={later} tomorrow={tomorrow} />

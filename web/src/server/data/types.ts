@@ -36,7 +36,9 @@ export type Assessment = "exam" | "credit";
 export type ComponentKind = "test" | "homework" | "essay" | "project" | "exam" | "participation";
 export type WorkStatus = "upcoming" | "draft" | "in_progress" | "submitted" | "reviewing" | "graded" | "returned";
 export type EventKind = "lecture" | "seminar" | "practice" | "consultation" | "test";
-export type NotificationKind = "grade" | "document" | "announcement" | "schedule";
+export type NotificationKind = "grade" | "document" | "announcement" | "schedule" | "library" | "material" | "security" | "office";
+export type NotificationCategory = "study" | "schedule" | "office" | "library" | "announcement" | "security";
+export type NotificationLevel = "action" | "important" | "info";
 
 /** Компоненты, которые студент сдаёт как задания (не участие и не экзамен). */
 export const TASK_KINDS: ComponentKind[] = ["test", "homework", "essay", "project"];
@@ -69,15 +71,36 @@ export interface SoonItem {
 
 export type NewsAvatar =
   | { kind: "initials"; text: string; gradient: string }
-  | { kind: "icon"; icon: "file-check-2" | "megaphone" | "map-pin" };
+  | { kind: "icon"; icon: NotificationKind };
 
+/** Уведомление для центра и «Нового». Правила — docs/notifications.md. */
 export interface NewsItem {
   id: string;
+  category: NotificationCategory;
+  level: NotificationLevel;
   title: string;
   subtitle: { before?: string; emphasis?: string; after?: string };
+  /** «10:05», «Вчера», «Пн», «12 ноября» */
   time: string;
+  group: "Сегодня" | "Вчера" | "Ранее";
   unread: boolean;
+  /** action, который ещё не решён */
+  pending: boolean;
+  /** срок для action: «До завтра, 10:00» */
+  due?: string;
+  /** срок ближе суток — полоса наверху «Сегодня» */
+  urgent: boolean;
+  href: string | null;
+  action?: { label: string; kind: "resolve" | "link" };
   avatar: NewsAvatar;
+}
+
+export interface NotificationCenterData {
+  items: NewsItem[];
+  /** число на колокольчике: нерешённые «нужно действие» */
+  actions: number;
+  /** точка на колокольчике: есть непрочитанное важное */
+  dot: boolean;
 }
 
 export interface FormulaSegment {

@@ -73,9 +73,9 @@ try {
   await page.goto(BASE + "/time");
   await page.waitForSelector('[data-pair="6"]');
   const list = await text(page);
-  check("list: Thu bell grid with live pair 3, ещё 41 мин", (await page.locator('[data-pair="3"][data-state="live"]').textContent()).includes("ещё 41 мин") && list.includes("Микроэкономика") && list.includes("Олигополия") && list.includes("Нет пары"));
+  check("list: Thu bell grid with live pair 3, ещё 41 мин", (await page.locator('[data-pair="3"][data-state="live"]').first().textContent()).includes("ещё 41 мин") && list.includes("Микроэкономика") && list.includes("Олигополия") && list.includes("Нет пары"));
   check("list: room change 2214 → 4105", list.includes("2214") && list.includes("→ 4105"));
-  check("list: signed-up consultation in pair 6, «Вы записаны»", (await page.locator('[data-pair="6"]').textContent()).includes("Эконометрика") && list.includes("Вы записаны"));
+  check("list: signed-up consultation in pair 6, «Вы записаны»", (await page.locator('[data-pair="6"]').first().textContent()).includes("Эконометрика") && list.includes("Вы записаны"));
   check("list: week title", list.includes("16 – 21 ноября"));
 
   await page.evaluate(() => { window.__marker = 1; });

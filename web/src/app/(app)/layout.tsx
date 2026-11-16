@@ -2,18 +2,19 @@ import { Suspense } from "react";
 import { PageEnter } from "@/components/shell/page-transition";
 import { TopBar } from "@/components/shell/top-bar";
 import { requireUser } from "@/server/auth/session";
-import { getUnreadCount } from "@/server/data/today";
+import { NotificationCenter } from "@/components/notifications/center";
+import { getNotificationCenter } from "@/server/data/notifications";
 
 // Сессия читается в запросе, поэтому всё содержимое — за Suspense (Cache Components).
 async function Shell({ children }: { children: React.ReactNode }) {
   const user = await requireUser();
-  const unread = user.role === "student" ? await getUnreadCount() : 0;
+  const center = await getNotificationCenter();
   return (
-    <>
+    <NotificationCenter data={center}>
       <PageEnter />
-      <TopBar user={user} unread={unread} />
+      <TopBar user={user} />
       <main className="mx-auto max-w-[1180px] px-5 pt-11 pb-20 sm:px-10">{children}</main>
-    </>
+    </NotificationCenter>
   );
 }
 

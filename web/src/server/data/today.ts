@@ -1,9 +1,9 @@
 import "server-only";
 import { db } from "@/server/db/client";
 import { requireUser } from "@/server/auth/session";
-import { DEMO_NOW, DEMO_DATE, addDays, dayStart, daysBetween, formatDayMonth, formatShortWeekday, mskDate, mskTime } from "@/lib/demo-clock";
-import { avatarGradientByKey, formatDue, getStudent, teacherInitials } from "./shared";
-import type { EventKind, Lesson, NewsItem, NotificationKind, SoonItem, WorkStatus } from "./types";
+import { DEMO_NOW, DEMO_DATE, addDays, dayStart, mskDate, mskTime } from "@/lib/demo-clock";
+import { formatDue, getStudent } from "./shared";
+import type { EventKind, Lesson, SoonItem, WorkStatus } from "./types";
 import { TASK_KINDS } from "./types";
 
 const FORMAT: Partial<Record<EventKind, string>> = { lecture: "Лекция", seminar: "Семинар", practice: "Практика", test: "Контрольная" };
@@ -114,49 +114,3 @@ export async function getSoon(): Promise<SoonItem[]> {
       };
     });
 }
-
-function newsTime(d: Date): string {
-  const diff = daysBetween(d, DEMO_NOW);
-  if (diff <= 0) return mskTime(d);
-  if (diff === 1) return "Вчера";
-  if (diff < 7) return formatShortWeekday(mskDate(d));
-  return formatDayMonth(d);
-}
-
-function parseBody(body: string): NewsItem["subtitle"] {
-  const m = body.match(/^(.*?)\*\*(.+?)\*\*(.*)$/);
-  return m ? { before: m[1] || undefined, emphasis: m[2], after: m[3] || undefined } : { before: body };
-}
-
-const ICON: Record<NotificationKind, "file-check-2" | "megaphone" | "map-pin"> = {
-  grade: "file-check-2",
-  document: "file-check-2",
-  announcement: "megaphone",
-  schedule: "map-pin",
-};
-
-export async function getNews(limit = 3): Promise<NewsItem[]> {
-  const user = await requireUser();
-  const rows = await db.notification.findMany({
-    where: { userId: user.id, createdAt: { lte: DEMO_NOW } },
-    orderBy: { createdAt: "desc" },
-    take: limit,
-  });
-  return rows.map((n) => ({
-    id: n.id,
-    title: n.title,
-    subtitle: parseBody(n.body),
-    time: newsTime(n.createdAt),
-    unread: n.readAt == null,
-    avatar:
-      n.actorName && n.kind === "grade"
-        ? { kind: "initials", text: teacherInitials(n.actorName), gradient: avatarGradientByKey(n.actorAvatar ?? "sand") }
-        : { kind: "icon", icon: ICON[n.kind as NotificationKind] ?? "megaphone" },
-  }));
-}
-
-export async function getUnreadCount(): Promise<number> {
-  const user = await requireUser();
-  return db.notification.count({ where: { userId: user.id, readAt: null, createdAt: { lte: DEMO_NOW } } });
-}
-
