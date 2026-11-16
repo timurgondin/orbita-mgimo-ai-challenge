@@ -240,7 +240,7 @@ const ALISA: Person = {
     { course: "intl-law-24", d: "2026-11-25", p: 4, place: "Онлайн", online: true, cap: 25, others: 11, qs: 6 },
   ],
   notes: [
-    { kind: "grade", title: "8 из 10 за контрольную №1", body: "Микроэкономика: «Хорошо с графиками»", actor: "Петрова Е. А.", avatar: "peach", at: "2026-11-19T10:05" },
+    { kind: "grade", title: "8 из 10 за контрольную по микроэкономике", body: "«Хорошо с графиками»", actor: "Петрова Е. А.", avatar: "peach", at: "2026-11-19T10:05" },
     { kind: "document", title: "Справка об обучении готова", body: "PDF с QR-кодом уже в «Офисе»", at: "2026-11-18T15:00" },
     { kind: "announcement", title: "Открыта запись на элективы", body: "Запись идёт до 30 ноября", at: "2026-11-17T11:00", read: true },
   ],
@@ -322,7 +322,7 @@ const MAXIM: Person = {
     { course: "ir-theory-22", d: "2026-11-24", p: 4, place: "Ауд. 5101", cap: 15, others: 5, qs: 2 },
   ],
   notes: [
-    { kind: "grade", title: "8,4 из 10 за аналитическую записку", body: "Внешняя политика России: «Сильная аргументация»", actor: "Зайцева Л. К.", avatar: "peach", at: "2026-11-19T09:12" },
+    { kind: "grade", title: "8,4 из 10 за записку по внешней политике", body: "«Сильная аргументация»", actor: "Зайцева Л. К.", avatar: "peach", at: "2026-11-19T09:12" },
     { kind: "schedule", title: "Конфликтология переехала", body: "В четверг в **ауд. 5102** вместо 5008", at: "2026-11-18T18:40" },
     { kind: "announcement", title: "Открыта запись на элективы", body: "Запись идёт до 30 ноября", at: "2026-11-17T11:00", read: true },
   ],
@@ -367,7 +367,7 @@ const NIKA: Person = {
     { course: "marketing-intro-26", d: "2026-11-23", p: 3, place: "Ауд. 1105", cap: 15, others: 4, qs: 1 },
   ],
   notes: [
-    { kind: "grade", title: "8,5 из 10 за тест 1", body: "Введение в маркетинг", actor: "Лебедева Т. Р.", avatar: "peach", at: "2026-11-12T16:05", read: true },
+    { kind: "grade", title: "8,5 из 10 за тест по маркетингу", body: "«Уверенно, так держать»", actor: "Лебедева Т. Р.", avatar: "peach", at: "2026-11-12T16:05", read: true },
     { kind: "announcement", title: "Добро пожаловать в Орбиту", body: "Письмо от учебного офиса", at: "2026-11-16T09:00" },
   ],
 };
