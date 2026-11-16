@@ -102,7 +102,7 @@ try {
   // запись через интерфейс
   await page.click(`[data-id="${alisaEng.id}"]`);
   await page.waitForSelector("#cons-q");
-  check("modal shows 3 questions from data", (await page.textContent('[role="dialog"]')).includes("3 вопроса уже прислали"));
+  check("modal shows 3 questions from data", (await page.textContent('dialog[open]')).includes("3 вопроса уже прислали"));
   await page.fill("#cons-q", "Как оформить Essay по Remote work");
   await page.click('button:has-text("Записаться")');
   await page.waitForSelector('[role="status"]:has-text("Вы записаны")');
@@ -132,8 +132,8 @@ try {
 
   // переполненная консультация (Ким, 12 из 12)
   await page.click(`[data-id="${alisaWorld.id}"]`);
-  await page.waitForSelector('[role="dialog"] >> text=Мест нет');
-  check("full consultation: modal has no sign-up button", (await page.locator('[role="dialog"] button:has-text("Записаться")').count()) === 0);
+  await page.waitForSelector('dialog[open] >> text=Мест нет');
+  check("full consultation: modal has no sign-up button", (await page.locator('dialog[open] button:has-text("Записаться")').count()) === 0);
   const full = await forge(ctx, "signUp", [alisaWorld.id, "прорвусь"]);
   check("forged signUp to FULL consultation rejected", full.body.includes("Мест нет") && (await count(alisaWorld.id)) === 12, full.body.slice(0, 80));
 

@@ -463,3 +463,83 @@ html.page-in body {
     pointer-events: none;
   }
 }
+
+/* Модальные окна: нативный <dialog> (components/ui/dialog.tsx).
+   Вход — @starting-style, выход — переходы display/overlay с allow-discrete; где их нет — по [data-closing].
+   В слое components, чтобы утилиты на самом окне (ширина, скругление) могли его дополнять. */
+@layer components {
+  .dlg {
+    position: fixed;
+    inset: 0;
+    margin: auto;
+    padding: 0;
+    border: 0;
+    max-width: none;
+    max-height: none;
+    color: var(--text);
+    background: var(--s2);
+    box-shadow:
+      0 0 0 0.5px var(--line),
+      0 40px 100px -24px rgb(0 0 0 / 0.85);
+    opacity: 0;
+    transition-property: opacity, translate, scale, display, overlay;
+    transition-duration: 0.22s, 0.45s, 0.45s, 0.45s, 0.45s;
+    transition-timing-function: var(--ease), var(--spring), var(--spring), linear, linear;
+    transition-behavior: allow-discrete;
+  }
+  .dlg[open]:where(:not([data-closing])) {
+    opacity: 1;
+    translate: none;
+    scale: none;
+  }
+  @starting-style {
+    .dlg[open] {
+      opacity: 0;
+    }
+  }
+  .dlg::backdrop {
+    background: rgb(10 10 12 / 0);
+    backdrop-filter: blur(0) saturate(1);
+    transition-property: background-color, backdrop-filter, display, overlay;
+    transition-duration: 0.3s;
+    transition-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+    transition-behavior: allow-discrete;
+  }
+  .dlg[open]:where(:not([data-closing]))::backdrop {
+    background: rgb(10 10 12 / 0.45);
+    backdrop-filter: blur(10px) saturate(1.2);
+  }
+  @starting-style {
+    .dlg[open]::backdrop {
+      background: rgb(10 10 12 / 0);
+      backdrop-filter: blur(0) saturate(1);
+    }
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .dlg {
+      translate: 0 2%;
+      scale: 0.96;
+    }
+    @starting-style {
+      .dlg[open] {
+        translate: 0 2%;
+        scale: 0.96;
+      }
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .dlg,
+    .dlg::backdrop {
+      transition-duration: 0.1s;
+    }
+  }
+}
+
+/* Прокрутка под модалкой: без overflow:hidden на body — сдерживаем прокрутку самого окна и фона */
+dialog:modal {
+  overscroll-behavior: contain;
+}
+dialog::backdrop {
+  overflow: hidden;
+  overscroll-behavior: contain;
+}

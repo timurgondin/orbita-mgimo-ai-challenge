@@ -66,25 +66,25 @@ try {
 
   // «Все» открывает шторку → всё прочитано, но действия висят
   await page.click("[data-open-center]");
-  await page.waitForSelector("[role=dialog][aria-label='Уведомления']:not([inert])");
+  await page.waitForSelector("dialog[open][aria-label='Уведомления']");
   await page.waitForTimeout(800);
-  const drawer = (await page.textContent("[role=dialog][aria-label='Уведомления']")) ?? "";
+  const drawer = (await page.textContent("dialog[open][aria-label='Уведомления']")) ?? "";
   check("center: «Нужно действие», «Новые» (unread at open) and «Ранее»", drawer.includes("Нужно действие") && drawer.includes("Новые") && drawer.includes("Ранее"));
   check("center shows types: Оценка, Расписание, Безопасность", drawer.includes("Оценка") && drawer.includes("Расписание") && drawer.includes("Безопасность"));
-  check("unread rows marked, read rows not", (await page.locator("[role=dialog] [data-unread]").count()) === 4 && (await page.locator("[role=dialog] [data-note]:not([data-unread])").count()) >= 3);
+  check("unread rows marked, read rows not", (await page.locator("dialog[open] [data-unread]").count()) === 4 && (await page.locator("dialog[open] [data-note]:not([data-unread])").count()) >= 3);
   const afterSeen = await notes("a.vorontsova");
   check("opening marks all as read", afterSeen.every((n) => n.readAt));
   check("read ≠ resolved: actions still pending", afterSeen.filter((n) => n.level === "action" && !n.resolvedAt).length === 2);
   check("Maxim's notifications untouched", JSON.stringify(await notes("m.orlov")) === JSON.stringify(maximBefore));
 
   // вкладки
-  await page.click("[role=dialog] button[aria-pressed]:has-text('Расписание')");
-  const sched = (await page.textContent("[role=dialog][aria-label='Уведомления']")) ?? "";
+  await page.click("dialog[open] button[aria-pressed]:has-text('Расписание')");
+  const sched = (await page.textContent("dialog[open][aria-label='Уведомления']")) ?? "";
   check("tab «Расписание» filters", sched.includes("Английский переехал") && !sched.includes("8 из 10") && !sched.includes("Экономикс"));
-  await page.click("[role=dialog] button[aria-pressed]:has-text('Все')");
+  await page.click("dialog[open] button[aria-pressed]:has-text('Все')");
 
   // «Продлить» прямо в шторке
-  await page.click("[role=dialog] [data-action-card] button:has-text('Продлить')");
+  await page.click("dialog[open] [data-action-card] button:has-text('Продлить')");
   await page.waitForSelector("text=Книга продлена на две недели");
   await page.waitForTimeout(800);
   const book = (await notes("a.vorontsova")).find((n) => n.category === "library");

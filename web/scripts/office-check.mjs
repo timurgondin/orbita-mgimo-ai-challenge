@@ -123,8 +123,8 @@ try {
   await page.click('button:has-text("Ответить")');
   await page.fill('textarea[aria-label="Сообщение"]', "Апостиль не нужен, спасибо");
   await page.click('button:has-text("Отправить")');
-  await page.waitForSelector('[role="dialog"] button:has-text("Ответить")'); // поле закрылось — сообщение ушло
-  await page.waitForSelector('[role="dialog"] span:has-text("Апостиль не нужен, спасибо")');
+  await page.waitForSelector('dialog[open] button:has-text("Ответить")'); // поле закрылось — сообщение ушло
+  await page.waitForSelector('dialog[open] span:has-text("Апостиль не нужен, спасибо")');
   const nReply = await db.requestMessage.count({ where: { requestId: reqA.id, authorRole: "student" } });
   check("reply stored and shown", nReply === 1, `count ${nReply}`);
   await page.keyboard.press("Escape");
@@ -148,8 +148,8 @@ try {
 
   // превью
   await page.click('[data-doc="D-2470"]');
-  await page.waitForSelector('[role="dialog"] >> text=Подписано электронной подписью');
-  check("doc preview: paper, QR svg, verify link", (await page.locator('[role="dialog"] svg[viewBox]').count()) > 1 && (await page.textContent('[role="dialog"]')).includes("Воронцовой Алисе Сергеевне"));
+  await page.waitForSelector('dialog[open] >> text=Подписано электронной подписью');
+  check("doc preview: paper, QR svg, verify link", (await page.locator('dialog[open] svg[viewBox]').count()) > 1 && (await page.textContent('dialog[open]')).includes("Воронцовой Алисе Сергеевне"));
   await page.keyboard.press("Escape");
 
   // лимит: 10 в час
