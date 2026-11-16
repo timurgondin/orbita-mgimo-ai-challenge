@@ -1,7 +1,6 @@
 import { Clock3 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { OfficeRequestView } from "@/server/data/types";
-import { OfficeTag } from "./icons";
 
 export function RequestCard({ req, onOpen }: { req: OfficeRequestView; onOpen: () => void }) {
   return (
@@ -11,12 +10,9 @@ export function RequestCard({ req, onOpen }: { req: OfficeRequestView; onOpen: (
       data-request={req.number}
       className="flex w-full flex-col rounded-[24px] bg-s1 px-6 py-[22px] text-left transition-colors duration-200 hover:bg-s2 max-sm:px-5"
     >
-      <span className="flex items-start justify-between gap-3">
-        <span className="min-w-0">
-          <span className="block text-[17px] font-semibold tracking-[-.02em]">{req.title}</span>
-          <span className="mt-0.5 block text-sm text-text-3">{req.subtitle}</span>
-        </span>
-        <OfficeTag status={req.status} />
+      <span className="min-w-0">
+        <span className="block text-[17px] font-semibold tracking-[-.02em]">{req.title}</span>
+        <span className="mt-0.5 block text-sm text-text-3">{req.subtitle}</span>
       </span>
       <span className="mt-[26px] grid" style={{ gridTemplateColumns: `repeat(${req.steps.length}, minmax(0, 1fr))` }}>
         {req.steps.map((s) => (
