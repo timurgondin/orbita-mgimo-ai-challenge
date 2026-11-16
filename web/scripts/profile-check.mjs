@@ -62,7 +62,7 @@ try {
   const maxim = await user("m.orlov");
   const { ctx, page } = await login("a.vorontsova");
   await page.click('button[aria-label="Профиль и настройки"]');
-  await page.click('[role=menuitem]:has-text("Профиль")');
+  await page.click('#profile-menu a:has-text("Профиль")');
   await page.waitForURL(BASE + "/profile");
   await page.waitForSelector("text=Зачётная книжка");
   const t = await text(page);
@@ -74,8 +74,8 @@ try {
 
   // студенческий: окно с QR
   await page.click("main [data-open-card]");
-  await page.waitForSelector("[role=dialog][aria-label='Студенческий билет'] svg");
-  const modal = (await page.textContent("[role=dialog][aria-label='Студенческий билет']")) ?? "";
+  await page.waitForSelector("dialog[open][aria-label='Студенческий билет'] svg");
+  const modal = (await page.textContent("dialog[open][aria-label='Студенческий билет']")) ?? "";
   check("card modal: QR + name + number + validity", modal.includes("Алиса Воронцова") && modal.includes("250412") && modal.includes("31.08.2029"));
   await page.keyboard.press("Escape");
 
@@ -112,8 +112,8 @@ try {
   // «Сегодня»: плитка «Студбилет» открывает то же окно
   await page.goto(BASE + "/");
   await page.click("nav[aria-label='Быстрый доступ'] [data-open-card]");
-  await page.waitForSelector("[role=dialog][aria-label='Студенческий билет'] svg");
-  check("Today tile opens student card", ((await page.textContent("[role=dialog][aria-label='Студенческий билет']")) ?? "").includes("250412"));
+  await page.waitForSelector("dialog[open][aria-label='Студенческий билет'] svg");
+  check("Today tile opens student card", ((await page.textContent("dialog[open][aria-label='Студенческий билет']")) ?? "").includes("250412"));
 
   // публичная проверка билета
   const v = await (await fetch(BASE + "/verify/" + alisa.cardToken)).text();

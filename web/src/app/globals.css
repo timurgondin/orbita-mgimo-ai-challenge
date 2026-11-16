@@ -575,3 +575,56 @@ dialog::backdrop {
     }
   }
 }
+
+/* Меню профиля (components/shell/profile-menu.tsx): popover, привязан к аватару через anchor positioning */
+@layer components {
+  .pmenu {
+    margin: 0;
+    border: 0;
+    color: var(--text);
+    overflow: visible;
+    position-anchor: --profile;
+    inset: auto;
+    top: calc(anchor(bottom) + 8px);
+    right: calc(anchor(right) - 4px);
+    transform-origin: top right;
+    opacity: 0;
+    scale: 0.98;
+    translate: 0 -4px;
+    transition-property: opacity, scale, translate, display, overlay;
+    transition-duration: 0.18s;
+    transition-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+    transition-behavior: allow-discrete;
+  }
+  .pmenu:popover-open {
+    opacity: 1;
+    scale: none;
+    translate: none;
+  }
+  @starting-style {
+    .pmenu:popover-open {
+      opacity: 0;
+      scale: 0.98;
+      translate: 0 -4px;
+    }
+  }
+  /* без anchor positioning: шапка прилипает к верху, поэтому место меню известно */
+  @supports not (anchor-name: --a) {
+    .pmenu {
+      top: 58px;
+      right: 12px;
+    }
+    @media (min-width: 640px) {
+      .pmenu {
+        right: 24px;
+      }
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .pmenu,
+    .pmenu:popover-open {
+      scale: none;
+      translate: none;
+    }
+  }
+}
