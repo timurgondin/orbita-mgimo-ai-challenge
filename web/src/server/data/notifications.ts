@@ -48,6 +48,7 @@ export const getNotificationCenter = cache(async (): Promise<NotificationCenterD
     const pending = level === "action" && !n.resolvedAt;
     return {
       id: n.id,
+      kind: (n.kind as NotificationKind) ?? "announcement",
       category: n.category as NotificationCategory,
       level,
       title: n.title,

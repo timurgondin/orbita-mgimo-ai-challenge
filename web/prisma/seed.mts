@@ -254,7 +254,7 @@ const ALISA: Person = {
     { kind: "material", category: "study", level: "info", title: "3 новых материала по эконометрике", body: "Слайды и задачи к лекции 12", link: "/study", at: "2026-11-18T19:20" },
     { kind: "announcement", category: "announcement", level: "info", title: "Открыта запись на элективы", body: "Запись идёт до 30 ноября", at: "2026-11-17T11:00", read: true },
     { kind: "security", category: "security", level: "info", title: "Вход с нового устройства", body: "iPhone, Москва", link: "/profile", at: "2026-11-16T21:14", read: true },
-    { kind: "schedule", category: "study", level: "important", title: "Problem set 6 можно сдать до субботы", body: "Срок сдвинут с четверга", link: "/study?tab=tasks", at: "2026-11-15T13:00", read: true },
+    { kind: "deadline", category: "study", level: "important", title: "Problem set 6 можно сдать до субботы", body: "Срок сдвинут с четверга", link: "/study?tab=tasks", at: "2026-11-15T13:00", read: true },
   ],
 };
 

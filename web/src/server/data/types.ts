@@ -36,7 +36,7 @@ export type Assessment = "exam" | "credit";
 export type ComponentKind = "test" | "homework" | "essay" | "project" | "exam" | "participation";
 export type WorkStatus = "upcoming" | "draft" | "in_progress" | "submitted" | "reviewing" | "graded" | "returned";
 export type EventKind = "lecture" | "seminar" | "practice" | "consultation" | "test";
-export type NotificationKind = "grade" | "document" | "announcement" | "schedule" | "library" | "material" | "security" | "office";
+export type NotificationKind = "grade" | "document" | "announcement" | "schedule" | "library" | "material" | "security" | "office" | "deadline";
 export type NotificationCategory = "study" | "schedule" | "office" | "library" | "announcement" | "security";
 export type NotificationLevel = "action" | "important" | "info";
 
@@ -76,6 +76,8 @@ export type NewsAvatar =
 /** Уведомление для центра и «Нового». Правила — docs/notifications.md. */
 export interface NewsItem {
   id: string;
+  /** тип — подпись и значок: «Оценка», «Расписание», «Безопасность» */
+  kind: NotificationKind;
   category: NotificationCategory;
   level: NotificationLevel;
   title: string;

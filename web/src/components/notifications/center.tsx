@@ -8,9 +8,9 @@ import { useToast } from "@/components/ui/toast";
 import { cn } from "@/lib/utils";
 import type { NewsItem, NotificationCenterData } from "@/server/data/types";
 import { markSeen, resolveNotification } from "@/server/notifications/actions";
-import { NoteAvatar, NoteRow, NoteSubtitle } from "./note-row";
+import { NoteAvatar, NoteLabel, NoteRow, NoteSubtitle } from "./note-row";
 
-/** Центр уведомлений: один источник, два входа — колокольчик и «Все» в «Новом». Правила — docs/notifications.md. */
+/** Центр уведомлений: один источник, два входа — колокольчик и «Все» в «Новом»; окно по центру. Правила — docs/notifications.md. */
 type Ctx = { data: NotificationCenterData; open: () => void; resolve: (id: string) => void; resolving: string | null };
 const CenterContext = createContext<Ctx | null>(null);
 
@@ -68,7 +68,7 @@ export function NotificationCenter({ data, children }: { data: NotificationCente
   return (
     <CenterContext.Provider value={value}>
       {children}
-      <Drawer open={isOpen} onClose={close} fresh={fresh} />
+      <CenterModal open={isOpen} onClose={close} fresh={fresh} />
       {node}
     </CenterContext.Provider>
   );
@@ -111,10 +111,11 @@ export function ActionCard({ n, onNavigate, className, compact }: { n: NewsItem;
   return (
     <div data-action-card={n.id} className={cn("flex items-center gap-3.5 rounded-[18px] bg-s1 px-4 py-3.5", className)}>
       <span className={cn(!compact && "max-sm:hidden")}>
-        <NoteAvatar avatar={n.avatar} />
+        <NoteAvatar n={n} />
       </span>
       <div className="min-w-0 flex-1">
-        <div className="font-medium">{n.title}</div>
+        <NoteLabel n={n} />
+        <div className="mt-0.5 font-semibold">{n.title}</div>
         {!compact && (
           <div className="mt-px text-sm text-text-3">
             <NoteSubtitle n={n} />
@@ -136,7 +137,7 @@ export function ActionCard({ n, onNavigate, className, compact }: { n: NewsItem;
   );
 }
 
-function Drawer({ open, onClose, fresh }: { open: boolean; onClose: () => void; fresh: Set<string> }) {
+function CenterModal({ open, onClose, fresh }: { open: boolean; onClose: () => void; fresh: Set<string> }) {
   const { data } = useNotifications();
   const [tab, setTab] = useState<Tab>("all");
   const panel = useRef<HTMLDivElement>(null);
@@ -172,9 +173,12 @@ function Drawer({ open, onClose, fresh }: { open: boolean; onClose: () => void; 
 
   const shown = data.items.filter((n) => inTab(n, tab));
   const pending = shown.filter((n) => n.pending);
-  const groups = (["Сегодня", "Вчера", "Ранее"] as const)
-    .map((g) => ({ g, list: shown.filter((n) => !n.pending && n.group === g) }))
-    .filter((x) => x.list.length);
+  // «Новые» — то, что было непрочитанным в момент открытия; дальше прочитанное по дням
+  const fresh_ = shown.filter((n) => !n.pending && fresh.has(n.id));
+  const groups = [
+    { g: "Новые", list: fresh_ },
+    ...(["Сегодня", "Вчера", "Ранее"] as const).map((g) => ({ g, list: shown.filter((n) => !n.pending && !fresh.has(n.id) && n.group === g) })),
+  ].filter((x) => x.list.length);
   const chip = "inline-flex h-8 shrink-0 items-center rounded-full px-3 text-[13.5px] font-medium transition-colors duration-150";
 
   return (
@@ -195,13 +199,10 @@ function Drawer({ open, onClose, fresh }: { open: boolean; onClose: () => void; 
         aria-hidden={!open}
         inert={!open}
         className={cn(
-          "fixed z-41 flex flex-col overflow-hidden bg-s2 shadow-[0_0_0_.5px_var(--line),0_40px_100px_-24px_rgba(0,0,0,.85)] transition-[transform,opacity] duration-[450ms,220ms] ease-[var(--spring),var(--ease)]",
-          // компьютер: шторка справа; телефон: снизу почти на весь экран
-          "top-3 right-3 bottom-3 w-[460px] rounded-[26px]",
-          "max-sm:inset-x-0 max-sm:top-[6dvh] max-sm:right-0 max-sm:bottom-0 max-sm:w-auto max-sm:rounded-t-[28px] max-sm:rounded-b-none",
-          open
-            ? "translate-x-0 translate-y-0 opacity-100"
-            : "pointer-events-none translate-x-[calc(100%+24px)] opacity-0 max-sm:translate-x-0 max-sm:translate-y-full",
+          // окно по центру, как остальные модалки; --ring-bg — фон для обводки значка типа на аватаре
+          "fixed top-1/2 left-1/2 z-41 flex h-[min(720px,calc(100dvh-48px))] w-[min(580px,calc(100vw-24px))] flex-col overflow-hidden rounded-[28px] bg-s2 [--ring-bg:var(--s2)]",
+          "shadow-[0_0_0_.5px_var(--line),0_40px_100px_-24px_rgba(0,0,0,.85)] transition-[opacity,transform] duration-[220ms,450ms] ease-[var(--ease),var(--spring)]",
+          open ? "-translate-x-1/2 -translate-y-1/2 scale-100 opacity-100" : "pointer-events-none -translate-x-1/2 -translate-y-[48%] scale-[.96] opacity-0",
         )}
       >
         <div className="flex items-center justify-between px-6 pt-5 pb-3">
@@ -236,14 +237,14 @@ function Drawer({ open, onClose, fresh }: { open: boolean; onClose: () => void; 
               <h3 className="mb-2.5 text-sm font-medium text-text-2">Нужно действие</h3>
               <div className="flex flex-col gap-2">
                 {pending.map((n) => (
-                  <ActionCard key={n.id} n={n} onNavigate={onClose} className="bg-s3/60" />
+                  <ActionCard key={n.id} n={n} onNavigate={onClose} className="bg-s3/60 [--ring-bg:color-mix(in_srgb,var(--s3)_60%,var(--s2))]" />
                 ))}
               </div>
             </section>
           )}
           {groups.map(({ g, list }) => (
             <section key={g} aria-label={g} className="mb-5">
-              <h3 className="mb-1 text-sm font-medium text-text-2">{g}</h3>
+              <h3 className={cn("mb-1 text-sm font-medium", g === "Новые" ? "text-text" : "text-text-3")}>{g}</h3>
               <div className="rows [--row-inset:12px]">
                 {list.map((n) => (
                   <NoteRow key={n.id} n={n} fresh={fresh.has(n.id)} onNavigate={onClose} />
