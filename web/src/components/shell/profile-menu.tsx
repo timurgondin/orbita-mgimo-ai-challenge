@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import Link from "next/link";
 import { LogOut, Moon, Settings, Sun, SunMoon, UserRound } from "lucide-react";
 import { useTheme } from "next-themes";
 import { logoutAction } from "@/server/auth/actions";
@@ -63,10 +64,10 @@ export function ProfileMenu({ user }: { user: UserView }) {
           <b className="block text-sm font-semibold">{fullName(user)}</b>
           <small className="text-xs text-text-3">{subtitle(user)}</small>
         </div>
-        <button type="button" role="menuitem" className={ITEM}>
+        <Link href="/profile" role="menuitem" className={ITEM} onClick={() => setOpen(false)}>
           <UserRound size={16} strokeWidth={1.6} />
           Профиль
-        </button>
+        </Link>
         <button type="button" role="menuitem" className={ITEM}>
           <Settings size={16} strokeWidth={1.6} />
           Настройки

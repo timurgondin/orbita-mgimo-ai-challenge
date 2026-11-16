@@ -11,14 +11,15 @@ import {
   toMinutes,
 } from "@/lib/demo-clock";
 import { requireUser } from "@/server/auth/session";
+import { getStudentCard } from "@/server/data/profile";
 import { getNews, getScheduleForToday, getSoon } from "@/server/data/today";
 
 export default async function TodayPage() {
   const user = await requireUser();
   const student = user.role === "student";
-  const [schedule, soon, news] = student
-    ? await Promise.all([getScheduleForToday(), getSoon(), getNews()])
-    : [null, [], []];
+  const [schedule, soon, news, card] = student
+    ? await Promise.all([getScheduleForToday(), getSoon(), getNews(), getStudentCard()])
+    : [null, [], [], null];
   const today = schedule?.today ?? [];
   const tomorrow = schedule?.tomorrow;
 
@@ -46,7 +47,7 @@ export default async function TodayPage() {
         <LaterToday lessons={later} tomorrow={tomorrow} />
       </div>
 
-      <QuickTiles />
+      <QuickTiles card={card} />
 
       <div className="mt-14 grid grid-cols-[minmax(0,1fr)] gap-12 min-[900px]:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
         <SoonList items={soon} />

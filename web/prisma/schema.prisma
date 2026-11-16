@@ -28,6 +28,20 @@ model User {
   courseRank          Int? // место на курсе
   courseSize          Int? // студентов на курсе
   creditsEarned       Int? // кредитов в семестре
+  // профиль: от университета (только чтение) и контакты (правит сам пользователь)
+  degree              String? // «Бакалавриат»
+  studyForm           String? // «Очная · бюджет»
+  admissionYear       Int?
+  graduationYear      Int?
+  recordBook          String? // номер зачётной книжки
+  curatorName         String?
+  headmanName         String?
+  phone               String?
+  telegram            String?
+  // студенческий билет: номер, срок, токен публичной проверки (/verify/<токен>, 32 байта CSPRNG)
+  cardNumber          String?
+  cardValidUntil      DateTime?
+  cardToken           String?              @unique
   sessions            Session[]
   enrollments         Enrollment[]
   works               StudentWork[]

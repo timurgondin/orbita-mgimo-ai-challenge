@@ -1,4 +1,35 @@
 // Значения-перечисления: в БД лежат строками, типы — здесь.
+
+export interface PersonRef {
+  name: string;
+  initials: string;
+  avatar: string;
+}
+
+export interface ProfileView {
+  student: boolean;
+  email: string;
+  phone: string | null;
+  telegram: string | null;
+  faculty: string | null;
+  position: string | null;
+  program: string | null;
+  programSub: string | null;
+  studyForm: string | null;
+  recordBook: string | null;
+  curator: PersonRef | null;
+  headman: PersonRef | null;
+  hasCard: boolean;
+}
+
+export interface StudentCardView {
+  name: string;
+  meta: string;
+  number: string;
+  validUntil: string;
+  /** SVG QR-кода (генерирует сервер библиотекой qrcode; ведёт на /verify/<токен>) */
+  qr: string;
+}
 export type CourseFormat = "offline" | "online";
 export type Assessment = "exam" | "credit";
 export type ComponentKind = "test" | "homework" | "essay" | "project" | "exam" | "participation";

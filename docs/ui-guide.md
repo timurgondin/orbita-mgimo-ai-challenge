@@ -58,6 +58,8 @@
 | Трекер этапов «как у посылки» | `components/office/request-card.tsx` |
 | Превью документа (лист, подпись, QR) | `components/office/doc-modal.tsx` |
 | Точечное поле (фирменный мотив) | `components/today/dot-field.tsx`, `components/login/orbit-canvas.tsx` |
+| Строки «ключ — значение» с копированием и правкой в строке | `components/profile/profile-sections.tsx` |
+| Окно студенческого (QR + минимум данных) | `components/profile/student-card.tsx` |
 | Пустая страница-заглушка | `components/shell/page-placeholder.tsx` |
 
 ## 6. Поведение
