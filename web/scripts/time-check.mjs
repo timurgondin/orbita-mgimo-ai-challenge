@@ -73,9 +73,9 @@ try {
   await page.goto(BASE + "/time");
   await page.waitForSelector('[data-pair="6"]');
   const list = await text(page);
-  check("list: Thu bell grid with live pair 3, ещё 41 мин", list.includes("Идёт · ещё 41 мин") && list.includes("Микроэкономика") && list.includes("Олигополия") && list.includes("Нет пары"));
+  check("list: Thu bell grid with live pair 3, ещё 41 мин", (await page.locator('[data-pair="3"][data-state="live"]').textContent()).includes("ещё 41 мин") && list.includes("Микроэкономика") && list.includes("Олигополия") && list.includes("Нет пары"));
   check("list: room change 2214 → 4105", list.includes("2214") && list.includes("→ 4105"));
-  check("list: signed-up consultation in pair 6, «Вы записаны»", list.includes("Консультация · Эконометрика") && list.includes("Вы записаны") && list.includes("7 из 15"));
+  check("list: signed-up consultation in pair 6, «Вы записаны»", (await page.locator('[data-pair="6"]').textContent()).includes("Эконометрика") && list.includes("Вы записаны"));
   check("list: week title", list.includes("16 – 21 ноября"));
 
   await page.evaluate(() => { window.__marker = 1; });
@@ -90,7 +90,7 @@ try {
   check("empty past week renders «Пар нет»", (await text(page)).includes("Пар нет"));
   await page.goto(BASE + "/time?view=week");
   await page.waitForSelector('button[aria-pressed="true"][aria-label="Неделя"]');
-  check("?view=week opens the grid", (await page.locator("main button", { hasText: "5 пара" }).count()) > 0);
+  check("?view=week opens the grid", (await page.locator("main button", { hasText: "ауд. 4105" }).count()) > 0);
 
   await page.goto(BASE + "/time?tab=cons");
   await page.waitForSelector("[data-id]");
@@ -166,7 +166,7 @@ try {
   void foreignCancel;
   await page.goto(BASE + "/time");
   await page.waitForSelector('[data-pair="7"]');
-  check("Maxim list: his consultation on pair 7", (await text(page)).includes("Консультация · Международная безопасность") && !(await text(page)).includes("Эконометрика"));
+  check("Maxim list: his consultation on pair 7", (await text(page)).includes("Международная безопасность") && !(await text(page)).includes("Эконометрика"));
   // запись на прошедшее время
   await db.consultation.update({ where: { id: maximSec.id }, data: { startsAt: new Date("2026-11-19T10:00:00+03:00"), endsAt: new Date("2026-11-19T11:20:00+03:00") } });
   const past = await forge(ctx, "signUp", [maximSec.id, "поздно"]);

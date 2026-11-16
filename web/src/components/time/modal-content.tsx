@@ -46,13 +46,10 @@ export function LessonContent({ lesson: l }: { lesson: TimeLesson }) {
   const [s, e] = BELLS[l.pair];
   return (
     <>
-      <div className="text-sm text-text-2">
-        {l.pair} пара · {l.kindLabel}
-        {l.topic ? ` · ${l.topic}` : ""}
-      </div>
+      <div className="text-sm text-text-2">{l.topic ? `${l.kindLabel} «${l.topic}»` : l.kindLabel}</div>
       <div className="mt-1 text-[26px] leading-[1.15] font-semibold tracking-[-.03em]">{l.title}</div>
       <div className="mt-1.5 text-[15px] text-text-2">
-        {weekday(l.date)}, {dayMonth(l.date)} · {s}–{e}
+        {weekday(l.date)}, {dayMonth(l.date)}, с {s} до {e}
       </div>
       {l.roomFrom && (
         <div className="mt-4 flex items-center gap-2.5 rounded-[14px] bg-[color-mix(in_srgb,var(--urgent)_12%,transparent)] px-3.5 py-3 text-sm font-medium text-urgent">
@@ -66,7 +63,7 @@ export function LessonContent({ lesson: l }: { lesson: TimeLesson }) {
         {l.test && (
           <>
             <Row link icon={<IconBox><Target size={16} strokeWidth={1.6} /></IconBox>} title={`${l.test.weight}% итоговой оценки`} sub={l.test.score ? `Сейчас ${l.test.score}` : undefined} />
-            <Row link icon={<IconBox><FileSearch size={16} strokeWidth={1.6} /></IconBox>} title="Демо-вариант" sub="PDF · 4 задачи" />
+            <Row link icon={<IconBox><FileSearch size={16} strokeWidth={1.6} /></IconBox>} title="Демо-вариант" sub="4 задачи в PDF" />
           </>
         )}
         <Row link icon={<IconBox><FolderOpen size={16} strokeWidth={1.6} /></IconBox>} title="Материалы к занятию" sub="3 файла" />
@@ -91,10 +88,10 @@ export function ConsContent({ cons: c, toast, onDone }: { cons: TimeConsultation
 
   return (
     <>
-      <div className="text-sm text-text-2">Консультация · {c.courseTitle}</div>
-      <div className="mt-1 text-[26px] leading-[1.15] font-semibold tracking-[-.03em]">{c.teacher}</div>
+      <div className="text-sm text-text-2">Консультация</div>
+      <div className="mt-1 text-[26px] leading-[1.15] font-semibold tracking-[-.03em]">{c.courseTitle}</div>
       <div className="mt-1.5 text-[15px] text-text-2">
-        {weekday(c.date)}, {dayMonth(c.date)} · {s}–{e}
+        {weekday(c.date)}, {dayMonth(c.date)}, с {s} до {e}
       </div>
       <div className="mt-4">
         <Row
@@ -109,7 +106,8 @@ export function ConsContent({ cons: c, toast, onDone }: { cons: TimeConsultation
             )
           }
         />
-        <Row icon={<IconBox><UsersRound size={16} strokeWidth={1.6} /></IconBox>} title={`${c.count} из ${c.capacity}`} sub={`${c.questions} ${plural(c.questions)} уже прислали`} />
+        <Row icon={<Avatar initials={c.teacherInitials} gradient={c.teacherGradient} />} title={c.teacher} sub="Преподаватель" action={<Act><Mail size={14} strokeWidth={1.6} />Написать</Act>} />
+        <Row icon={<IconBox><UsersRound size={16} strokeWidth={1.6} /></IconBox>} title={`Записались ${c.count} из ${c.capacity}`} sub={`${c.questions} ${plural(c.questions)} уже прислали`} />
       </div>
       <label htmlFor="cons-q" className="mt-[18px] block text-sm text-text-2">
         Ваш вопрос

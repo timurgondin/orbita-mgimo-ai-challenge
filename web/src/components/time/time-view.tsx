@@ -81,7 +81,7 @@ export function TimeView({ data }: { data: TimeData }) {
   const cons = shown?.type === "cons" ? data.consultations.find((c) => c.id === shown.id) : undefined;
 
   const accent = lesson ? `var(--c-${lesson.color})` : "var(--accent)";
-  const title = lesson ? lesson.title : cons ? `Консультация · ${cons.courseTitle}` : "Синхронизация календаря";
+  const title = lesson ? lesson.title : cons ? `Консультация: ${cons.courseTitle}` : "Синхронизация календаря";
 
   return (
     <>

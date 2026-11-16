@@ -5,6 +5,7 @@ import { BELLS } from "@/lib/bells";
 import { DEMO_DATE, DEMO_MINUTES, toMinutes } from "@/lib/demo-clock";
 import { cn } from "@/lib/utils";
 import { Segmented } from "@/components/ui/segmented";
+import { TeacherAvatar } from "@/components/ui/teacher-avatar";
 import type { TimeConsultation, TimeLesson } from "@/server/data/types";
 import { ACCENT, DOW, DOWL, cap, cc, dayMonth, dayNumber, relDay, slotStatus, weekDates, weekTitle } from "./helpers";
 
@@ -31,9 +32,17 @@ function Slot({ item, date, onOpen }: { item: Item; date: string; onOpen: (item:
   const style = cons ? ACCENT : cc(item.lesson.color);
   const mine = cons && st.state === "future";
   const l = cons ? null : item.lesson;
-  const meta = cons
-    ? `${item.cons.place} · ${item.cons.teacher} · ${item.cons.count} из ${item.cons.capacity}`
-    : null;
+  // вторая строка — фраза: «Семинар «Олигополия»»; место, человек и статус — своими элементами справа
+  const line2 = cons ? "Консультация" : l!.topic ? `${l!.kindLabel} «${l!.topic}»` : l!.kindLabel;
+  const room = cons ? (
+    item.cons.place.replace(/^Каб\.\s*/, "каб.\u00a0")
+  ) : l!.roomFrom ? (
+    <>
+      <s className="text-text-3">{l!.roomFrom}</s> <span className="font-medium text-urgent">→ {l!.room}</span>
+    </>
+  ) : (
+    `ауд.\u00a0${l!.room}`
+  );
   return (
     <button
       type="button"
@@ -42,7 +51,7 @@ function Slot({ item, date, onOpen }: { item: Item; date: string; onOpen: (item:
       data-pair={item.pair}
       data-state={st.state}
       className={cn(
-        "slot group -mx-4 grid w-[calc(100%+32px)] cursor-pointer grid-cols-[44px_96px_minmax(0,1fr)_auto] items-center gap-3.5 rounded-[18px] px-4 py-3.5 text-left transition-colors duration-150 hover:bg-hover max-sm:grid-cols-[28px_46px_minmax(0,1fr)] max-sm:gap-x-2.5 max-sm:gap-y-1",
+        "slot group -mx-4 grid w-[calc(100%+32px)] cursor-pointer grid-cols-[44px_96px_minmax(0,1fr)_96px_24px_150px] items-center gap-3.5 rounded-[18px] px-4 py-3.5 text-left transition-colors duration-150 hover:bg-hover max-[900px]:grid-cols-[44px_96px_minmax(0,1fr)_96px_150px] max-sm:grid-cols-[28px_46px_minmax(0,1fr)] max-sm:gap-x-2.5 max-sm:gap-y-1",
         st.state === "live" && "bg-s1",
       )}
     >
@@ -58,30 +67,17 @@ function Slot({ item, date, onOpen }: { item: Item; date: string; onOpen: (item:
           )}
         >
           {l?.isTest ? <Target size={15} strokeWidth={1.6} className="shrink-0 text-(--cc)" /> : <i className="size-2 shrink-0 rounded-full bg-(--cc)" />}
-          <span className="min-w-0">{cons ? `Консультация · ${item.cons.courseTitle}` : l!.title}</span>
+          <span className="min-w-0">{cons ? item.cons.courseTitle : l!.title}</span>
         </div>
-        <div className="mt-0.5 pl-[17px] text-sm text-text-3">
-          {cons ? (
-            meta
-          ) : (
-            <>
-              {l!.kindLabel}
-              {l!.topic ? ` · ${l!.topic}` : ""} ·{" "}
-              {l!.roomFrom ? (
-                <>
-                  <s>{l!.roomFrom}</s> <span className="font-medium text-urgent">→ {l!.room}</span>
-                </>
-              ) : (
-                `ауд. ${l!.room}`
-              )}{" "}
-              · {l!.teacher}
-            </>
-          )}
-        </div>
+        <div className="mt-0.5 truncate pl-[17px] text-sm text-text-3">{line2}</div>
       </div>
+      <span className={cn("text-sm whitespace-nowrap text-text-2 max-sm:col-start-3 max-sm:row-start-2 max-sm:justify-self-start max-sm:pl-[17px] max-sm:text-[13px]", st.state === "past" && "opacity-50")}>{room}</span>
+      <span className={cn("max-[900px]:hidden", st.state === "past" && "opacity-50")} title={t.teacher}>
+        <TeacherAvatar name={t.teacher} size={24} gradient={cons ? item.cons.teacherGradient : l!.teacherGradient} />
+      </span>
       <span
         className={cn(
-          "text-[13.5px] whitespace-nowrap text-text-3 max-sm:col-start-3 max-sm:text-left max-sm:pl-[17px] sm:text-right",
+          "text-[13.5px] whitespace-nowrap text-text-3 max-sm:col-start-3 max-sm:row-start-2 max-sm:justify-self-end max-sm:text-[13px] max-sm:empty:hidden sm:text-right",
           st.tone === "live" && "text-text",
           st.tone === "hot" && "text-urgent",
           mine && "text-(--st-green)",
@@ -190,7 +186,7 @@ function WeekGrid({ monday, byDate, onOpen }: { monday: string; byDate: Map<stri
                     {cons ? "Консультация" : it.lesson.isTest ? it.lesson.title : it.lesson.courseTitle}
                   </div>
                   <div className="mt-px truncate text-[11px] text-text-2 sm:text-xs">
-                    {it.pair} пара · {cons ? it.cons.place : it.lesson.room}
+                    {cons ? it.cons.place : `ауд. ${it.lesson.room}`}
                   </div>
                 </button>
               );

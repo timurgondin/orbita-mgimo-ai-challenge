@@ -1,6 +1,6 @@
 "use client";
 
-import { Check, Video } from "lucide-react";
+import { Check, Video, MapPin } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { TimeConsultation } from "@/server/data/types";
 import { DOWL, cap, cc, dayMonth, relDay } from "./helpers";
@@ -90,7 +90,7 @@ export function ConsView({
                   >
                     <div>
                       <b className="block text-[17px] font-semibold tracking-[-.02em]">{c.start}</b>
-                      <small className="text-[13.5px] text-text-3">до {c.end}<span className="sm:hidden"> · {c.count} из {c.capacity}</span></small>
+                      <small className="text-[13.5px] text-text-3">до {c.end}</small>
                     </div>
                     <div className="flex min-w-0 items-center gap-3 max-sm:order-3 max-sm:col-span-2">
                       <span className="grid size-10 shrink-0 place-items-center rounded-full text-[13px] font-semibold text-[#1d1d20]" style={{ background: c.teacherGradient }}>
@@ -98,15 +98,16 @@ export function ConsView({
                       </span>
                       <div className="min-w-0">
                         <b className="block text-[15.5px] font-semibold">{c.teacher}</b>
-                        <small className="flex items-center gap-1.5 text-sm text-text-3">
-                          <i className="size-[7px] shrink-0 rounded-full bg-(--cc)" />
-                          <span className="truncate">{c.courseTitle}</span>
-                          <span aria-hidden>·</span>
-                          {c.online ? (
-                            <span className="inline-flex items-center gap-1.5 whitespace-nowrap"><Video size={14} strokeWidth={1.6} />Онлайн</span>
-                          ) : (
-                            <span className="whitespace-nowrap">{c.place}</span>
-                          )}
+                        {/* отдельные элементы, разделённые воздухом и значками, а не «·» */}
+                        <small className="flex items-center gap-4 text-sm text-text-3">
+                          <span className="flex min-w-0 items-center gap-1.5">
+                            <i className="size-[7px] shrink-0 rounded-full bg-(--cc)" />
+                            <span className="truncate">{c.courseTitle}</span>
+                          </span>
+                          <span className="inline-flex items-center gap-1.5 whitespace-nowrap">
+                            {c.online ? <Video size={14} strokeWidth={1.6} /> : <MapPin size={14} strokeWidth={1.6} />}
+                            {c.online ? "Онлайн" : c.place}
+                          </span>
                         </small>
                       </div>
                     </div>

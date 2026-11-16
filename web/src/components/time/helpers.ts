@@ -41,14 +41,14 @@ export function slotStatus(date: string, start: string, end: string): SlotStatus
   const [s, e] = [toMinutes(start), toMinutes(end)];
   if (e <= DEMO_MINUTES) return { state: "past", text: "Прошла", tone: "" };
   if (s <= DEMO_MINUTES)
-    return { state: "live", text: `Идёт · ещё ${formatDuration(e - DEMO_MINUTES)}`, tone: "live", progress: Math.round(((DEMO_MINUTES - s) / (e - s)) * 100) };
+    return { state: "live", text: `ещё ${formatDuration(e - DEMO_MINUTES)}`, tone: "live", progress: Math.round(((DEMO_MINUTES - s) / (e - s)) * 100) };
   const x = s - DEMO_MINUTES;
   return { state: "future", text: `Через ${formatDuration(x)}`, tone: x <= 30 ? "hot" : "" };
 }
 
-/** «Корпус 2 · 3 этаж» из номера аудитории (первая цифра — корпус, вторая — этаж) */
+/** «3 этаж, корпус 2» из номера аудитории (первая цифра — корпус, вторая — этаж) */
 export function roomHint(room: string): string {
-  return /^\d{4}$/.test(room) ? `Корпус ${room[0]} · ${room[1]} этаж` : `Главный корпус · ${room[0]} этаж`;
+  return /^\d{4}$/.test(room) ? `${room[1]} этаж корпуса ${room[0]}` : `${room[0]} этаж главного корпуса`;
 }
 
 export const cc = (color: string) => ({ "--cc": `var(--c-${color})` }) as React.CSSProperties;
