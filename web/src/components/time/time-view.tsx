@@ -1,15 +1,14 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { CircleAlert, CircleCheck } from "lucide-react";
 import { Segmented } from "@/components/ui/segmented";
+import { useToast } from "@/components/ui/toast";
 import { DEMO_DATE, addDays } from "@/lib/demo-clock";
-import { cn } from "@/lib/utils";
 import type { TimeData } from "@/server/data/types";
 import { ConsView } from "./cons-view";
 import { dowIndex } from "./helpers";
-import { ConsContent, LessonContent, SyncContent, type Toast } from "./modal-content";
+import { ConsContent, LessonContent, SyncContent } from "./modal-content";
 import { Modal } from "./modal";
 import { ScheduleView, type Item, type View } from "./schedule-view";
 
@@ -49,19 +48,9 @@ export function TimeView({ data }: { data: TimeData }) {
   const [filter, setFilter] = useState("all");
   const [open, setOpen] = useState(false);
   const [shown, setShown] = useState<ModalState>(null);
-  const [toastState, setToastState] = useState<{ text: string; tone: "ok" | "error"; n: number } | null>(null);
-  const [toastOn, setToastOn] = useState(false);
-  const timer = useRef<ReturnType<typeof setTimeout>>(undefined);
+  const { toast, node: toastNode } = useToast();
 
   const go = (t: Tab, v: View, w: number) => window.history.pushState(null, "", buildUrl(t, v, w));
-
-  const toast: Toast = useCallback((text, tone = "ok") => {
-    setToastState((p) => ({ text, tone, n: (p?.n ?? 0) + 1 }));
-    setToastOn(true);
-    clearTimeout(timer.current);
-    timer.current = setTimeout(() => setToastOn(false), 2400);
-  }, []);
-  useEffect(() => () => clearTimeout(timer.current), []);
 
   const openModal = (m: NonNullable<ModalState>) => {
     setShown(m);
@@ -128,17 +117,7 @@ export function TimeView({ data }: { data: TimeData }) {
         {shown?.type === "sync" && <SyncContent link={data.syncLink} toast={toast} />}
       </Modal>
 
-      <div
-        role="status"
-        aria-live="polite"
-        className={cn(
-          "pointer-events-none fixed bottom-7 left-1/2 z-50 flex items-center gap-2 rounded-[14px] bg-text px-[18px] py-3 text-sm font-medium whitespace-nowrap text-bg transition-[opacity,transform] duration-[250ms,400ms] ease-[var(--ease),var(--spring)] max-sm:bottom-24",
-          toastOn ? "-translate-x-1/2 translate-y-0 opacity-100" : "-translate-x-1/2 translate-y-5 opacity-0",
-        )}
-      >
-        {toastState?.tone === "error" ? <CircleAlert size={16} strokeWidth={1.8} /> : <CircleCheck size={16} strokeWidth={1.8} />}
-        {toastState?.text}
-      </div>
+      {toastNode}
     </>
   );
 }

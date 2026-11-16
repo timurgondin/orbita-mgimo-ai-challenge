@@ -105,7 +105,7 @@ try {
   check("modal shows 3 questions from data", (await page.textContent('dialog[open]')).includes("3 вопроса уже прислали"));
   await page.fill("#cons-q", "Как оформить Essay по Remote work");
   await page.click('button:has-text("Записаться")');
-  await page.waitForSelector('[role="status"]:has-text("Вы записаны")');
+  await page.waitForSelector('.toast:popover-open:has-text("Вы записаны")');
   await waitText(page, "10 из 15");
   check("sign up: count 10 из 15 and «Вы идёте»", (await text(page)).includes("10 из 15") && (await text(page)).includes("Вы идёте"));
   const mine = await db.consultationSignup.findFirst({ where: { consultationId: alisaEng.id, user: { login: "a.vorontsova" } } });
@@ -120,13 +120,13 @@ try {
   await page.waitForSelector("#cons-q");
   await page.fill("#cons-q", "Новый вопрос");
   await page.click('button:has-text("Сохранить")');
-  await page.waitForSelector('[role="status"]:has-text("Вопрос сохранён")');
+  await page.waitForSelector('.toast:popover-open:has-text("Вопрос сохранён")');
   check("question updated", (await db.consultationSignup.findFirst({ where: { consultationId: alisaEng.id, user: { login: "a.vorontsova" } } }))?.question === "Новый вопрос");
   await page.waitForTimeout(400);
   await page.click(`[data-id="${alisaEng.id}"]`);
   await page.waitForSelector('button:has-text("Отменить запись")');
   await page.click('button:has-text("Отменить запись")');
-  await page.waitForSelector('[role="status"]:has-text("Запись отменена")');
+  await page.waitForSelector('.toast:popover-open:has-text("Запись отменена")');
   await waitText(page, "9 из 15");
   check("cancel: back to 9 из 15, signup deleted", (await count(alisaEng.id)) === 9 && (await text(page)).includes("9 из 15"));
 
