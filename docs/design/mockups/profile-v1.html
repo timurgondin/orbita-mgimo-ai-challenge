@@ -1,0 +1,326 @@
+<!doctype html>
+<html lang="ru" class="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Орбита — Профиль (макет v1)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/lucide@0.460.0/dist/umd/lucide.min.js"></script>
+<style>
+  :root{
+    --bg:#131315; --s1:#1B1B1E; --s2:#212124; --s3:#2A2A2E; --hover:rgba(255,255,255,.04);
+    --line:rgba(255,255,255,.07);
+    --text:#EDEDEF; --text-2:#9A9AA2; --text-3:#7E7E87;
+    --accent:#8B8EFF; --urgent:#F2A35E;
+    --st-orange:#F2A35E; --st-blue:#62AEF7; --st-violet:#B39BFB; --st-yellow:#E3C766; --st-green:#5BD891; --st-red:#F58A8A; --st-gray:#9A9AA3;
+    --amber:#E0A75E; --violet:#8F8DF7; --teal:#52BBAA; --rose:#E58091; --sky:#6AA9F2; --green:#4FCB85; --lilac:#C69CF0;
+    --sans:"Onest",system-ui,sans-serif;
+    --ease:cubic-bezier(.22,1,.36,1); --spring:cubic-bezier(.34,1.35,.5,1);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{background:var(--bg);color-scheme:dark}
+  body{font-family:var(--sans);background:var(--bg);color:var(--text);-webkit-font-smoothing:antialiased;font-size:15px;line-height:1.45;font-variant-numeric:tabular-nums}
+  ::selection{background:color-mix(in srgb,var(--accent) 35%,transparent)}
+  :focus-visible{outline:2px solid var(--accent);outline-offset:3px;border-radius:10px}
+  button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
+  a{color:inherit;text-decoration:none}
+  svg.lucide{width:16px;height:16px;stroke-width:1.6;flex-shrink:0}
+
+  /* ---------- Header (F) ---------- */
+  header{position:sticky;top:0;z-index:30;height:72px;display:grid;grid-template-columns:1fr auto 1fr;align-items:center;padding:0 28px;transition:background .25s,box-shadow .25s}
+  header.scrolled{background:color-mix(in srgb,var(--bg) 80%,transparent);backdrop-filter:blur(20px) saturate(1.5);-webkit-backdrop-filter:blur(20px) saturate(1.5);box-shadow:0 .5px 0 var(--line)}
+  .logo{display:flex;align-items:center;gap:9px;width:max-content}
+  .logo span{font-weight:600;font-size:17px;letter-spacing:-.035em}
+  .right{display:flex;justify-content:flex-end;align-items:center;gap:6px}
+  .ib{position:relative;width:36px;height:36px;display:grid;place-items:center;border-radius:50%;color:var(--text-2)}
+  .ib:hover{background:var(--hover);color:var(--text)}
+  .ib .badge{position:absolute;top:8px;right:9px;width:7px;height:7px;border-radius:50%;background:var(--accent);box-shadow:0 0 0 2px var(--bg)}
+  .me{width:32px;height:32px;margin-left:4px;border-radius:50%;background:linear-gradient(140deg,#D6C3AE,#8F7A68);color:#2a211a;display:grid;place-items:center;font-size:12px;font-weight:600}
+  .dock{position:relative;display:flex;align-items:center;height:48px;padding:5px;border-radius:999px;background:rgba(34,34,38,.7);backdrop-filter:blur(28px) saturate(1.7);-webkit-backdrop-filter:blur(28px) saturate(1.7);box-shadow:0 0 0 .5px rgba(255,255,255,.09),inset 0 .5px 0 rgba(255,255,255,.08),0 12px 32px -14px rgba(0,0,0,.7)}
+  .dock .ind{position:absolute;top:5px;bottom:5px;left:0;width:0;border-radius:999px;background:rgba(255,255,255,.09)}
+  .tab{position:relative;z-index:1;display:flex;align-items:center;gap:7px;height:38px;padding:0 16px;border-radius:999px;font-size:13.5px;font-weight:500;color:var(--text-3)}
+  .tab:hover{color:var(--text-2)} .tab.on{color:var(--text)}
+  .tab svg.lucide{width:15px;height:15px}
+  .orbslot{position:relative;z-index:1;width:68px;height:38px;display:grid;place-items:center}
+  .orbslot .ring{position:absolute;width:56px;height:56px;border-radius:50%;background:var(--bg);box-shadow:0 0 0 .5px rgba(255,255,255,.1),0 8px 24px -8px rgba(0,0,0,.8);display:grid;place-items:center;top:50%;left:50%;transform:translate(-50%,-50%)}
+  .orb{position:relative;width:44px;height:44px;border-radius:50%;overflow:hidden;isolation:isolate;background:#2B2D7A;box-shadow:inset 0 0 0 .5px rgba(255,255,255,.25),inset 0 -4px 8px rgba(0,0,0,.35)}
+  .orb i{position:absolute;border-radius:50%;filter:blur(7px);mix-blend-mode:screen}
+  .orb i:nth-child(1){width:70%;height:70%;left:-5%;top:0;background:#7C7FFF;animation:o1 7s ease-in-out infinite}
+  .orb i:nth-child(2){width:60%;height:60%;right:-10%;top:15%;background:#58B4FF;animation:o2 9s ease-in-out infinite}
+  .orb i:nth-child(3){width:55%;height:55%;left:20%;bottom:-15%;background:#D58BFF;animation:o3 8s ease-in-out infinite}
+  .orb::after{content:"";position:absolute;left:18%;top:10%;width:40%;height:28%;border-radius:50%;background:rgba(255,255,255,.55);filter:blur(4px)}
+  @keyframes o1{50%{transform:translate(35%,25%) scale(1.15)}} @keyframes o2{50%{transform:translate(-40%,20%) scale(.9)}} @keyframes o3{50%{transform:translate(10%,-45%) scale(1.2)}}
+
+  /* ---------- Page ---------- */
+  .page{max-width:1180px;margin:0 auto;padding:44px 40px 80px}
+  .head{display:flex;align-items:flex-end;justify-content:space-between;gap:24px}
+  .head h1{font-size:34px;font-weight:500;letter-spacing:-.03em;line-height:1.15}
+  h2{font-size:18px;font-weight:600;letter-spacing:-.02em;margin-bottom:14px;display:flex;align-items:baseline;justify-content:space-between}
+  h2 a{font-size:14px;font-weight:400;color:var(--text-3)} h2 a:hover{color:var(--text)}
+  section{margin-top:44px}
+  .ghost{height:40px;padding:0 14px;border-radius:12px;background:var(--s2);font-weight:500;font-size:14px;display:inline-flex;align-items:center;gap:7px;transition:background .15s,transform .15s var(--ease)}
+  .ghost:hover{background:var(--s3)} .ghost:active{transform:scale(.97)}
+  .ghost svg.lucide{width:15px;height:15px}
+  .primary{height:40px;padding:0 16px;border-radius:12px;background:var(--text);color:var(--bg);font-weight:600;font-size:14px;display:inline-flex;align-items:center;gap:8px;transition:opacity .2s,transform .15s var(--ease)}
+  .primary:hover{opacity:.92} .primary:active{transform:scale(.97)}
+  .primary svg.lucide{width:16px;height:16px;stroke-width:1.9}
+  .cols > div > section:first-child{margin-top:0}
+
+  /* ---------- Hero ---------- */
+  .banner{position:relative;height:168px;border-radius:26px;background:var(--s1);overflow:hidden}
+  .banner canvas{position:absolute;inset:0;width:100%;height:100%;-webkit-mask-image:radial-gradient(90% 160% at 100% 0%,#000 10%,transparent 80%);mask-image:radial-gradient(90% 160% at 100% 0%,#000 10%,transparent 80%)}
+  .id-row{display:flex;align-items:flex-end;justify-content:space-between;gap:20px;padding:0 4px 0 28px;margin-top:-56px;position:relative}
+  .ava{width:112px;height:112px;border-radius:34px;display:grid;place-items:center;font-size:36px;font-weight:600;letter-spacing:-.02em;color:#2a211a;background:linear-gradient(140deg,#D6C3AE,#8F7A68);box-shadow:0 0 0 5px var(--bg);flex-shrink:0}
+  .actions{display:flex;gap:8px;padding-bottom:4px}
+  .who{padding:18px 28px 0}
+  .who h1{font-size:34px;font-weight:500;letter-spacing:-.03em;line-height:1.15}
+  .who .meta{margin-top:4px;color:var(--text-2);font-size:15px}
+  .stats{display:flex;flex-wrap:wrap;gap:6px 28px;margin-top:18px;font-size:14px;color:var(--text-3)}
+  .stats b{color:var(--text);font-weight:600;font-size:15px;margin-right:5px}
+
+  /* ---------- Body ---------- */
+  .cols{display:grid;grid-template-columns:1.25fr 1fr;gap:56px;margin-top:52px}
+  section + section{margin-top:48px}
+  h2{font-size:18px;font-weight:600;letter-spacing:-.02em;margin-bottom:8px}
+  .kv{display:grid;grid-template-columns:180px minmax(0,1fr) auto;gap:16px;align-items:center;min-height:52px;padding:10px 14px;margin:0 -14px;border-radius:14px}
+  .kv + .kv{box-shadow:0 -.5px 0 var(--line)}
+  .kv dt{color:var(--text-3);font-size:14px}
+  .kv dd{font-weight:500;min-width:0;overflow:hidden;text-overflow:ellipsis}
+  .kv dd small{display:block;font-weight:400;font-size:13.5px;color:var(--text-3)}
+  .kv.click{cursor:pointer;transition:background .15s}
+  .kv.click:hover{background:var(--hover)}
+  .kv.click:hover,.kv.click:hover + .kv{box-shadow:none}
+  .kv .act{width:32px;height:32px;border-radius:10px;display:grid;place-items:center;color:var(--text-3);opacity:0;transition:opacity .15s,background .15s,color .15s}
+  .kv:hover .act,.act:focus-visible{opacity:1}
+  .kv .act:hover{background:var(--s2);color:var(--text)}
+  .kv .chev{color:var(--text-3)}
+  .person{display:flex;align-items:center;gap:10px}
+  .person .av{width:26px;height:26px;border-radius:50%;display:grid;place-items:center;font-size:10px;font-weight:600;color:#2a211a;background:linear-gradient(140deg,#E7CDB4,#A88A70)}
+
+  /* Student ID card */
+  .sid{position:relative;display:flex;flex-direction:column;justify-content:space-between;width:100%;text-align:left;aspect-ratio:1.586/1;border-radius:24px;overflow:hidden;padding:22px 24px;background:linear-gradient(150deg,#22232c 0%,#1a1a1e 60%);box-shadow:inset 0 0 0 .5px rgba(255,255,255,.08);transition:transform .35s var(--spring)}
+  .sid:hover{transform:translateY(-2px)} .sid:active{transform:scale(.98)}
+  .sid canvas{position:absolute;inset:0;width:100%;height:100%;-webkit-mask-image:radial-gradient(70% 90% at 100% 100%,#000,transparent 75%);mask-image:radial-gradient(70% 90% at 100% 100%,#000,transparent 75%)}
+  .sid .top,.sid .bot{position:relative;display:flex;justify-content:space-between}
+  .sid .bot{align-items:flex-end;gap:16px}
+  .sid .top{align-items:center;font-size:13px;color:var(--text-2)}
+  .sid .top .logo span{font-size:15px;color:var(--text)}
+  .sid .nm b{display:block;font-size:19px;font-weight:600;letter-spacing:-.02em}
+  .sid .nm small{display:block;font-size:13px;color:var(--text-2);margin-top:2px}
+  .sid .qr{padding:6px;border-radius:12px;background:#fff;line-height:0}
+
+  /* Sessions */
+  .dev{display:grid;grid-template-columns:40px minmax(0,1fr) auto;gap:14px;align-items:center;padding:10px 0}
+  .dev + .dev{box-shadow:0 -.5px 0 var(--line)}
+  .dev .ic{width:40px;height:40px;border-radius:12px;background:var(--s1);display:grid;place-items:center;color:var(--text-2)}
+  .dev b{display:block;font-weight:500}
+  .dev small{display:block;font-size:13.5px;color:var(--text-3)}
+  .dev .here{display:inline-flex;align-items:center;gap:6px;font-size:13.5px;color:var(--st-green)}
+  .dev .here::before{content:"";width:7px;height:7px;border-radius:50%;background:currentColor}
+  .dev.link{padding:10px 14px;margin:0 -14px;border-radius:14px;transition:background .15s}
+  .dev.link:hover{background:var(--hover)}
+  .dev .chev{color:var(--text-3)}
+  .end{height:32px;padding:0 12px;border-radius:10px;font-size:13.5px;font-weight:500;color:var(--text-2);transition:background .15s,color .15s}
+  .end:hover{background:var(--s2);color:var(--st-red)}
+
+  /* Toggles */
+  .sw{position:relative;width:42px;height:26px;border-radius:999px;background:var(--s3);transition:background .25s var(--ease);flex-shrink:0}
+  .sw::after{content:"";position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:#fff;box-shadow:0 2px 6px rgba(0,0,0,.3);transition:transform .35s var(--spring)}
+  .sw[aria-checked=true]{background:var(--accent)}
+  .sw[aria-checked=true]::after{transform:translateX(16px)}
+  .tg{display:flex;align-items:center;justify-content:space-between;gap:16px;min-height:52px;padding:8px 0}
+  .tg + .tg{box-shadow:0 -.5px 0 var(--line)}
+  .seg{position:relative;display:inline-flex;padding:3px;border-radius:12px;background:var(--s1)}
+  .seg .ind{position:absolute;top:3px;bottom:3px;border-radius:9px;background:var(--s3);transition:left .4s var(--spring),width .4s var(--spring)}
+  .seg button{position:relative;height:30px;padding:0 12px;border-radius:9px;font-size:13.5px;font-weight:500;color:var(--text-3)}
+  .seg button.on{color:var(--text)}
+
+  /* Modal */
+  .scrim{position:fixed;inset:0;z-index:40;background:rgba(10,10,12,.45);backdrop-filter:blur(10px) saturate(1.2);-webkit-backdrop-filter:blur(10px) saturate(1.2);opacity:0;pointer-events:none;transition:opacity .3s var(--ease)}
+  .scrim.open{opacity:1;pointer-events:auto}
+  .modal{position:fixed;z-index:41;left:50%;top:50%;width:min(440px,calc(100vw - 32px));border-radius:28px;background:var(--s2);box-shadow:0 0 0 .5px var(--line),0 40px 100px -24px rgba(0,0,0,.85);opacity:0;transform:translate(-50%,-48%) scale(.96);pointer-events:none;transition:opacity .22s var(--ease),transform .45s var(--spring);padding:26px 28px 28px;text-align:center}
+  .modal.open{opacity:1;transform:translate(-50%,-50%) scale(1);pointer-events:auto}
+  .m-close{position:absolute;top:16px;right:16px;width:32px;height:32px;border-radius:50%;display:grid;place-items:center;background:var(--s3)}
+  .modal .bigqr{display:inline-block;margin-top:26px;padding:14px;border-radius:22px;background:#fff;line-height:0}
+  .modal h3{font-size:24px;font-weight:600;letter-spacing:-.03em;margin-top:20px}
+  .modal p{color:var(--text-2);margin-top:2px}
+  .modal .valid{display:inline-flex;align-items:center;gap:7px;margin-top:14px;font-size:13.5px;color:var(--st-green)}
+  .modal .ghost{background:var(--s3)} .modal .ghost:hover{background:color-mix(in srgb,var(--text) 14%,var(--s3))}
+  .modal .row{display:flex;gap:8px;justify-content:center;margin-top:24px}
+
+  .toast{position:fixed;left:50%;bottom:28px;z-index:50;transform:translate(-50%,20px);opacity:0;padding:12px 18px;border-radius:14px;background:var(--text);color:var(--bg);font-weight:500;font-size:14px;display:flex;gap:8px;align-items:center;transition:opacity .25s var(--ease),transform .4s var(--spring);pointer-events:none}
+  .toast.show{opacity:1;transform:translate(-50%,0)}
+
+  @media (max-width:900px){ .cols{grid-template-columns:1fr;gap:48px} }
+  @media (max-width:640px){
+    header{padding:0 16px;grid-template-columns:auto 1fr auto} .dock .tab{padding:0 10px;font-size:0;gap:0} .logo span{display:none} .sid .logo span{display:inline}
+    .page{padding:20px 16px 72px}
+    .banner{height:120px;border-radius:22px}
+    .id-row{margin-top:-44px;padding:0 0 0 18px}
+    .ava{width:88px;height:88px;border-radius:28px;font-size:28px;box-shadow:0 0 0 4px var(--bg)}
+    .who{padding:14px 2px 0} .who h1{font-size:28px}
+    .actions .ghost span{display:none} .actions .ghost{width:40px;padding:0;justify-content:center}
+    .kv{grid-template-columns:minmax(0,1fr) auto;gap:2px 12px;padding:10px 14px} .kv dt{grid-column:1;font-size:13px} .kv dd{grid-column:1} .kv .act,.kv .chev{grid-column:2;grid-row:1 / span 2;opacity:1}
+  }
+</style>
+</head>
+<body>
+
+<header id="hdr">
+  <a class="logo" href="today-desktop-v4.html" aria-label="Орбита — на главную">
+    <svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><defs><mask id="gap"><rect width="24" height="24" fill="#fff"/><circle cx="18.72" cy="5.28" r="4.2" fill="#000"/></mask></defs><circle cx="12" cy="12" r="9.5" fill="none" stroke="currentColor" stroke-width="1.7" mask="url(#gap)"/><circle cx="18.72" cy="5.28" r="2.3" fill="currentColor"/></svg>
+    <span>орбита</span>
+  </a>
+  <nav class="dock" id="dock" aria-label="Основная навигация">
+    <span class="ind" id="ind"></span>
+    <a href="today-desktop-v4.html" class="tab"><i data-lucide="sun"></i>Сегодня</a>
+    <a href="study-v1.html" class="tab"><i data-lucide="graduation-cap"></i>Учёба</a>
+    <button class="orbslot" aria-label="Спросить Орбиту (Ctrl K)"><span class="ring"><span class="orb"><i></i><i></i><i></i></span></span></button>
+    <a href="time-v3.html" class="tab"><i data-lucide="calendar-range"></i>Время</a>
+    <a href="#" class="tab"><i data-lucide="stamp"></i>Офис</a>
+  </nav>
+  <div class="right">
+    <button class="ib" aria-label="Уведомления"><i data-lucide="bell"></i><span class="badge"></span></button>
+    <button class="me" aria-label="Профиль">АВ</button>
+  </div>
+</header>
+
+<main class="page">
+  <div class="banner"><canvas id="bn"></canvas></div>
+  <div class="id-row">
+    <div class="ava">АВ</div>
+    <div class="actions">
+      <button class="ghost" aria-label="Изменить профиль"><i data-lucide="pen-line"></i><span>Изменить</span></button>
+      <button class="primary" data-open-id><i data-lucide="id-card"></i>Студенческий</button>
+    </div>
+  </div>
+  <div class="who">
+    <h1>Алиса Воронцова</h1>
+    <div class="meta">Международный бизнес · 2 курс · МБ-24-1</div>
+    <div class="stats">
+      <span><b>12</b>место из 184</span>
+      <span><b>26</b>кредитов в семестре</span>
+      <span><b>2025</b>год поступления</span>
+    </div>
+  </div>
+
+  <div class="cols">
+    <div>
+      <section>
+        <h2>Учёба</h2>
+        <dl>
+          <div class="kv"><dt>Факультет</dt><dd>Международного бизнеса</dd></div>
+          <div class="kv"><dt>Программа</dt><dd>Международный бизнес<small>Бакалавриат · 4 года</small></dd></div>
+          <div class="kv"><dt>Форма обучения</dt><dd>Очная · бюджет</dd></div>
+          <div class="kv"><dt>Зачётная книжка</dt><dd>25-МБ-0412</dd><button class="act" data-copy="25-МБ-0412" aria-label="Скопировать"><i data-lucide="copy"></i></button></div>
+          <div class="kv click"><dt>Куратор группы</dt><dd><span class="person"><span class="av">ЕП</span>Елена Андреевна Петрова</span></dd><i data-lucide="chevron-right" class="chev"></i></div>
+        </dl>
+      </section>
+
+      <section>
+        <h2>Контакты</h2>
+        <dl>
+          <div class="kv"><dt>Почта</dt><dd>a.vorontsova@orbita.edu</dd><button class="act" data-copy="a.vorontsova@orbita.edu" aria-label="Скопировать"><i data-lucide="copy"></i></button></div>
+          <div class="kv"><dt>Телефон</dt><dd>+7 900 000-12-34</dd><button class="act" aria-label="Изменить"><i data-lucide="pen-line"></i></button></div>
+          <div class="kv"><dt>Telegram</dt><dd>@alisa_vrn</dd><button class="act" aria-label="Изменить"><i data-lucide="pen-line"></i></button></div>
+        </dl>
+      </section>
+    </div>
+
+    <div>
+      <section>
+        <button class="sid" data-open-id aria-label="Открыть студенческий билет">
+          <canvas id="sc"></canvas>
+          <span class="top"><span class="logo"><svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><defs><mask id="gap2"><rect width="24" height="24" fill="#fff"/><circle cx="18.72" cy="5.28" r="4.2" fill="#000"/></mask></defs><circle cx="12" cy="12" r="9.5" fill="none" stroke="currentColor" stroke-width="1.7" mask="url(#gap2)"/><circle cx="18.72" cy="5.28" r="2.3" fill="var(--accent)"/></svg><span>Университет Будущего</span></span><span>до 08.2029</span></span>
+          <span class="bot"><span class="nm"><b>Алиса Воронцова</b><small>Студенческий № 250412</small></span>
+          <span class="qr" id="qrs"></span></span>
+        </button>
+      </section>
+
+      <section>
+        <h2>Вход и безопасность</h2>
+        <a href="#" class="dev link"><span class="ic"><i data-lucide="key-round"></i></span><span><b>Пароль</b><small>Изменён 14 сентября</small></span><i data-lucide="chevron-right" class="chev"></i></a>
+        <div class="dev"><span class="ic"><i data-lucide="laptop"></i></span><span><b>MacBook · Safari</b><small>Москва</small></span><span class="here">Сейчас</span></div>
+        <div class="dev"><span class="ic"><i data-lucide="smartphone"></i></span><span><b>iPhone · Safari</b><small>Москва · вчера, 21:14</small></span><button class="end">Завершить</button></div>
+      </section>
+
+      <section>
+        <h2>Настройки</h2>
+        <div class="tg"><span>Тема</span>
+          <div class="seg" id="theme"><span class="ind"></span><button class="on">Тёмная</button><button>Светлая</button></div>
+        </div>
+        <div class="tg"><span>Изменения в расписании</span><button class="sw" role="switch" aria-checked="true" aria-label="Изменения в расписании"></button></div>
+        <div class="tg"><span>Новые оценки</span><button class="sw" role="switch" aria-checked="true" aria-label="Новые оценки"></button></div>
+        <div class="tg"><span>Статус заявок</span><button class="sw" role="switch" aria-checked="true" aria-label="Статус заявок"></button></div>
+        <div class="tg"><span>Новости университета</span><button class="sw" role="switch" aria-checked="false" aria-label="Новости университета"></button></div>
+      </section>
+    </div>
+  </div>
+</main>
+
+<div class="scrim" id="scrim"></div>
+<div class="modal" id="modal" role="dialog" aria-modal="true" aria-label="Студенческий билет">
+  <button class="m-close" id="mclose" aria-label="Закрыть"><i data-lucide="x"></i></button>
+  <span class="bigqr" id="qrb"></span>
+  <h3>Алиса Воронцова</h3>
+  <p>Студенческий № 250412 · МБ-24-1</p>
+  <span class="valid"><i data-lucide="badge-check"></i>Действителен до 31.08.2029</span>
+  <div class="row"><button class="ghost"><i data-lucide="wallet"></i>В Wallet</button><button class="ghost"><i data-lucide="download"></i>PDF</button></div>
+</div>
+<div class="toast" id="toast"><i data-lucide="check"></i><span>Скопировано</span></div>
+
+<script>
+  lucide.createIcons();
+  function qr(seed, size){
+    const N = 25, cell = 4; let s = seed, r = () => (s = (s * 9301 + 49297) % 233280) / 233280; let rects = '';
+    const finder = (x, y) => `<rect x="${x*cell}" y="${y*cell}" width="${7*cell}" height="${7*cell}" fill="#1b1b1d"/><rect x="${(x+1)*cell}" y="${(y+1)*cell}" width="${5*cell}" height="${5*cell}" fill="#fff"/><rect x="${(x+2)*cell}" y="${(y+2)*cell}" width="${3*cell}" height="${3*cell}" fill="#1b1b1d"/>`;
+    for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) {
+      const inF = (x<8&&y<8)||(x>N-9&&y<8)||(x<8&&y>N-9); if (inF) continue;
+      if (r() > .52) rects += `<rect x="${x*cell}" y="${y*cell}" width="${cell}" height="${cell}"/>`;
+    }
+    return `<svg viewBox="0 0 ${N*cell} ${N*cell}" width="${size}" height="${size}"><g fill="#1b1b1d">${rects}</g>${finder(0,0)}${finder(N-7,0)}${finder(0,N-7)}</svg>`;
+  }
+  document.getElementById('qrs').innerHTML = qr(250412, 54);
+  document.getElementById('qrb').innerHTML = qr(250412, 200);
+
+  // dot field: dots breathe in a wave
+  function dots(canvas, rgb, peak, gap){
+    const ctx = canvas.getContext('2d'); let w, h;
+    const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const fit = () => { const d = devicePixelRatio || 1; w = canvas.clientWidth; h = canvas.clientHeight; canvas.width = w*d; canvas.height = h*d; ctx.setTransform(d,0,0,d,0,0); };
+    const draw = ms => { const t = ms/1000; ctx.clearRect(0,0,w,h);
+      for (let y = gap/2; y < h; y += gap) for (let x = gap/2; x < w; x += gap) {
+        const v = .5 + .5*Math.sin((x/w)*5 - t*.5 + Math.sin((y/h)*4 + t*.35)*1.6);
+        ctx.fillStyle = `rgba(${rgb},${peak*(.25+.75*v)})`; ctx.beginPath(); ctx.arc(x, y, .5 + v*1.3, 0, Math.PI*2); ctx.fill();
+      }
+      if (!reduce) requestAnimationFrame(draw); };
+    new ResizeObserver(() => { fit(); if (reduce) draw(0); }).observe(canvas); fit(); requestAnimationFrame(draw);
+  }
+  dots(document.getElementById('bn'), '224,167,94', .8, 12);   // цвет факультета
+  dots(document.getElementById('sc'), '139,142,255', .35, 10);  // акцент
+
+  // modal
+  const modal = document.getElementById('modal'), scrim = document.getElementById('scrim');
+  const close = () => { modal.classList.remove('open'); scrim.classList.remove('open'); };
+  document.querySelectorAll('[data-open-id]').forEach(b => b.onclick = () => { modal.classList.add('open'); scrim.classList.add('open'); });
+  scrim.onclick = close; document.getElementById('mclose').onclick = close; addEventListener('keydown', e => e.key === 'Escape' && close());
+
+  // copy → toast
+  const toast = document.getElementById('toast'); let tt;
+  document.querySelectorAll('[data-copy]').forEach(b => b.onclick = () => { navigator.clipboard?.writeText(b.dataset.copy); toast.classList.add('show'); clearTimeout(tt); tt = setTimeout(() => toast.classList.remove('show'), 1600); });
+
+  // switches, theme segment
+  document.querySelectorAll('.sw').forEach(s => s.onclick = () => s.setAttribute('aria-checked', s.getAttribute('aria-checked') !== 'true'));
+  const seg = document.getElementById('theme'), sind = seg.querySelector('.ind');
+  const place = b => { sind.style.left = b.offsetLeft + 'px'; sind.style.width = b.offsetWidth + 'px'; };
+  seg.querySelectorAll('button').forEach(b => b.onclick = () => { seg.querySelector('.on').classList.remove('on'); b.classList.add('on'); place(b); });
+
+  const slide = (ind, el) => { if (!el) { ind.style.width = 0; return; } ind.style.left = el.offsetLeft + 'px'; ind.style.width = el.offsetWidth + 'px'; };
+  const init = () => { slide(document.getElementById('ind'), document.querySelector('.tab.on')); place(seg.querySelector('.on')); };
+  init(); document.fonts && document.fonts.ready.then(init);
+  const hdr = document.getElementById('hdr');
+  addEventListener('scroll', () => hdr.classList.toggle('scrolled', scrollY > 4), { passive: true });
+</script>
+</body>
+</html>
