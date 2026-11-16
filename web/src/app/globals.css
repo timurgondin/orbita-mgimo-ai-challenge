@@ -412,3 +412,29 @@ button {
 .rows > [data-state="live"] + *::before {
   opacity: 0;
 }
+
+/* Переход «вход → кабинет» (components/shell/page-transition.tsx) */
+html.page-out body {
+  opacity: 0;
+  filter: blur(6px);
+  transition:
+    opacity 0.34s var(--ease),
+    filter 0.34s var(--ease);
+}
+html.page-in body {
+  animation: page-in 0.8s var(--ease) both;
+}
+@keyframes page-in {
+  from {
+    opacity: 0;
+    filter: blur(6px);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  html.page-out body,
+  html.page-in body {
+    transition: none;
+    animation: none;
+    filter: none;
+  }
+}

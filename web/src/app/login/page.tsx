@@ -1,5 +1,6 @@
 import { Suspense } from "react";
 import type { Metadata } from "next";
+import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { LoginForm } from "@/components/login/login-form";
 import { OrbitCanvas } from "@/components/login/orbit-canvas";
@@ -9,6 +10,8 @@ import { getCurrentUser } from "@/server/auth/session";
 export const metadata: Metadata = { title: "Вход — Орбита" };
 
 async function RedirectIfSignedIn() {
+  // Ответ на сам вход (server action) не уводим: клиент сыграет переход и перейдёт сам (login-form).
+  if ((await headers()).has("next-action")) return null;
   if (await getCurrentUser()) redirect("/");
   return null;
 }

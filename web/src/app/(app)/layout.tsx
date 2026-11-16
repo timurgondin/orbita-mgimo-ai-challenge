@@ -1,4 +1,5 @@
 import { Suspense } from "react";
+import { PageEnter } from "@/components/shell/page-transition";
 import { TopBar } from "@/components/shell/top-bar";
 import { requireUser } from "@/server/auth/session";
 import { getUnreadCount } from "@/server/data/today";
@@ -9,6 +10,7 @@ async function Shell({ children }: { children: React.ReactNode }) {
   const unread = user.role === "student" ? await getUnreadCount() : 0;
   return (
     <>
+      <PageEnter />
       <TopBar user={user} unread={unread} />
       <main className="mx-auto max-w-[1180px] px-5 pt-11 pb-20 sm:px-10">{children}</main>
     </>

@@ -2,8 +2,11 @@
 
 import { useActionState, useEffect, useRef, useState } from "react";
 import { ChevronDown, CircleAlert, Eye, EyeOff, Stamp, UsersRound } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useTheme } from "next-themes";
+import { ThinkingOrb } from "thinking-orbs";
 import { loginAction, type LoginState } from "@/server/auth/actions";
-import { Orb } from "@/components/shell/orb";
+import { leavePage } from "@/components/shell/page-transition";
 import { cn } from "@/lib/utils";
 
 const DEMO = [
@@ -30,6 +33,16 @@ export function LoginForm() {
   const demoRef = useRef<HTMLDivElement>(null);
   const btnRef = useRef<HTMLButtonElement>(null);
   const submitRef = useRef<HTMLButtonElement>(null);
+  const router = useRouter();
+  const { resolvedTheme } = useTheme();
+  const busy = pending || !!state.to;
+
+  useEffect(() => {
+    const to = state.to;
+    if (!to) return;
+    router.prefetch(to);
+    leavePage(() => router.replace(to));
+  }, [state.to, router]);
 
   const error = state.error && dismissed !== state ? state.error : undefined;
   const hide = () => setDismissed(state);
@@ -133,11 +146,19 @@ export function LoginForm() {
         <button
           ref={submitRef}
           type="submit"
-          disabled={pending}
+          disabled={busy}
+          aria-busy={busy}
           className="mt-2 flex h-[50px] items-center justify-center gap-2.5 rounded-[14px] bg-text text-[15px] font-semibold tracking-[-.01em] text-bg transition-[transform,opacity] duration-150 ease-soft hover:opacity-90 active:scale-[.985] disabled:pointer-events-none"
         >
-          {pending && <Orb size={22} className="orb-fast" />}
-          {pending ? "Входим" : "Войти"}
+          {busy ? (
+            <>
+              {/* светлая кнопка в тёмной теме → тёмные точки, и наоборот */}
+              <ThinkingOrb state="connecting" size={20} theme={resolvedTheme === "light" ? "dark" : "light"} aria-hidden="true" />
+              <span className="sr-only">Входим</span>
+            </>
+          ) : (
+            "Войти"
+          )}
         </button>
       </form>
 

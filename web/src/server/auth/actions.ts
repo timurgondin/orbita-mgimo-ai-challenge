@@ -9,6 +9,8 @@ import { createSession, destroySession, requireUser } from "./session";
 
 export interface LoginState {
   error?: string;
+  /** Куда перейти после успешного входа (клиент сначала играет переход). */
+  to?: "/" | "/welcome";
 }
 
 const GENERIC = "Неверный логин или пароль";
@@ -55,7 +57,7 @@ export async function loginAction(_prev: LoginState, formData: FormData): Promis
     });
   }
   await createSession(user.id, remember);
-  redirect(user.role === "student" && !user.onboardingDone ? "/welcome" : "/");
+  return { to: user.role === "student" && !user.onboardingDone ? "/welcome" : "/" };
 }
 
 export async function logoutAction(): Promise<void> {
