@@ -29,6 +29,12 @@ const CREDITS_PLAN = 30;
 const UPCOMING_DAYS = 10;
 
 /** Всё для экрана «Учёба» текущего студента. Только его записи на курсы и его работы. */
+/** 1 урок, 2 урока, 5 уроков */
+function plural(n: number, one: string, few: string, many: string): string {
+  const d = n % 10, h = n % 100;
+  return d === 1 && h !== 11 ? one : d >= 2 && d <= 4 && (h < 12 || h > 14) ? few : many;
+}
+
 export async function getStudyData(): Promise<StudyData | null> {
   const user = await getStudent();
   if (!user) return null;
@@ -67,7 +73,7 @@ export async function getStudyData(): Promise<StudyData | null> {
       online.push({
         id: course.id,
         color: course.color,
-        kindLabel: `Видеокурс · ${total} уроков`,
+        kindLabel: `${total} ${plural(total, "видеоурок", "видеоурока", "видеоуроков")}`,
         title: course.title,
         teacher: course.providerName ?? course.teacherName,
         score: String(p?.lessonsDone ?? 0),
@@ -115,7 +121,9 @@ export async function getStudyData(): Promise<StudyData | null> {
           id: c.id,
           color: course.color,
           title: c.title,
-          subtitle: `${course.title} · ${work?.gradedAt ? formatDayMonth(work.gradedAt) : ""}`,
+          course: course.title,
+          // справа под оценкой — когда проверили
+          note: work?.gradedAt ? formatDayMonth(work.gradedAt) : "",
           due: "",
           dueHot: false,
           status: null,
@@ -135,7 +143,9 @@ export async function getStudyData(): Promise<StudyData | null> {
           id: c.id,
           color: course.color,
           title: c.title,
-          subtitle: `${course.title} · ${c.subtitle ?? `${c.weight}% оценки`}`,
+          course: course.title,
+          // справа под сроком — где писать или сколько весит
+          note: c.room ? `ауд. ${c.room}` : `${c.weight}% оценки`,
           due: due.label,
           dueHot: due.today,
           status: status as TagKind,
@@ -180,7 +190,8 @@ export async function getStudyData(): Promise<StudyData | null> {
           day: mskDate(c.dueAt).slice(8).replace(/^0/, ""),
           month: formatMonthShort(c.dueAt),
           title: course.title,
-          sub: ["Экзамен", mskTime(c.dueAt), c.room ? `ауд. ${c.room}` : null].filter(Boolean).join(" · "),
+          time: mskTime(c.dueAt),
+          room: c.room ? `ауд. ${c.room}` : null,
           at: c.dueAt.getTime(),
         });
       }

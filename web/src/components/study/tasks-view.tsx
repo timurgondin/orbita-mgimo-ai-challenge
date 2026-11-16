@@ -13,26 +13,25 @@ function Task({ t }: { t: TaskItemData }) {
       <span className="size-2 rounded-full bg-(--cc)" />
       <div className="min-w-0">
         <div className="truncate font-medium">{t.title}</div>
-        <div className="mt-px truncate text-sm text-text-3">{t.subtitle}</div>
+        <div className="mt-px truncate text-sm text-text-3">{t.course}</div>
       </div>
       {t.status ? (
         <>
-          <span
-            className={cn(
-              "min-w-[120px] text-right text-sm text-text-2 max-sm:order-last max-sm:col-start-2 max-sm:min-w-0 max-sm:text-left max-sm:text-[13px]",
-              t.dueHot && "text-urgent",
-            )}
-          >
-            {t.due}
+          <span className="min-w-[120px] text-right max-sm:order-last max-sm:col-start-2 max-sm:flex max-sm:min-w-0 max-sm:gap-3 max-sm:text-left">
+            <span className={cn("block text-sm text-text-2 max-sm:text-[13px]", t.dueHot && "text-urgent")}>{t.due}</span>
+            <span className="mt-px block text-[13px] text-text-3">{t.note}</span>
           </span>
           <span className="flex min-w-[118px] justify-end max-sm:col-start-3 max-sm:row-start-1">
             <StatusTag status={t.status} />
           </span>
         </>
       ) : (
-        <span className="col-start-4 text-right text-lg font-semibold tracking-[-.02em] max-sm:col-start-3">
-          {t.score}
-          <small className="text-[13px] font-normal text-text-3"> / 10</small>
+        <span className="col-start-4 text-right max-sm:col-start-3">
+          <span className="block text-lg leading-tight font-semibold tracking-[-.02em]">
+            {t.score}
+            <small className="text-[13px] font-normal text-text-3"> / 10</small>
+          </span>
+          <span className="block text-[13px] text-text-3">{t.note}</span>
         </span>
       )}
       {t.feedback && (

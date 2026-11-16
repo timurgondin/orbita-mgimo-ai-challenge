@@ -132,7 +132,7 @@ const ALISA: Person = {
   login: "a.vorontsova",
   courses: [
     {
-      slug: "micro-24", title: "Микроэкономика", color: "micro", assessment: "exam", credits: 6, kinds: "Семинар · лекция",
+      slug: "micro-24", title: "Микроэкономика", color: "micro", assessment: "exam", credits: 6, kinds: "Лекции и семинары",
       teacher: "Петрова Е. А.", avatar: "peach", teacherLogin: "e.petrova",
       comps: [
         { t: "Контрольная №1", kind: "test", w: 20, due: "2026-11-10T11:00", work: { s: "graded", score: 8, g: "2026-11-10T16:00", fb: "Хорошо с графиками. В задаче 3 не учтены постоянные издержки." } },
@@ -142,7 +142,7 @@ const ALISA: Person = {
       ],
     },
     {
-      slug: "econometrics-24", title: "Эконометрика", color: "econ", assessment: "exam", credits: 6, kinds: "Лекция · консультации",
+      slug: "econometrics-24", title: "Эконометрика", color: "econ", assessment: "exam", credits: 6, kinds: "Лекции и консультации",
       teacher: "Соколов Д. В.", avatar: "sand",
       comps: [
         { t: "Работа на практикумах", kind: "participation", w: 20, work: { s: "graded", score: 7, g: "2026-11-12T12:00" } },
@@ -153,7 +153,7 @@ const ALISA: Person = {
       ],
     },
     {
-      slug: "world-economy-24", title: "Мировая экономика", color: "world", assessment: "exam", credits: 4, kinds: "Семинар",
+      slug: "world-economy-24", title: "Мировая экономика", color: "world", assessment: "exam", credits: 4, kinds: "Семинары",
       teacher: "Ким А. С.", avatar: "lilac",
       comps: [
         { t: "Семинарские доклады", kind: "participation", w: 25, work: { s: "graded", score: 9, g: "2026-11-11T12:00" } },
@@ -173,7 +173,7 @@ const ALISA: Person = {
       ],
     },
     {
-      slug: "intl-law-24", title: "Международное право", color: "law", assessment: "exam", credits: 4, kinds: "Лекция · семинар",
+      slug: "intl-law-24", title: "Международное право", color: "law", assessment: "exam", credits: 4, kinds: "Лекции и семинары",
       teacher: "Орлова М. И.", avatar: "mist",
       comps: [
         { t: "Тест по источникам права", kind: "test", w: 10, due: "2026-11-03T11:00", work: { s: "graded", score: 6, g: "2026-11-03T17:00" } },
@@ -183,7 +183,7 @@ const ALISA: Person = {
       ],
     },
     {
-      slug: "diplomacy-history-24", title: "История дипломатии", color: "hist", assessment: "credit", credits: 3, kinds: "Семинар",
+      slug: "diplomacy-history-24", title: "История дипломатии", color: "hist", assessment: "credit", credits: 3, kinds: "Семинары",
       teacher: "Белов Г. Н.", avatar: "sand",
       comps: [
         { t: "Работа на семинарах", kind: "participation", w: 25, work: { s: "graded", score: 8, g: "2026-11-12T12:00" } },
@@ -193,9 +193,9 @@ const ALISA: Person = {
       ],
     },
     { slug: "python-data", title: "Python для анализа данных", color: "py", assessment: "credit", credits: 0, teacher: "Цифровая кафедра", avatar: "sand",
-      online: { total: 12, provider: "Цифровая кафедра", done: 6, next: "Урок 7 · pandas", minutes: 18 } },
+      online: { total: 12, provider: "Цифровая кафедра", done: 6, next: "Pandas", minutes: 18 } },
     { slug: "academic-writing", title: "Академическое письмо", color: "econ", assessment: "credit", credits: 0, teacher: "Центр академического письма", avatar: "sand",
-      online: { total: 8, provider: "Центр академического письма", done: 2, next: "Урок 3 · Аргумент", minutes: 12 } },
+      online: { total: 8, provider: "Центр академического письма", done: 2, next: "Структура аргумента", minutes: 12 } },
   ],
   events: [
     // Пн 16
@@ -250,7 +250,7 @@ const MAXIM: Person = {
   login: "m.orlov",
   courses: [
     {
-      slug: "ir-theory-22", title: "Теория международных отношений", color: "econ", assessment: "exam", credits: 5, kinds: "Лекция · семинар",
+      slug: "ir-theory-22", title: "Теория международных отношений", color: "econ", assessment: "exam", credits: 5, kinds: "Лекции и семинары",
       teacher: "Громов В. П.", avatar: "mist",
       comps: [
         { t: "Коллоквиум 1", kind: "test", w: 20, due: "2026-11-09T11:00", work: { s: "graded", score: 7, g: "2026-11-09T18:00", fb: "Неплохо по реализму, слабее — неореализм и либерализм." } },
@@ -260,7 +260,7 @@ const MAXIM: Person = {
       ],
     },
     {
-      slug: "russia-foreign-policy-22", title: "Внешняя политика России", color: "hist", assessment: "exam", credits: 4, kinds: "Лекция · семинар",
+      slug: "russia-foreign-policy-22", title: "Внешняя политика России", color: "hist", assessment: "exam", credits: 4, kinds: "Лекции и семинары",
       teacher: "Зайцева Л. К.", avatar: "peach",
       comps: [
         { t: "Аналитическая записка", kind: "essay", w: 25, due: "2026-11-12T23:59", work: { s: "graded", score: 8.4, g: "2026-11-18T09:00", fb: "Сильная аргументация, добавьте больше первичных источников." } },
@@ -270,7 +270,7 @@ const MAXIM: Person = {
       ],
     },
     {
-      slug: "conflictology-22", title: "Конфликтология", color: "world", assessment: "exam", credits: 4, kinds: "Семинар",
+      slug: "conflictology-22", title: "Конфликтология", color: "world", assessment: "exam", credits: 4, kinds: "Семинары",
       teacher: "Рябов Н. Т.", avatar: "lilac",
       comps: [
         { t: "Кейс-анализ №1", kind: "homework", w: 20, due: "2026-11-04T23:59", work: { s: "graded", score: 7, g: "2026-11-09T12:00", fb: "Хорошая структура, мало сравнений между случаями." } },
@@ -280,7 +280,7 @@ const MAXIM: Person = {
       ],
     },
     {
-      slug: "intl-security-22", title: "Международная безопасность", color: "micro", assessment: "exam", credits: 3, kinds: "Лекция",
+      slug: "intl-security-22", title: "Международная безопасность", color: "micro", assessment: "exam", credits: 3, kinds: "Лекции",
       teacher: "Фролов И. С.", avatar: "sand",
       comps: [
         { t: "Реферат", kind: "essay", w: 30, due: "2026-11-05T23:59", work: { s: "graded", score: 8, g: "2026-11-09T14:00", fb: "Чёткая постановка проблемы. Список литературы оформите по ГОСТу." } },
@@ -299,7 +299,7 @@ const MAXIM: Person = {
       ],
     },
     { slug: "political-data", title: "Анализ данных в политологии", color: "py", assessment: "credit", credits: 0, teacher: "Школа политических данных", avatar: "sand",
-      online: { total: 10, provider: "Школа политических данных", done: 4, next: "Урок 5 · Визуализация", minutes: 15 } },
+      online: { total: 10, provider: "Школа политических данных", done: 4, next: "Визуализация", minutes: 15 } },
   ],
   events: [
     { course: "russia-foreign-policy-22", kind: "lecture", d: "2026-11-16", p: 3, room: "5201" },
@@ -332,7 +332,7 @@ const NIKA: Person = {
   login: "n.lanskaya",
   courses: [
     {
-      slug: "marketing-intro-26", title: "Введение в маркетинг", color: "micro", assessment: "exam", credits: 4, kinds: "Лекция · семинар",
+      slug: "marketing-intro-26", title: "Введение в маркетинг", color: "micro", assessment: "exam", credits: 4, kinds: "Лекции и семинары",
       teacher: "Лебедева Т. Р.", avatar: "peach",
       comps: [
         { t: "Тест 1", kind: "test", w: 20, due: "2026-11-12T11:40", work: { s: "graded", score: 8.5, g: "2026-11-12T16:00", fb: "Отличный старт. Повторите сегментирование." } },
@@ -341,7 +341,7 @@ const NIKA: Person = {
       ],
     },
     {
-      slug: "economics-basics-26", title: "Основы экономики", color: "econ", assessment: "exam", credits: 4, kinds: "Лекция",
+      slug: "economics-basics-26", title: "Основы экономики", color: "econ", assessment: "exam", credits: 4, kinds: "Лекции",
       teacher: "Дроздов А. М.", avatar: "mist",
       comps: [
         { t: "Домашнее задание 2", kind: "homework", w: 20, due: "2026-11-20T23:59", sub: "домашнее задание", work: { s: "draft" } },

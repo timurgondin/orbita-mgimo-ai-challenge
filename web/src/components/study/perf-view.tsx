@@ -71,7 +71,11 @@ export function PerfView({ perf }: { perf: StudyData["perf"] }) {
               </div>
               <div className="min-w-0 flex-1">
                 <div className="font-medium">{e.title}</div>
-                <div className="text-sm text-text-3">{e.sub}</div>
+                <div className="text-sm text-text-3">Экзамен</div>
+              </div>
+              <div className="text-right">
+                <div className="font-medium tabular-nums">{e.time}</div>
+                {e.room && <div className="text-[13px] text-text-3">{e.room}</div>}
               </div>
             </div>
           ))}

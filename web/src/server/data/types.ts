@@ -107,7 +107,9 @@ export interface TaskItemData {
   id: string;
   color: string;
   title: string;
-  subtitle: string;
+  course: string;
+  /** мелко справа: «ауд. 1201», «15% оценки» или дата проверки */
+  note: string;
   due: string;
   dueHot: boolean;
   status: TagKind | null;
@@ -131,7 +133,8 @@ export interface ExamData {
   day: string;
   month: string;
   title: string;
-  sub: string;
+  time: string;
+  room: string | null;
 }
 
 export interface StudyData {
