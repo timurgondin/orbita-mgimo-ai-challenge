@@ -136,7 +136,7 @@ function DayBlock({ date, items, onOpen }: { date: string; items: Item[]; onOpen
           {dayMonth(date)}
         </span>
       </div>
-      {items.length ? <div className="[&>*:not(:first-child)]:shadow-[0_-.5px_0_var(--line)] [&>*:hover]:shadow-none [&>*:hover+*]:shadow-none [&>[data-state=live]]:shadow-none [&>[data-state=live]+*]:shadow-none">{rows}</div> : <div className="py-[18px] text-text-3">Пар нет</div>}
+      {items.length ? <div className="rows">{rows}</div> : <div className="py-[18px] text-text-3">Пар нет</div>}
     </section>
   );
 }

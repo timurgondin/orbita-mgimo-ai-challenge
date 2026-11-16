@@ -70,7 +70,7 @@ export function ConsView({
                 {dayMonth(date)}
               </span>
             </h3>
-            <div className="[&>*:not(:first-child)]:shadow-[0_-.5px_0_var(--line)] [&>*:hover]:shadow-none [&>*:hover+*]:shadow-none">
+            <div className="rows">
               {list
                 .filter((c) => c.date === date)
                 .map((c) => (

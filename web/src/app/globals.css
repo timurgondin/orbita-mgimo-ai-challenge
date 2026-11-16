@@ -390,3 +390,25 @@ button {
     stroke-dashoffset: 0;
   }
 }
+
+/* Списки строк: прямой разделитель с отступом по полям строки (не box-shadow — на скруглённой строке он загибается «стопкой карточек»). */
+.rows > * {
+  position: relative;
+}
+.rows > * + *::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: var(--row-inset, 16px);
+  right: var(--row-inset, 16px);
+  height: 0.5px;
+  background: var(--line);
+  pointer-events: none;
+  transition: opacity 0.15s;
+}
+.rows > *:hover::before,
+.rows > *:hover + *::before,
+.rows > [data-state="live"]::before,
+.rows > [data-state="live"] + *::before {
+  opacity: 0;
+}

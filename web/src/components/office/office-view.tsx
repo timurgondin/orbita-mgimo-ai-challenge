@@ -95,7 +95,7 @@ export function OfficeView({ data }: { data: OfficeData }) {
       <section className="mt-11">
         <H2>Документы</H2>
         {data.documents.length ? (
-          <div>
+          <div className="rows [--row-inset:14px]">
             {data.documents.map((d) => (
               <div
                 key={d.id}
@@ -104,7 +104,7 @@ export function OfficeView({ data }: { data: OfficeData }) {
                 data-doc={d.number}
                 onClick={() => openModal({ type: "doc", id: d.id, snap: d })}
                 onKeyDown={(e) => e.key === "Enter" && openModal({ type: "doc", id: d.id, snap: d })}
-                className="-mx-3.5 grid cursor-pointer grid-cols-[40px_minmax(0,1fr)_auto_auto] items-center gap-4 rounded-2xl px-3.5 py-3 transition-colors duration-150 hover:bg-hover max-sm:grid-cols-[40px_minmax(0,1fr)_auto] max-sm:gap-3 [&:not(:first-child)]:shadow-[0_-.5px_0_var(--line)] hover:[&:not(:first-child)]:shadow-none [&:hover+*]:shadow-none"
+                className="-mx-3.5 grid cursor-pointer grid-cols-[40px_minmax(0,1fr)_auto_auto] items-center gap-4 rounded-2xl px-3.5 py-3 transition-colors duration-150 hover:bg-hover max-sm:grid-cols-[40px_minmax(0,1fr)_auto] max-sm:gap-3"
               >
                 <span className="grid size-10 place-items-center rounded-[12px] bg-s2 text-text-2">
                   <FileBadge size={16} strokeWidth={1.6} />
