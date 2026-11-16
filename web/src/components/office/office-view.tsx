@@ -1,10 +1,10 @@
 "use client";
 
 import { useCallback, useRef, useState } from "react";
-import { Building2, Download, FileBadge, MessageCircle, Plus } from "lucide-react";
+import { Building2, Download, FileBadge, MessageCircle, Plus, MapPin, Clock3 } from "lucide-react";
 import { Modal } from "@/components/time/modal";
 import { useToast } from "@/components/ui/toast";
-import { REQUEST_TYPES, OFFICE, getType } from "@/lib/office-catalog";
+import { REQUEST_TYPES, OFFICE, getType, catalogLine } from "@/lib/office-catalog";
 import { cn } from "@/lib/utils";
 import type { OfficeData, OfficeDocView, OfficeRequestView } from "@/server/data/types";
 import { DocContent, pdfHref } from "./doc-modal";
@@ -82,9 +82,7 @@ export function OfficeView({ data }: { data: OfficeData }) {
                 </span>
                 <span>
                   <b className="block text-[15px] leading-tight font-semibold tracking-[-.01em]">{t.title}</b>
-                  <small className="mt-[3px] block text-[13px] text-text-3">
-                    {t.format} · {t.eta}
-                  </small>
+                  <small className="mt-[3px] block text-[13px] text-text-3">{catalogLine(t)}</small>
                 </span>
               </button>
             );
@@ -142,8 +140,15 @@ export function OfficeView({ data }: { data: OfficeData }) {
         </span>
         <div className="min-w-0 flex-1 max-md:basis-[calc(100%-60px)]">
           <b className="font-semibold">{OFFICE.name}</b>
-          <small className="block text-sm text-text-3">
-            {OFFICE.address} · {OFFICE.hours} · {OFFICE.email}
+          <small className="mt-0.5 flex flex-wrap items-center gap-x-5 gap-y-1 text-sm text-text-3">
+            <span className="inline-flex items-center gap-1.5">
+              <MapPin size={14} strokeWidth={1.6} />
+              {OFFICE.address}
+            </span>
+            <span className="inline-flex items-center gap-1.5">
+              <Clock3 size={14} strokeWidth={1.6} />
+              {OFFICE.hours}
+            </span>
           </small>
         </div>
         <span className={cn("inline-flex items-center gap-1.5 text-[13.5px] before:size-[7px] before:rounded-full before:bg-current", data.open ? "text-(--st-green)" : "text-text-3")}>

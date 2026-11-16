@@ -24,7 +24,6 @@ function person(fio: string | null, avatar: string): PersonRef | null {
 export async function getProfile(): Promise<ProfileView> {
   const u = await requireUser();
   const student = u.role === "student";
-  const years = u.admissionYear && u.graduationYear ? `${u.admissionYear}–${u.graduationYear}` : null;
   return {
     student,
     email: `${u.login}@${EMAIL_DOMAIN}`,
@@ -33,7 +32,9 @@ export async function getProfile(): Promise<ProfileView> {
     faculty: u.faculty,
     position: u.position,
     program: u.program,
-    programSub: [u.degree, years].filter(Boolean).join(" · ") || null,
+    // «Бакалавриат, выпуск в 2029»
+    programSub: u.degree ? (u.graduationYear ? `${u.degree}, выпуск в ${u.graduationYear}` : u.degree) : null,
+    group: u.groupName,
     studyForm: u.studyForm,
     recordBook: u.recordBook,
     curator: person(u.curatorName, "peach"),
@@ -48,7 +49,7 @@ export async function getStudentCard(): Promise<StudentCardView | null> {
   if (u.role !== "student" || !u.cardToken || !u.cardNumber || !u.cardValidUntil) return null;
   return {
     name: `${u.firstName} ${u.lastName}`,
-    meta: [u.groupName, u.program].filter(Boolean).join(" · "),
+    meta: u.groupName ? `${u.program}, группа ${u.groupName}` : (u.program ?? ""),
     number: u.cardNumber,
     validUntil: fmtDate(u.cardValidUntil),
     qr: await qrSvg(verifyUrl(u.cardToken)),

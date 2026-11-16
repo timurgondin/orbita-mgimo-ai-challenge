@@ -15,6 +15,7 @@ export interface ProfileView {
   position: string | null;
   program: string | null;
   programSub: string | null;
+  group: string | null;
   studyForm: string | null;
   recordBook: string | null;
   curator: PersonRef | null;

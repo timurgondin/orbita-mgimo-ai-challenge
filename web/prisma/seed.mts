@@ -23,9 +23,9 @@ const stats: Record<string, { courseRank: number; courseSize: number; creditsEar
 };
 // Профиль (вымышленные данные). Токен студенческого — новый при каждом сиде.
 const profiles: Record<string, Record<string, unknown>> = {
-  "a.vorontsova": { degree: "Бакалавриат", studyForm: "Очная · бюджет", admissionYear: 2025, graduationYear: 2029, recordBook: "25-МБ-0412", curatorName: "Петрова Елена Андреевна", headmanName: "Беляева Дарья", phone: "+7 900 000-12-34", telegram: "@alisa_vrn", cardNumber: "250412", cardValidUntil: new Date("2029-08-31T00:00:00+03:00") },
-  "m.orlov": { degree: "Бакалавриат", studyForm: "Очная · контракт", admissionYear: 2023, graduationYear: 2027, recordBook: "23-МП-0178", curatorName: "Ким Андрей Сергеевич", headmanName: "Жуков Матвей", phone: "+7 900 000-56-78", telegram: "@orlov_m", cardNumber: "230178", cardValidUntil: new Date("2027-08-31T00:00:00+03:00") },
-  "n.lanskaya": { degree: "Бакалавриат", studyForm: "Очная · бюджет", admissionYear: 2026, graduationYear: 2030, recordBook: "26-МК-0931", curatorName: "Петрова Елена Андреевна", headmanName: null, phone: null, telegram: null, cardNumber: "260931", cardValidUntil: new Date("2030-08-31T00:00:00+03:00") },
+  "a.vorontsova": { degree: "Бакалавриат", studyForm: "Очная, бюджет", admissionYear: 2025, graduationYear: 2029, recordBook: "25-МБ-0412", curatorName: "Петрова Елена Андреевна", headmanName: "Беляева Дарья", phone: "+7 900 000-12-34", telegram: "@alisa_vrn", cardNumber: "250412", cardValidUntil: new Date("2029-08-31T00:00:00+03:00") },
+  "m.orlov": { degree: "Бакалавриат", studyForm: "Очная, контракт", admissionYear: 2023, graduationYear: 2027, recordBook: "23-МП-0178", curatorName: "Ким Андрей Сергеевич", headmanName: "Жуков Матвей", phone: "+7 900 000-56-78", telegram: "@orlov_m", cardNumber: "230178", cardValidUntil: new Date("2027-08-31T00:00:00+03:00") },
+  "n.lanskaya": { degree: "Бакалавриат", studyForm: "Очная, бюджет", admissionYear: 2026, graduationYear: 2030, recordBook: "26-МК-0931", curatorName: "Петрова Елена Андреевна", headmanName: null, phone: null, telegram: null, cardNumber: "260931", cardValidUntil: new Date("2030-08-31T00:00:00+03:00") },
   "e.petrova": { phone: "+7 900 000-90-12", telegram: "@petrova_econ" },
 };
 for (const u of users) {
@@ -478,11 +478,11 @@ const SEED_REQS: SeedReq[] = [
     events: [{ title: "Заявка подана", actor: "Вы", at: "2026-11-17T10:15" }, { title: "Принята в работу", actor: "Смирнова И. А.", at: "2026-11-17T12:30" }, { title: "Готовится", note: "Печать и подпись" }, { title: "Готова", note: "Бумажная справка" }] },
 ];
 const SEED_DOCS: SeedDoc[] = [
-  { login: "a.vorontsova", number: "D-2470", typeId: "study", title: "Справка об обучении", subtitle: "По месту требования · PDF с QR", issued: "2026-11-18T16:41", status: "ready" },
-  { login: "a.vorontsova", number: "D-2415", typeId: "grades", title: "Выписка оценок за 1 курс", subtitle: "PDF с QR", issued: "2026-10-02T12:10", status: "done" },
-  { login: "a.vorontsova", number: "D-2398", typeId: "study", title: "Справка в банк", subtitle: "Бумажная · получена в офисе", issued: "2026-09-14T15:30", status: "done" },
-  { login: "m.orlov", number: "D-2441", typeId: "study", title: "Справка об обучении", subtitle: "По месту требования · PDF с QR", issued: "2026-10-05T11:00", status: "done" },
-  { login: "m.orlov", number: "D-2402", typeId: "grades", title: "Выписка оценок за 3 курс", subtitle: "PDF с QR", issued: "2026-09-12T13:20", status: "done" },
+  { login: "a.vorontsova", number: "D-2470", typeId: "study", title: "Справка об обучении", subtitle: "По месту требования", issued: "2026-11-18T16:41", status: "ready" },
+  { login: "a.vorontsova", number: "D-2415", typeId: "grades", title: "Выписка оценок за 1 курс", subtitle: "С QR-кодом", issued: "2026-10-02T12:10", status: "done" },
+  { login: "a.vorontsova", number: "D-2398", typeId: "study", title: "Справка в банк", subtitle: "Бумажная, получена в офисе", issued: "2026-09-14T15:30", status: "done" },
+  { login: "m.orlov", number: "D-2441", typeId: "study", title: "Справка об обучении", subtitle: "По месту требования", issued: "2026-10-05T11:00", status: "done" },
+  { login: "m.orlov", number: "D-2402", typeId: "grades", title: "Выписка оценок за 3 курс", subtitle: "С QR-кодом", issued: "2026-09-12T13:20", status: "done" },
 ];
 
 function paragraphs(d: SeedDoc): string[] {

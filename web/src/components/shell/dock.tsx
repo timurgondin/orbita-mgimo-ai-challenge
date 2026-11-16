@@ -90,7 +90,7 @@ export function Dock() {
       <button
         type="button"
         aria-label="Спросить Орбиту (Ctrl K)"
-        title="Спросить Орбиту · Ctrl K"
+        title="Спросить Орбиту (Ctrl K)"
         className="group relative z-[1] grid h-[38px] w-[68px] place-items-center rounded-full after:absolute after:top-[calc(100%+16px)] after:text-[11px] after:whitespace-nowrap after:text-text-3 after:opacity-0 after:transition-opacity after:duration-200 after:content-['Ctrl_K'] hover:after:opacity-100 focus-visible:after:opacity-100 max-sm:w-[60px]"
       >
         <span className="absolute top-1/2 left-1/2 grid size-14 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full bg-bg shadow-[0_0_0_.5px_var(--dock-ring),var(--orb-ring-shadow)]">

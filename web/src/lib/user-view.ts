@@ -24,6 +24,7 @@ export const fullName = (u: UserView) => `${u.firstName} ${u.lastName}`;
 export const avatarGradient = (u: UserView) => AVATAR_GRADIENTS[u.avatar] ?? AVATAR_GRADIENTS.sand;
 
 export function subtitle(u: UserView): string {
-  if (u.role === "student") return [u.program, u.course ? `${u.course} курс` : null, u.groupName].filter(Boolean).join(" · ");
+  // «Международный бизнес, 2 курс» — фраза, а не склейка через «·»; группа — в профиле
+  if (u.role === "student") return [u.program, u.course ? `${u.course} курс` : null].filter(Boolean).join(", ");
   return u.position ?? "";
 }

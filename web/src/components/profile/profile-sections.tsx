@@ -124,6 +124,7 @@ export function ProfileSections({ p }: { p: ProfileView }) {
                   {p.programSub && <small className="block text-[13.5px] font-normal text-text-3">{p.programSub}</small>}
                 </Row>
               )}
+              {p.group && <Row k="Группа">{p.group}</Row>}
               {p.studyForm && <Row k="Форма обучения">{p.studyForm}</Row>}
               {p.recordBook && (
                 <Row k="Зачётная книжка" action={<CopyButton value={p.recordBook} label="номер зачётки" onDone={copied} />}>

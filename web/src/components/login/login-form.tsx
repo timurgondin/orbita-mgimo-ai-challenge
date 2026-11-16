@@ -10,9 +10,9 @@ import { leavePage } from "@/components/shell/page-transition";
 import { cn } from "@/lib/utils";
 
 const DEMO = [
-  { login: "a.vorontsova", initials: "АВ", name: "Алиса Воронцова", sub: "Студентка · 2 курс", bg: "linear-gradient(140deg,#D6C3AE,#8F7A68)" },
-  { login: "m.orlov", initials: "МО", name: "Максим Орлов", sub: "Студент · 4 курс", bg: "linear-gradient(140deg,#C9D3E6,#7F8BA6)" },
-  { login: "n.lanskaya", initials: "НЛ", name: "Ника Ланская", sub: "Первокурсница · онбординг", bg: "linear-gradient(140deg,#D9C2E4,#9878A8)" },
+  { login: "a.vorontsova", initials: "АВ", name: "Алиса Воронцова", sub: "Студентка 2 курса", bg: "linear-gradient(140deg,#D6C3AE,#8F7A68)" },
+  { login: "m.orlov", initials: "МО", name: "Максим Орлов", sub: "Студент 4 курса", bg: "linear-gradient(140deg,#C9D3E6,#7F8BA6)" },
+  { login: "n.lanskaya", initials: "НЛ", name: "Ника Ланская", sub: "Первокурсница", bg: "linear-gradient(140deg,#D9C2E4,#9878A8)" },
   { login: "e.petrova", initials: "ЕП", name: "Елена Петрова", sub: "Преподаватель", bg: "linear-gradient(140deg,#E7CDB4,#A88A70)" },
   { login: "office", initials: "", name: "Учебный офис", sub: "Сотрудник", bg: "" },
 ];

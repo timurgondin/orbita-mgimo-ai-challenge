@@ -62,9 +62,8 @@ export function FormContent({ type, toast, onClose }: { type: RequestType; toast
           </svg>
         </span>
         <h3 className="mt-[18px] text-2xl font-semibold tracking-[-.03em]">Заявка отправлена</h3>
-        <p className="mt-1 text-[15px] text-text-2">
-          {type.title} · {sent}
-        </p>
+        <p className="mt-1 text-[15px] text-text-2">{type.title}</p>
+        {sent && <p className="mt-0.5 text-sm text-text-3 tabular-nums">Номер {sent}</p>}
         <button type="button" onClick={onClose} className={cn(ghostBtn, "mt-[22px]")}>
           Готово
         </button>

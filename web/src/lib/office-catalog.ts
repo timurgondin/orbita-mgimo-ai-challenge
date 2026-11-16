@@ -73,11 +73,14 @@ export function validateParams(type: RequestType, raw: unknown): { ok: true; par
   return { ok: true, params: { subject: p.subject, comment: comment.trim() } };
 }
 
+/** Строка под названием в каталоге: «PDF с QR за 1 день», «Ответ за 3 дня». */
+export const catalogLine = (t: RequestType) => (t.kind === "cert" ? `${t.format} за ${t.eta}` : `Ответ за ${t.eta}`);
+
 /** Подзаголовок карточки заявки. */
 export function paramsSubtitle(type: RequestType, params: unknown): string {
   const p = (params ?? {}) as Partial<CertParams & AppParams>;
   if (type.kind === "app") return p.subject ?? "";
-  return `${p.lang === "Английский" ? "На английском" : "На русском"} · ${p.format === PAPER ? "бумажная" : "электронная"}`;
+  return `${p.format === PAPER ? "Бумажная" : "Электронная"} на ${p.lang === "Английский" ? "английском" : "русском"}`;
 }
 
 export const ACTIVE_STATUSES = ["sent", "work", "review"] as const;
@@ -93,7 +96,7 @@ export const STATUS_TAGS: Record<string, { label: string; color: string; icon: s
 };
 
 export const OFFICE = {
-  name: "Учебный офис · Факультет международного бизнеса",
+  name: "Учебный офис факультета международного бизнеса",
   address: "Корпус А, каб. 104, окно 3",
   hours: "Пн–Пт 10:00–18:00",
   email: "office.ib@future.edu",
