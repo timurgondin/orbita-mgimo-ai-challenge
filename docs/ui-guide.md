@@ -53,8 +53,8 @@
 | Заголовок секции со ссылкой «Все ›» | `components/today/section-header.tsx` |
 | Строки списков (время/дата слева, 2 строки текста, справа статус/время) | `components/today/soon-list.tsx`, `news-list.tsx`, `components/time/schedule-view.tsx`. Разделители — класс `.rows` (прямая линия 0,5 px, `--row-inset`) |
 | Карточка с обложкой цвета курса и точечным узором | `components/study/courses-view.tsx` |
-| Модалка по центру на размытом фоне (проп `width`) | `components/time/modal.tsx` |
-| Тост внизу по центру | `components/ui/toast.tsx` |
+| Модалка по центру на размытом фоне (проп `width`) | `components/time/modal.tsx` (основа — нативный `<dialog>`: `components/ui/dialog.tsx`) |
+| Тост внизу по центру (`popover="manual"`, виден поверх модалки) | `components/ui/toast.tsx` |
 | Трекер этапов «как у посылки» | `components/office/request-card.tsx` |
 | Превью документа (лист, подпись, QR) | `components/office/doc-modal.tsx` |
 | Точечное поле (фирменный мотив) | `components/today/dot-field.tsx`, `components/login/orbit-canvas.tsx` |
@@ -100,6 +100,7 @@
 - Поиска как способа навигации (вход в поиск/ИИ — сфера в доке, Ctrl+K).
 - Номера недели, реальных имён, логотипов вузов. Данные только вымышленные.
 - Новых шрифтов, цветов, размеров радиусов вне этого гайда.
+- Самодельных оверлеев: `div role="dialog"`, ловушек фокуса, своих обработчиков Esc, `overflow: hidden` на `body`, `z-index` для «поверх всего». Окна — `ui/dialog.tsx` (`<dialog>` + `showModal()`), меню и подсказки — `popover`, тосты — `popover="manual"`. Состояние по прокрутке — CSS (`scroll-state`, scroll-driven), не слушатель `scroll`. Сверяйся с `github.com/GoogleChrome/modern-web-guidance`.
 
 ## 8. Как работать
 
