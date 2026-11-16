@@ -81,7 +81,12 @@ function EditableRow({ k, field, initial, placeholder }: { k: string; field: Con
             disabled={pending}
             onChange={(e) => setDraft(e.target.value)}
             onKeyDown={(e) => {
-              if (e.key === "Enter") save();
+              if (e.key === "Enter") {
+                e.preventDefault();
+                // Enter, подтверждающий набор через IME (китайский, японский…), не сохраняет; 229 — для Safari
+                if (e.nativeEvent.isComposing || e.keyCode === 229) return;
+                save();
+              }
               if (e.key === "Escape") setDraft(null);
             }}
             className="-my-1 h-9 w-full rounded-[10px] bg-s2 px-3 text-[15px] font-medium text-text outline-none shadow-[inset_0_0_0_1px_color-mix(in_srgb,var(--accent)_60%,transparent),0_0_0_4px_color-mix(in_srgb,var(--accent)_14%,transparent)] placeholder:font-normal placeholder:text-text-3"

@@ -160,13 +160,19 @@ button {
   background: color-mix(in srgb, var(--accent) 35%, transparent);
 }
 
-::-webkit-scrollbar {
-  width: 10px;
+/* Полосы прокрутки: стандартный scrollbar-color (наследуется вложенными областями); ::-webkit-scrollbar — только где его нет */
+:root {
+  scrollbar-color: var(--s3) transparent;
 }
-::-webkit-scrollbar-thumb {
-  background: var(--s3);
-  border-radius: 10px;
-  border: 3px solid var(--bg);
+@supports not (scrollbar-color: auto) {
+  ::-webkit-scrollbar {
+    width: 10px;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: var(--s3);
+    border-radius: 10px;
+    border: 3px solid var(--bg);
+  }
 }
 
 :focus-visible {
