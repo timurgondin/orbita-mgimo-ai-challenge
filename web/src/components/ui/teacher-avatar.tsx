@@ -14,7 +14,7 @@ export function TeacherAvatar({ name, size = 24, gradient }: { name: string; siz
   return (
     <span
       aria-hidden="true"
-      className="grid shrink-0 place-items-center rounded-full font-semibold text-[#2a211a]"
+      className="mono grid shrink-0 place-items-center rounded-full font-semibold"
       style={{
         width: size,
         height: size,

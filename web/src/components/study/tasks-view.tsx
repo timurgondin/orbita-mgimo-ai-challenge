@@ -37,7 +37,7 @@ function Task({ t }: { t: TaskItemData }) {
       {t.feedback && (
         <div className="col-[2/-1] flex items-start gap-2.5 text-sm text-text-2">
           <span
-            className="mt-px grid size-[22px] shrink-0 place-items-center rounded-full text-[9.5px] font-semibold text-[#1d1d20]"
+            className="mt-px grid size-[22px] shrink-0 place-items-center rounded-full text-[9.5px] font-semibold mono"
             style={{ background: t.feedback.gradient }}
           >
             {t.feedback.initials}

@@ -12,10 +12,12 @@ export interface UserView {
 }
 
 export const AVATAR_GRADIENTS: Record<string, string> = {
-  sand: "linear-gradient(140deg,#D6C3AE,#8F7A68)",
-  mist: "linear-gradient(140deg,#C9D3E6,#7F8BA6)",
-  lilac: "linear-gradient(140deg,#D9C2E4,#9878A8)",
-  peach: "linear-gradient(140deg,#E7CDB4,#A88A70)",
+  // глубокие тона под белые инициалы; блик и кант — класс .mono (globals.css)
+  sand: "linear-gradient(160deg,#C9A887,#7E5F45)",
+  mist: "linear-gradient(160deg,#9FAAC8,#56627F)",
+  lilac: "linear-gradient(160deg,#B79BCC,#6E5287)",
+  peach: "linear-gradient(160deg,#D8A889,#8F5F48)",
+  mint: "linear-gradient(160deg,#8FC2B2,#4E8574)",
   stone: "linear-gradient(140deg,#2A2A2E,#2A2A2E)",
 };
 

@@ -46,7 +46,7 @@ export function ProfileMenu({ user }: { user: UserView }) {
         aria-expanded={open}
         onClick={() => setOpen((o) => !o)}
         style={{ background: avatarGradient(user) }}
-        className={cn("ml-1 grid size-8 place-items-center rounded-full text-xs font-semibold transition-transform hover:scale-105", user.avatar === "stone" ? "text-text-2" : "text-[#2a211a]")}
+        className={cn("mono ml-1 grid size-8 place-items-center rounded-full text-xs font-semibold transition-transform hover:scale-105", user.avatar === "stone" && "text-text-2")}
       >
         {initials(user)}
       </button>

@@ -7,6 +7,7 @@ import { replyToRequest, withdrawRequest } from "@/server/office/actions";
 import type { OfficeRequestView } from "@/server/data/types";
 import { MAX_MESSAGE } from "@/lib/office-catalog";
 import type { Toast } from "@/components/ui/toast";
+import { AVATAR_GRADIENTS } from "@/lib/user-view";
 import { OfficeTag, ghostBtn, whiteBtn } from "./icons";
 
 export function RequestContent({ req, toast, onClose }: { req: OfficeRequestView; toast: Toast; onClose: () => void }) {
@@ -65,8 +66,8 @@ export function RequestContent({ req, toast, onClose }: { req: OfficeRequestView
       {req.messages.map((m) => (
         <div key={m.id} className="mt-1.5 flex gap-2.5 rounded-[14px] bg-s1 px-3.5 py-3 text-sm text-text-2 first-of-type:mt-[22px]">
           <span
-            className="grid size-6 shrink-0 place-items-center rounded-full text-[10px] font-semibold text-[#1d1d20]"
-            style={{ background: m.staff ? "linear-gradient(140deg,#C9E6DD,#7FA699)" : "linear-gradient(140deg,#D6C3AE,#8F7A68)" }}
+            className="mono grid size-6 shrink-0 place-items-center rounded-full text-[10px] font-semibold"
+            style={{ background: m.staff ? AVATAR_GRADIENTS.mint : AVATAR_GRADIENTS.sand }}
           >
             {m.initials}
           </span>

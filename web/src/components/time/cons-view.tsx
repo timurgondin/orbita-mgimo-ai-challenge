@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils";
 import type { TimeConsultation } from "@/server/data/types";
 import { DOWL, cap, cc, dayMonth, relDay } from "./helpers";
 
-const STACK = ["#D6C3AE,#8F7A68", "#C9D3E6,#7F8BA6", "#D9C2E4,#9878A8", "#C9E6DD,#7FA699"];
+const STACK = ["#C9A887,#7E5F45", "#9FAAC8,#56627F", "#B79BCC,#6E5287", "#8FC2B2,#4E8574"];
 
 export const isFull = (c: TimeConsultation) => c.count >= c.capacity && !c.going;
 
@@ -93,7 +93,7 @@ export function ConsView({
                       <small className="text-[13.5px] text-text-3">до {c.end}</small>
                     </div>
                     <div className="flex min-w-0 items-center gap-3 max-sm:order-3 max-sm:col-span-2">
-                      <span className="grid size-10 shrink-0 place-items-center rounded-full text-[13px] font-semibold text-[#1d1d20]" style={{ background: c.teacherGradient }}>
+                      <span className="grid size-10 shrink-0 place-items-center rounded-full text-[13px] font-semibold mono" style={{ background: c.teacherGradient }}>
                         {c.teacherInitials}
                       </span>
                       <div className="min-w-0">
@@ -114,7 +114,7 @@ export function ConsView({
                     <div className="flex items-center gap-2.5 text-[13.5px] whitespace-nowrap text-text-3 max-sm:hidden">
                       <span className="flex">
                         {STACK.slice(0, Math.min(3, c.count)).map((g, i) => (
-                          <span key={i} className="-ml-[7px] size-6 rounded-full shadow-[0_0_0_2px_var(--bg)] first:ml-0" style={{ background: `linear-gradient(140deg,${g})` }} />
+                          <span key={i} className="mono -ml-[7px] size-6 rounded-full shadow-[0_0_0_2px_var(--bg),inset_0_1px_0_rgb(255_255_255/.3)] first:ml-0" style={{ background: `linear-gradient(160deg,${g})` }} />
                         ))}
                       </span>
                       {c.count} из {c.capacity}

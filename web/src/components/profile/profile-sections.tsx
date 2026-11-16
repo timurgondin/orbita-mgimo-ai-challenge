@@ -26,7 +26,7 @@ function Row({ k, children, action }: { k: string; children: React.ReactNode; ac
 function Person({ p }: { p: PersonRef }) {
   return (
     <span className="flex items-center gap-2.5">
-      <span className="grid size-[26px] shrink-0 place-items-center rounded-full text-[10px] font-semibold text-[#2a211a]" style={{ background: p.avatar }}>
+      <span className="grid size-[26px] shrink-0 place-items-center rounded-full text-[10px] font-semibold mono" style={{ background: p.avatar }}>
         {p.initials}
       </span>
       <span className="truncate">{p.name}</span>

@@ -32,7 +32,7 @@ const IconBox = ({ children }: { children: React.ReactNode }) => (
   <span className="grid size-9 shrink-0 place-items-center rounded-[11px] bg-s3 text-text-2">{children}</span>
 );
 const Avatar = ({ initials, gradient }: { initials: string; gradient: string }) => (
-  <span className="grid size-9 shrink-0 place-items-center rounded-full text-xs font-semibold text-[#1d1d20]" style={{ background: gradient }}>
+  <span className="grid size-9 shrink-0 place-items-center rounded-full text-xs font-semibold mono" style={{ background: gradient }}>
     {initials}
   </span>
 );

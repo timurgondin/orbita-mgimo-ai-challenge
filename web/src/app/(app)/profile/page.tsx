@@ -32,7 +32,7 @@ export default async function ProfilePage() {
         <span
           aria-hidden="true"
           style={{ background: avatarGradient(user) }}
-          className={`grid size-28 shrink-0 place-items-center rounded-[34px] text-4xl font-semibold tracking-[-.02em] shadow-[0_0_0_5px_var(--bg)] max-sm:size-[88px] max-sm:rounded-[28px] max-sm:text-[28px] max-sm:shadow-[0_0_0_4px_var(--bg)] ${user.avatar === "stone" ? "text-text-2" : "text-[#2a211a]"}`}
+          className={`grid size-28 shrink-0 place-items-center rounded-[34px] text-4xl font-semibold tracking-[-.02em] mono shadow-[0_0_0_5px_var(--bg),inset_0_1px_0_rgb(255_255_255/.3),inset_0_-2px_4px_rgb(0_0_0/.18)] max-sm:size-[88px] max-sm:rounded-[28px] max-sm:text-[28px] max-sm:shadow-[0_0_0_4px_var(--bg),inset_0_1px_0_rgb(255_255_255/.3),inset_0_-2px_4px_rgb(0_0_0/.18)] ${user.avatar === "stone" ? "text-text-2" : ""}`}
         >
           {initials(user)}
         </span>

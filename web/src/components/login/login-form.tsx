@@ -10,10 +10,10 @@ import { leavePage } from "@/components/shell/page-transition";
 import { cn } from "@/lib/utils";
 
 const DEMO = [
-  { login: "a.vorontsova", initials: "АВ", name: "Алиса Воронцова", sub: "Студентка 2 курса", bg: "linear-gradient(140deg,#D6C3AE,#8F7A68)" },
-  { login: "m.orlov", initials: "МО", name: "Максим Орлов", sub: "Студент 4 курса", bg: "linear-gradient(140deg,#C9D3E6,#7F8BA6)" },
-  { login: "n.lanskaya", initials: "НЛ", name: "Ника Ланская", sub: "Первокурсница", bg: "linear-gradient(140deg,#D9C2E4,#9878A8)" },
-  { login: "e.petrova", initials: "ЕП", name: "Елена Петрова", sub: "Преподаватель", bg: "linear-gradient(140deg,#E7CDB4,#A88A70)" },
+  { login: "a.vorontsova", initials: "АВ", name: "Алиса Воронцова", sub: "Студентка 2 курса", bg: "linear-gradient(160deg,#C9A887,#7E5F45)" },
+  { login: "m.orlov", initials: "МО", name: "Максим Орлов", sub: "Студент 4 курса", bg: "linear-gradient(160deg,#9FAAC8,#56627F)" },
+  { login: "n.lanskaya", initials: "НЛ", name: "Ника Ланская", sub: "Первокурсница", bg: "linear-gradient(160deg,#B79BCC,#6E5287)" },
+  { login: "e.petrova", initials: "ЕП", name: "Елена Петрова", sub: "Преподаватель", bg: "linear-gradient(160deg,#D8A889,#8F5F48)" },
   { login: "office", initials: "", name: "Учебный офис", sub: "Сотрудник", bg: "" },
 ];
 const DEMO_PASSWORD = "orbita-demo";
@@ -209,7 +209,7 @@ export function LoginForm() {
                   className="flex w-full items-center gap-3 rounded-xl px-2.5 py-2 text-left transition-colors hover:bg-hover focus-visible:bg-hover focus-visible:outline-none"
                 >
                   <span
-                    className={cn("grid size-[34px] shrink-0 place-items-center rounded-full text-xs font-semibold", a.bg ? "text-[#1d1d20]" : "bg-s3 text-text-2")}
+                    className={cn("grid size-[34px] shrink-0 place-items-center rounded-full text-xs font-semibold", a.bg ? "mono" : "bg-s3 text-text-2")}
                     style={a.bg ? { background: a.bg } : undefined}
                   >
                     {a.bg ? a.initials : <Stamp size={16} strokeWidth={1.6} />}
