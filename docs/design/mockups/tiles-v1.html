@@ -24,6 +24,7 @@
   .face{--face:var(--s1);display:grid;place-items:center;width:100%;aspect-ratio:1;border-radius:24px;background:var(--face);overflow:hidden;transition:background .2s}
   .face svg{width:64%;height:auto;transition:transform .45s cubic-bezier(.34,1.35,.5,1)}
   .tile:hover .face{background:var(--s2);--face:var(--s2)}
+  .tile:hover .face[style]{filter:brightness(1.12)}
   .tile:hover .face svg{transform:translateY(-2px) scale(1.06)}
   @media (max-width:900px){.grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
   @media (max-width:640px){.page{padding:24px 16px 60px}.grid{gap:12px}.tile{font-size:14px}}
@@ -176,16 +177,84 @@ const clay = [
     return svg(`<defs>${defs}</defs><g filter="url(#${f})">${body}</g>`); },
 ];
 
+/* ---------------- общие цвета (hex — чтобы считать оттенки) ---------------- */
+const HEX = { violet: "#8F8DF7", green: "#4FCB85", sky: "#6AA9F2", accent: "#8B8EFF", rose: "#E58091", amber: "#E0A75E", teal: "#52BBAA", lilac: "#C69CF0" };
+const mix = (a, b, t) => { const p = (h) => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16)); const [x, y] = [p(a), p(b)];
+  return "#" + x.map((v, i) => Math.round(v + (y[i] - v) * t).toString(16).padStart(2, "0")).join(""); };
+
+/* ---------------- F. Цветные плитки: тонированная плитка + белый сплошной глиф ---------------- */
+const W = "#fff";
+const tinted = [
+  () => svg(`<rect x="30" y="24" width="40" height="54" rx="9" fill="${W}" opacity=".45" transform="rotate(-12 50 51)"/><rect x="46" y="20" width="42" height="58" rx="9" fill="${W}"/>
+    <rect x="54" y="32" width="24" height="5" rx="2.5" fill="var(--c)"/><rect x="54" y="41" width="16" height="5" rx="2.5" fill="var(--c)" opacity=".55"/>`),
+  () => svg(`${[[26,56,24],[42,46,34],[58,38,42]].map(([x,y,h])=>`<rect x="${x}" y="${y}" width="12" height="${h}" rx="4" fill="${W}" opacity=".5"/>`).join("")}<rect x="74" y="24" width="12" height="56" rx="4" fill="${W}"/>`),
+  () => svg(`<path d="M38 16h28l16 16v46a6 6 0 0 1-6 6H38a6 6 0 0 1-6-6V22a6 6 0 0 1 6-6z" fill="${W}"/><path d="M66 16v12a4 4 0 0 0 4 4h12" fill="${W}" opacity=".55"/>
+    <rect x="41" y="40" width="22" height="5" rx="2.5" fill="var(--c)" opacity=".55"/><rect x="41" y="49" width="30" height="5" rx="2.5" fill="var(--c)" opacity=".55"/>
+    <circle cx="82" cy="74" r="14" fill="var(--c)"/><circle cx="82" cy="74" r="11" fill="${W}"/><path d="M76.5 74.2l3.8 3.8 7-7.2" fill="none" stroke="var(--c)" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/>`),
+  () => svg(`<rect x="16" y="24" width="88" height="56" rx="11" fill="${W}"/><circle cx="36" cy="46" r="9" fill="var(--c)"/><rect x="52" y="39" width="36" height="5" rx="2.5" fill="var(--c)"/><rect x="52" y="48" width="22" height="5" rx="2.5" fill="var(--c)" opacity=".5"/><rect x="28" y="62" width="16" height="10" rx="3" fill="var(--c)" opacity=".7"/>`),
+  () => svg(`<circle cx="76" cy="40" r="11" fill="${W}" opacity=".5"/><path d="M60 82a18 18 0 0 1 34 0z" fill="${W}" opacity=".5"/><circle cx="50" cy="38" r="14" fill="${W}"/><path d="M26 84a24 24 0 0 1 48 0z" fill="${W}"/>`),
+  () => svg(`${[[20,28,.6],[35,22,1],[50,32,.6]].map(([x,y,o])=>`<rect x="${x}" y="${y}" width="12" height="${80 - y}" rx="3" fill="${W}" opacity="${o}"/>`).join("")}<rect x="72" y="28" width="12" height="52" rx="3" fill="${W}" opacity=".85" transform="rotate(14 78 80)"/><rect x="16" y="80" width="88" height="5" rx="2.5" fill="${W}" opacity=".4"/>`),
+];
+const TINT = ["violet", "green", "sky", "accent", "rose", "amber"].map((c) => ({
+  face: `linear-gradient(160deg, ${mix(HEX[c], "#1B1B1E", .35)}, ${mix(HEX[c], "#1B1B1E", .62)})`, c: mix(HEX[c], "#1B1B1E", .45),
+}));
+
+/* ---------------- G. Изометрия ---------------- */
+const O = [60, 58], K = .866;
+const P = (x, y, z) => [O[0] + (x - y) * K, O[1] + (x + y) * .5 - z];
+const poly = (pts, fill) => `<polygon points="${pts.map((p) => p.map((v) => v.toFixed(1)).join(",")).join(" ")}" fill="${fill}"/>`;
+function box(x, y, z, w, d, h, c) {
+  const top = mix(c, "#ffffff", .22), left = c, right = mix(c, "#000000", .32);
+  return poly([P(x, y + d, z), P(x + w, y + d, z), P(x + w, y + d, z + h), P(x, y + d, z + h)], left)
+    + poly([P(x + w, y, z), P(x + w, y + d, z), P(x + w, y + d, z + h), P(x + w, y, z + h)], right)
+    + poly([P(x, y, z + h), P(x + w, y, z + h), P(x + w, y + d, z + h), P(x, y + d, z + h)], top);
+}
+const shadowIso = (x, y, w, d) => poly([P(x - 2, y - 2, 0), P(x + w + 4, y - 2, 0), P(x + w + 4, y + d + 4, 0), P(x - 2, y + d + 4, 0)], "rgba(0,0,0,.35)");
+const iso = [
+  () => svg(`${shadowIso(-20, -14, 40, 28)}${box(-20, -14, 0, 40, 28, 7, HEX.teal)}${box(-17, -12, 7, 38, 26, 7, HEX.amber)}${box(-21, -15, 14, 40, 28, 7, HEX.violet)}`),
+  () => svg(`${shadowIso(-30, -8, 62, 14)}${[[-30, 10, "#55555E"], [-14, 18, "#6A6A74"], [2, 26, "#80808A"], [18, 36, HEX.green]].map(([x, h, c]) => box(x, -8, 0, 11, 11, h, c)).join("")}`),
+  () => svg(`${shadowIso(-18, -26, 36, 50)}${box(-18, -26, 0, 36, 50, 2.5, "#D9DAE2")}${box(-14, -22, 2.5, 18, 3, .6, "#9A9CA8")}${box(-14, -14, 2.5, 24, 3, .6, "#B5B7C1")}${box(-14, -8, 2.5, 20, 3, .6, "#B5B7C1")}${box(6, 10, 2.5, 10, 10, 5, HEX.sky)}`),
+  () => svg(`${shadowIso(-28, -18, 56, 36)}${box(-28, -18, 0, 56, 36, 3, HEX.accent)}${box(-22, 4, 3, 11, 8, 1.6, "#E6C77A")}${box(-6, -12, 3, 26, 4, .6, "#FFFFFF")}${box(-6, -4, 3, 16, 4, .6, "#DADAFF")}`),
+  () => { const head = (x, y, z, r, c) => { const [cx, cy] = P(x, y, z); return `<circle cx="${cx.toFixed(1)}" cy="${(cy - r).toFixed(1)}" r="${r}" fill="${c}"/><circle cx="${(cx - r * .35).toFixed(1)}" cy="${(cy - r * 1.35).toFixed(1)}" r="${r * .35}" fill="#fff" opacity=".35"/>`; };
+    return svg(`${shadowIso(-28, -10, 56, 18)}${box(-28, -8, 0, 16, 16, 14, mix(HEX.sky, "#000000", .1))}${head(-20, 0, 14, 9, "#C6D0EA")}${box(4, -12, 0, 18, 18, 22, HEX.rose)}${head(13, -3, 22, 11, "#F1D0B4")}`); },
+  () => svg(`${shadowIso(-26, -10, 52, 22)}${[[HEX.amber, 34], [HEX.violet, 40], [HEX.teal, 30], [HEX.lilac, 36], [HEX.sky, 32]].map(([c, h], i) => box(-26 + i * 10, -10, 0, 8, 20, h, c)).join("")}`),
+];
+
+/* ---------------- H. Бумага: плоские слои с чёткой тенью, приглушённая палитра ---------------- */
+const MUTE = (c) => mix(HEX[c], "#8A8A92", .3);
+function cut() { const f = id("c"); return [f, `<filter id="${f}" x="-20%" y="-20%" width="140%" height="150%"><feDropShadow dx="0" dy="2.5" stdDeviation=".6" flood-color="#000" flood-opacity=".45"/></filter>`]; }
+const paper = [
+  () => { const [f, d] = cut(); return svg(`<defs>${d}</defs><circle cx="60" cy="50" r="40" fill="${MUTE("violet")}" opacity=".18"/><g filter="url(#${f})">
+    <rect x="26" y="26" width="40" height="54" rx="6" fill="${MUTE("teal")}" transform="rotate(-12 46 53)"/><rect x="56" y="24" width="40" height="54" rx="6" fill="${MUTE("amber")}" transform="rotate(9 76 51)"/><rect x="38" y="18" width="44" height="60" rx="6" fill="${MUTE("violet")}"/>
+    <rect x="46" y="30" width="24" height="5" rx="2.5" fill="#F2F2F4"/><rect x="46" y="39" width="16" height="5" rx="2.5" fill="#F2F2F4" opacity=".7"/></g>`); },
+  () => { const [f, d] = cut(); return svg(`<defs>${d}</defs><circle cx="60" cy="50" r="40" fill="${MUTE("green")}" opacity=".18"/><g filter="url(#${f})">
+    <rect x="18" y="22" width="76" height="60" rx="8" fill="#3A3A41"/>${[[30,58,14,"#6A6A73"],[44,50,22,"#7C7C85"],[58,42,30,"#8E8E97"],[72,32,40,MUTE("green")]].map(([x,y,h,c])=>`<rect x="${x}" y="${y}" width="10" height="${h}" rx="2" fill="${c}"/>`).join("")}
+    <circle cx="94" cy="24" r="13" fill="${MUTE("green")}"/></g><text x="94" y="29" text-anchor="middle" font-family="Onest" font-weight="600" font-size="14" fill="#fff">8</text>`); },
+  () => { const [f, d] = cut(); return svg(`<defs>${d}</defs><circle cx="60" cy="50" r="40" fill="${MUTE("sky")}" opacity=".18"/><g filter="url(#${f})">
+    <rect x="34" y="16" width="46" height="64" rx="5" fill="#E7E7EB"/><rect x="42" y="28" width="24" height="5" rx="2.5" fill="#A7A9B3"/><rect x="42" y="37" width="30" height="4" rx="2" fill="#C2C4CC"/><rect x="42" y="44" width="26" height="4" rx="2" fill="#C2C4CC"/>
+    <path d="M80 60l5 4 6-1 1 6 4 5-4 5-1 6-6-1-5 4-5-4-6 1-1-6-4-5 4-5 1-6 6 1z" fill="${MUTE("sky")}"/></g><path d="M75 74.5l3.6 3.6 6.6-6.8" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>`); },
+  () => { const [f, d] = cut(); return svg(`<defs>${d}</defs><circle cx="60" cy="50" r="40" fill="${MUTE("accent")}" opacity=".18"/><g filter="url(#${f})" transform="rotate(-6 60 52)">
+    <rect x="18" y="26" width="84" height="54" rx="8" fill="${MUTE("accent")}"/><rect x="18" y="62" width="84" height="18" rx="0" fill="#000" opacity=".12"/><circle cx="37" cy="45" r="8" fill="#F2F2F4"/>
+    <rect x="51" y="39" width="34" height="5" rx="2.5" fill="#F2F2F4"/><rect x="51" y="48" width="22" height="5" rx="2.5" fill="#F2F2F4" opacity=".7"/><rect x="28" y="65" width="14" height="10" rx="2" fill="#D9BE7E"/></g>`); },
+  () => { const [f, d] = cut(); return svg(`<defs>${d}</defs><circle cx="60" cy="50" r="40" fill="${MUTE("rose")}" opacity=".18"/><g filter="url(#${f})">
+    <circle cx="80" cy="40" r="10" fill="${MUTE("sky")}"/><path d="M64 80a16 16 0 0 1 32 0z" fill="${MUTE("sky")}"/><circle cx="50" cy="38" r="13" fill="${MUTE("rose")}"/><path d="M28 82a22 22 0 0 1 44 0z" fill="${MUTE("rose")}"/></g>`); },
+  () => { const [f, d] = cut(); return svg(`<defs>${d}</defs><circle cx="60" cy="50" r="40" fill="${MUTE("amber")}" opacity=".18"/><g filter="url(#${f})">
+    ${[["amber",30,22],["violet",22,36],["teal",34,50],["lilac",26,64]].map(([c,y,x])=>`<rect x="${x}" y="${y}" width="12" height="${80 - y}" rx="2" fill="${MUTE(c)}"/>`).join("")}<rect x="80" y="30" width="12" height="50" rx="2" fill="${MUTE("sky")}" transform="rotate(14 86 80)"/><rect x="16" y="80" width="88" height="5" rx="1.5" fill="#55555D"/></g>`); },
+];
+
 const STYLES = [
   ["A", "Стекло", "глянец, градиенты, блик — как иконки Apple", glass],
   ["B", "Точки", "предметы из точечного растра — фирменный мотив", dotted],
   ["C", "Линия", "тонкий монолайн и одна цветная деталь", line],
   ["D", "Орбиты", "светлые предметы на орбите с цветной планетой", orbit],
   ["E", "Клей", "мягкое 3D, объём и тень", clay],
+  ["F", "Цветные плитки", "плитка в цвете раздела, белый сплошной глиф — как в «Настройках» iPhone", tinted, TINT],
+  ["G", "Изометрия", "объёмные блоки в изометрии, три тона на грань", iso.map((f) => () => f().replace(/^<svg([^>]*)>/, '<svg$1><g transform="translate(60 54) scale(1.45) translate(-60 -54)">').replace(/<\/svg>$/, "</g></svg>"))],
+  ["H", "Бумага", "плоские слои с чёткой тенью, приглушённые цвета", paper],
 ];
-document.getElementById("root").innerHTML = STYLES.map(([k, name, note, set]) => `
+document.getElementById("root").innerHTML = STYLES.map(([k, name, note, set, faces]) => `
   <section><h2>${k}. ${name} <small>${note}</small></h2>
-  <div class="grid">${set.map((f, i) => `<div class="tile"><span class="face">${f()}</span>${LABELS[i]}</div>`).join("")}</div></section>`).join("");
+  <div class="grid">${set.map((f, i) => `<div class="tile"><span class="face"${faces ? ` style="background:${faces[i].face};--c:${faces[i].c}"` : ""}>${f()}</span>${LABELS[i]}</div>`).join("")}</div></section>`).join("");
 </script>
 </body>
 </html>
