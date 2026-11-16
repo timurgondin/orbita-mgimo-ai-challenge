@@ -26,12 +26,6 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       </Suspense>
       <footer className="px-5 pb-7 text-center text-xs text-text-3">
         Концепт для конкурса MGIMO×AI Challenge. Не официальный сервис, все данные вымышлены.
-        <br />
-        Иконки —{" "}
-        <a href="https://www.figma.com/community/file/1166831539721848736" target="_blank" rel="noreferrer" className="underline-offset-2 hover:text-text-2 hover:underline">
-          Solar, 480 Design
-        </a>
-        , CC BY 4.0.
       </footer>
     </>
   );

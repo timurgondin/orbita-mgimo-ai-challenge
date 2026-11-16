@@ -13,7 +13,7 @@
 | Что | Лицензия | Условие | Где |
 |---|---|---|---|
 | Lucide (`lucide-react`) | ISC | — | иконки интерфейса |
-| Solar, 480 Design | CC BY 4.0 | указать авторство — строка в подвале кабинета со ссылкой | плитки «Сегодня» (`web/src/components/today/tile-icons.tsx`) |
+| Solar, 480 Design | CC BY 4.0 | указать авторство — страница «О проекте» (`/about`, пункт в меню аватара) со ссылкой на набор | плитки «Сегодня» (`web/src/components/today/tile-icons.tsx`) |
 | Thinking Orbs (`thinking-orbs`), Jakub Antalik | MIT | — | индикатор «думаю» на кнопке входа |
 | Логотип, фавикон, точечные узоры, иллюстрации | собственные | — | — |
 
@@ -31,3 +31,7 @@
 
 - `tiles-v4.html` — знаки из наборов Solar (CC BY 4.0), Phosphor (MIT), Hugeicons (MIT), MingCute (Apache 2.0), Material Symbols (Apache 2.0), Fluent Emoji (MIT), Streamline Ultimate Color (CC BY 4.0); авторство указано внизу макета.
 - Макеты подключают Onest с Google Fonts и Lucide с unpkg — те же лицензии, что выше.
+
+## Референсы
+
+`docs/design/references/*.png` — скриншоты чужих дизайнов для внутренней работы (в продукте не используются). Репозиторий приватный; перед публикацией — удалить из репозитория.

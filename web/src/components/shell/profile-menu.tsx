@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { LogOut, Moon, Settings, Sun, SunMoon, UserRound } from "lucide-react";
+import { Info, LogOut, Moon, Settings, Sun, SunMoon, UserRound } from "lucide-react";
 import { useTheme } from "next-themes";
 import { logoutAction } from "@/server/auth/actions";
 import { avatarGradient, fullName, initials, subtitle, type UserView } from "@/lib/user-view";
@@ -90,6 +90,10 @@ export function ProfileMenu({ user }: { user: UserView }) {
             </i>
           </span>
         </button>
+        <Link href="/about" role="menuitem" className={ITEM} onClick={() => setOpen(false)}>
+          <Info size={16} strokeWidth={1.6} />
+          О проекте
+        </Link>
         <form action={logoutAction}>
           <button type="submit" role="menuitem" className={ITEM}>
             <LogOut size={16} strokeWidth={1.6} />
