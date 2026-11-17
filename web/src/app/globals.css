@@ -728,3 +728,30 @@ dialog::backdrop {
     border-radius: 3px;
   }
 }
+
+/* ИИ-помощник: смена подписи «думаю», появление карточки после текста */
+@media (prefers-reduced-motion: no-preference) {
+  .assistant-step {
+    animation: assistant-step 0.35s var(--ease) both;
+  }
+  .assistant-in {
+    animation: assistant-in 0.4s var(--ease) both;
+  }
+}
+@keyframes assistant-step {
+  from {
+    opacity: 0;
+    translate: 0 3px;
+  }
+}
+@keyframes assistant-in {
+  from {
+    opacity: 0;
+    translate: 0 6px;
+  }
+}
+
+/* Сфера помощника: «слушает» (пишут вопрос) — течение быстрее */
+.orb[data-state="listening"] i:nth-child(1) { animation-duration: 3.6s; }
+.orb[data-state="listening"] i:nth-child(2) { animation-duration: 4.4s; }
+.orb[data-state="listening"] i:nth-child(3) { animation-duration: 4s; }

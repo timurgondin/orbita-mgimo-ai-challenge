@@ -62,6 +62,7 @@
 | Строки «ключ — значение» с копированием и правкой в строке | `components/profile/profile-sections.tsx` |
 | Окно студенческого (QR + минимум данных) | `components/profile/student-card.tsx` |
 | Центр уведомлений: колокольчик, окно, карточка «нужно действие», строка уведомления с типом, полоса срочного | `components/notifications/*` (правила — `docs/notifications.md`) |
+| ИИ-помощник: окно-чат, «думает» — `thinking-orbs` 32 px с оттенком акцента и подписью шага, пустое окно — фирменная сфера `shell/orb.tsx`, сообщения без аватара, карточки ответа с действием | `components/assistant/*` |
 | Монограмма (аватар с инициалами): глубокий градиент `AVATAR_GRADIENTS`, белые буквы, блик — класс `.mono` | `lib/user-view.ts`, `components/ui/teacher-avatar.tsx` |
 | Загрузка файла (выбрать или перетащить, ход отправки, «Получен») | `components/office/upload-box.tsx` |
 | Пустая страница-заглушка | `components/shell/page-placeholder.tsx` |

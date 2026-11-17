@@ -1,12 +1,19 @@
 import { cn } from "@/lib/utils";
 
-// TODO: пакет `thinking-orbs` даёт монохромную точечную сферу только размеров 20/32/64 —
-// не совпадает с утверждённой цветной сферой макета (44 px). Оставляем CSS-сферу.
-// Когда ассистент получит состояния (слушает/ищет/пишет), можно рассмотреть thinking-orbs.
-export function Orb({ size = 30, className }: { size?: number; className?: string }) {
+/** Фирменная сфера «Орбиты» — она же ИИ-помощник. Состояния: покой и «слушает» (пишут вопрос); «думает» — `thinking-orbs` в окне помощника. */
+export function Orb({
+  size = 30,
+  state,
+  className,
+}: {
+  size?: number;
+  state?: "listening";
+  className?: string;
+}) {
   return (
     <span
       aria-hidden="true"
+      data-state={state}
       className={cn("orb", className)}
       style={{ width: size, height: size, "--orb-blur": `${size * 0.16}px` } as React.CSSProperties}
     >

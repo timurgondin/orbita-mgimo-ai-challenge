@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { CalendarRange, GraduationCap, Stamp, Sun, type LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useAssistant } from "@/components/assistant/assistant";
 import { Orb } from "./orb";
 
 interface Tab {
@@ -30,6 +31,7 @@ export function Dock() {
   const pathname = usePathname();
   const dockRef = useRef<HTMLElement>(null);
   const indRef = useRef<HTMLSpanElement>(null);
+  const assistant = useAssistant();
 
   const place = useCallback((animate: boolean) => {
     const ind = indRef.current;
@@ -89,6 +91,8 @@ export function Dock() {
       {LEFT_TABS.map(renderTab)}
       <button
         type="button"
+        onClick={assistant.open}
+        aria-haspopup="dialog"
         aria-label="Спросить Орбиту (Ctrl K)"
         title="Спросить Орбиту (Ctrl K)"
         className="group relative z-[1] grid h-[38px] w-[68px] place-items-center rounded-full after:absolute after:top-[calc(100%+16px)] after:text-[11px] after:whitespace-nowrap after:text-text-3 after:opacity-0 after:transition-opacity after:duration-200 after:content-['Ctrl_K'] hover:after:opacity-100 focus-visible:after:opacity-100 max-sm:w-[60px]"

@@ -1,4 +1,5 @@
 import { Suspense } from "react";
+import { AssistantProvider } from "@/components/assistant/assistant";
 import { PageEnter } from "@/components/shell/page-transition";
 import { TopBar } from "@/components/shell/top-bar";
 import { requireUser } from "@/server/auth/session";
@@ -11,9 +12,11 @@ async function Shell({ children }: { children: React.ReactNode }) {
   const center = await getNotificationCenter();
   return (
     <NotificationCenter data={center}>
-      <PageEnter />
-      <TopBar user={user} />
-      <main className="mx-auto max-w-[1180px] px-5 pt-11 pb-20 sm:px-10">{children}</main>
+      <AssistantProvider>
+        <PageEnter />
+        <TopBar user={user} />
+        <main className="mx-auto max-w-[1180px] px-5 pt-11 pb-20 sm:px-10">{children}</main>
+      </AssistantProvider>
     </NotificationCenter>
   );
 }
