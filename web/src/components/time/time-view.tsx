@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { Segmented } from "@/components/ui/segmented";
 import { useToast } from "@/components/ui/toast";
@@ -52,11 +52,21 @@ export function TimeView({ data }: { data: TimeData }) {
 
   const go = (t: Tab, v: View, w: number) => window.history.pushState(null, "", buildUrl(t, v, w));
 
-  const openModal = (m: NonNullable<ModalState>) => {
+  const openModal = useCallback((m: NonNullable<ModalState>) => {
     setShown(m);
     setOpen(true);
-  };
+  }, []);
   const close = useCallback(() => setOpen(false), []);
+
+  // ?open=<id> — сразу открыть пару или консультацию (так ведут «Сейчас» и «Дальше сегодня»); адрес чистим
+  const wanted = params.get("open");
+  useEffect(() => {
+    if (!wanted) return;
+    const type = data.lessons.some((l) => l.id === wanted) ? "lesson" : data.consultations.some((c) => c.id === wanted) ? "cons" : null;
+    // через кадр: страница успевает отрисоваться, окно открывается с обычной анимацией
+    if (type) requestAnimationFrame(() => openModal({ type, id: wanted }));
+    window.history.replaceState(null, "", buildUrl(tab, view, week));
+  }, [wanted, data, openModal, tab, view, week]);
 
   const items: Item[] = useMemo(
     () => [

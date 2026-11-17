@@ -2,8 +2,8 @@ import "server-only";
 import { db } from "@/server/db/client";
 import { requireUser } from "@/server/auth/session";
 import { DEMO_NOW, DEMO_DATE, addDays, dayStart, mskDate, mskTime } from "@/lib/demo-clock";
-import { formatDue, getStudent } from "./shared";
-import type { EventKind, Lesson, SoonItem, WorkStatus } from "./types";
+import { avatarGradientByKey, formatDue, getStudent, teacherInitials } from "./shared";
+import type { EventKind, Lesson, SoonItem, TeacherView, WorkStatus } from "./types";
 import { TASK_KINDS } from "./types";
 
 const FORMAT: Partial<Record<EventKind, string>> = { lecture: "Лекция", seminar: "Семинар", practice: "Практика", test: "Контрольная" };
@@ -113,4 +113,40 @@ export async function getSoon(): Promise<SoonItem[]> {
         today: due.today,
       };
     });
+}
+
+/** Преподаватели текущих курсов студента и их ближайшие консультации. Только его записи на курсы. */
+export async function getTeachers(): Promise<TeacherView[]> {
+  const user = await getStudent();
+  if (!user) return [];
+  const enrollments = await db.enrollment.findMany({
+    where: { userId: user.id, course: { format: "offline" } },
+    orderBy: { order: "asc" },
+    select: {
+      course: {
+        select: {
+          title: true, color: true, teacherName: true, teacherAvatar: true,
+          consultations: { where: { startsAt: { gte: DEMO_NOW } }, orderBy: { startsAt: "asc" }, take: 1, select: { id: true, startsAt: true } },
+        },
+      },
+    },
+  });
+
+  const byName = new Map<string, TeacherView & { at: number }>();
+  for (const { course: c } of enrollments) {
+    const t =
+      byName.get(c.teacherName) ??
+      byName
+        .set(c.teacherName, {
+          name: c.teacherName, initials: teacherInitials(c.teacherName), gradient: avatarGradientByKey(c.teacherAvatar), courses: [], cons: null, at: Infinity,
+        })
+        .get(c.teacherName)!;
+    t.courses.push({ title: c.title, color: c.color });
+    const next = c.consultations[0];
+    if (next && next.startsAt.getTime() < t.at) {
+      t.at = next.startsAt.getTime();
+      t.cons = { id: next.id, when: formatDue(next.startsAt).label };
+    }
+  }
+  return [...byName.values()].map(({ at: _at, ...t }) => (void _at, t));
 }

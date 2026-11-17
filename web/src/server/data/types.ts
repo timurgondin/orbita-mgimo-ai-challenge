@@ -21,6 +21,8 @@ export interface ProfileView {
   curator: PersonRef | null;
   headman: PersonRef | null;
   hasCard: boolean;
+  /** сводка архива: сколько семестров позади и средний балл; null — архив пуст */
+  archive: { semesters: number; average: string | null } | null;
 }
 
 export interface StudentCardView {
@@ -293,4 +295,60 @@ export interface OfficeData {
   requests: OfficeRequestView[];
   documents: OfficeDocView[];
   open: boolean;
+}
+
+// ---- Архив: прошлые семестры ----
+export interface ArchiveCourse {
+  id: string;
+  title: string;
+  color: string;
+  assessment: Assessment;
+  credits: number;
+  /** «9» или «Зачёт» */
+  grade: string;
+  /** «отлично»; у зачёта — пусто */
+  gradeWord: string;
+  passed: boolean;
+  teacher: string;
+  teacherInitials: string;
+  teacherGradient: string;
+  /** «22 декабря 2025» */
+  closedAt: string;
+  /** взвешенная сумма до округления: «8,7» */
+  total: string;
+  components: { title: string; weight: number; score: string }[];
+}
+
+export interface ArchiveSemester {
+  /** номер семестра обучения: 1 — осень первого курса */
+  n: number;
+  /** курс обучения */
+  year: number;
+  /** «1 курс, осень 2025» */
+  title: string;
+  /** «Осень 2025» */
+  season: string;
+  /** средний балл по экзаменам, взвешен по кредитам */
+  average: string | null;
+  credits: number;
+  courses: ArchiveCourse[];
+}
+
+export interface ArchiveData {
+  average: string | null;
+  credits: number;
+  creditsPlan: number;
+  passed: number;
+  /** от новых к старым */
+  semesters: ArchiveSemester[];
+}
+
+/** Преподаватель текущих курсов: для окна «Преподаватели» на «Сегодня». */
+export interface TeacherView {
+  name: string;
+  initials: string;
+  gradient: string;
+  courses: { title: string; color: string }[];
+  /** ближайшая групповая консультация по его курсам */
+  cons: { id: string; when: string } | null;
 }

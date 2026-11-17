@@ -3,11 +3,12 @@ import { PerfView } from "@/components/study/perf-view";
 import { StudyTabs } from "@/components/study/study-tabs";
 import { TasksView } from "@/components/study/tasks-view";
 import { requireUser } from "@/server/auth/session";
+import { getArchive } from "@/server/data/archive";
 import { getStudyData } from "@/server/data/study";
 
 export default async function StudyPage() {
   const user = await requireUser();
-  const data = user.role === "student" ? await getStudyData() : null;
+  const [data, archive] = user.role === "student" ? await Promise.all([getStudyData(), getArchive()]) : [null, null];
   if (!data) {
     return (
       <>
@@ -22,7 +23,7 @@ export default async function StudyPage() {
       views={{
         courses: <CoursesView courses={data.courses} online={data.online} />,
         tasks: <TasksView upcoming={data.upcoming} checked={data.checked} />,
-        perf: <PerfView perf={data.perf} />,
+        perf: <PerfView perf={data.perf} past={archive?.semesters} />,
       }}
     />
   );

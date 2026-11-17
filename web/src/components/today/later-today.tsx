@@ -7,7 +7,7 @@ import type { Lesson } from "@/server/data/types";
 function Row({ lesson }: { lesson: Lesson }) {
   return (
     <Link
-      href="#"
+      href={`/time?open=${lesson.id}`}
       className="-mx-3 grid grid-cols-[54px_1fr_auto] items-baseline gap-3.5 rounded-[14px] px-3 py-3 transition-colors duration-150 hover:bg-hover max-sm:grid-cols-[48px_1fr_auto]"
     >
       <span className="text-[15px] text-text-2">{lesson.start}</span>
@@ -33,7 +33,7 @@ function Row({ lesson }: { lesson: Lesson }) {
 export function LaterToday({ lessons, tomorrow }: { lessons: Lesson[]; tomorrow?: Lesson }) {
   return (
     <section aria-label="Дальше сегодня" className="flex flex-col">
-      <SectionHeader title="Дальше сегодня" linkLabel="Неделя" />
+      <SectionHeader title="Дальше сегодня" linkLabel="Неделя" href="/time?view=week" />
       {lessons.map((l) => (
         <Row key={l.id} lesson={l} />
       ))}

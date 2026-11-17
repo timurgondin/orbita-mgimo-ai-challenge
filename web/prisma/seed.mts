@@ -471,6 +471,133 @@ for (const person of [ALISA, MAXIM, NIKA]) {
   }
 }
 
+// ---------- Архив: прошлые семестры (вымышленные дисциплины и оценки). Итог = Σ балл·вес, округлён до целого ----------
+await db.pastCourse.deleteMany();
+
+// Формулы оценки прошлых курсов: [название, вес %]
+const FORMULAS: Record<string, [string, number][]> = {
+  seminar: [["Работа на семинарах", 30], ["Контрольная работа", 30], ["Экзамен", 40]],
+  essay: [["Работа на семинарах", 20], ["Эссе", 20], ["Контрольная работа", 20], ["Экзамен", 40]],
+  math: [["Домашние задания", 20], ["Контрольная №1", 20], ["Контрольная №2", 20], ["Экзамен", 40]],
+  lang: [["Speaking", 30], ["Writing", 30], ["Экзамен", 40]],
+  credit: [["Работа на занятиях", 50], ["Итоговая работа", 50]],
+  project: [["Проект", 60], ["Защита", 40]],
+};
+// [название, цвет, экзамен/зачёт, кредиты, преподаватель, аватар, формула, баллы по элементам]
+type PastDef = [string, string, "exam" | "credit", number, string, string, keyof typeof FORMULAS, number[]];
+
+const ARCHIVE: Record<string, { admission: number; semesters: PastDef[][] }> = {
+  "a.vorontsova": {
+    admission: 2025,
+    semesters: [
+      [
+        ["Введение в экономику", "econ", "exam", 6, "Петрова Е. А.", "peach", "math", [9, 8, 9, 8]],
+        ["Математический анализ", "micro", "exam", 6, "Гончаров П. И.", "mist", "math", [7, 6, 7, 6]],
+        ["Основы бизнеса", "world", "exam", 5, "Ким А. С.", "lilac", "essay", [9, 10, 9, 9]],
+        ["Английский язык B1", "eng", "exam", 4, "Morgan K.", "mist", "lang", [9, 8, 9]],
+        ["История России", "hist", "exam", 4, "Белов Г. Н.", "sand", "seminar", [8, 7, 8]],
+        ["Цифровая грамотность", "py", "credit", 3, "Лаптев И. О.", "sand", "credit", [9, 9]],
+        ["Русский язык и культура речи", "law", "credit", 2, "Сафронова Л. Е.", "peach", "credit", [8, 9]],
+      ],
+      [
+        ["Статистика", "econ", "exam", 6, "Соколов Д. В.", "sand", "math", [8, 9, 8, 9]],
+        ["Линейная алгебра", "micro", "exam", 5, "Гончаров П. И.", "mist", "math", [7, 8, 7, 7]],
+        ["Теория менеджмента", "world", "exam", 5, "Захарова О. В.", "lilac", "essay", [9, 9, 8, 9]],
+        ["Правоведение", "law", "exam", 4, "Орлова М. И.", "mist", "seminar", [8, 8, 7]],
+        ["Английский язык B1+", "eng", "exam", 4, "Morgan K.", "mist", "lang", [9, 9, 10]],
+        ["Философия", "hist", "credit", 3, "Лебедев А. М.", "sand", "credit", [8, 8]],
+        ["Python: основы программирования", "py", "credit", 3, "Лаптев И. О.", "sand", "project", [9, 10]],
+      ],
+    ],
+  },
+  "m.orlov": {
+    admission: 2023,
+    semesters: [
+      [
+        ["Введение в политологию", "world", "exam", 5, "Ким А. С.", "lilac", "essay", [8, 7, 8, 7]],
+        ["История международных отношений", "hist", "exam", 6, "Белов Г. Н.", "sand", "seminar", [7, 7, 8]],
+        ["Экономическая теория", "econ", "exam", 5, "Соколов Д. В.", "sand", "math", [6, 6, 7, 6]],
+        ["Английский язык B2", "eng", "exam", 4, "Morgan K.", "mist", "lang", [8, 8, 8]],
+        ["Основы права", "law", "exam", 4, "Орлова М. И.", "mist", "seminar", [7, 8, 7]],
+        ["Информатика", "py", "credit", 3, "Лаптев И. О.", "sand", "credit", [8, 9]],
+        ["Логика", "micro", "credit", 3, "Лебедев А. М.", "sand", "credit", [7, 8]],
+      ],
+      [
+        ["Сравнительная политология", "world", "exam", 6, "Ким А. С.", "lilac", "essay", [8, 8, 7, 8]],
+        ["Новая история", "hist", "exam", 5, "Белов Г. Н.", "sand", "seminar", [8, 7, 8]],
+        ["Макроэкономика", "econ", "exam", 5, "Соколов Д. В.", "sand", "math", [7, 6, 7, 7]],
+        ["Английский язык B2+", "eng", "exam", 4, "Morgan K.", "mist", "lang", [8, 9, 8]],
+        ["Конституционное право", "law", "exam", 4, "Орлова М. И.", "mist", "seminar", [6, 7, 6]],
+        ["Статистика для политологов", "py", "credit", 3, "Лаптев И. О.", "sand", "credit", [8, 8]],
+        ["Социология", "micro", "credit", 3, "Захарова О. В.", "lilac", "credit", [9, 8]],
+      ],
+      [
+        ["Мировая экономика", "econ", "exam", 5, "Ким А. С.", "lilac", "essay", [8, 8, 8, 8]],
+        ["Новейшая история", "hist", "exam", 5, "Белов Г. Н.", "sand", "seminar", [8, 9, 8]],
+        ["Международное право", "law", "exam", 6, "Орлова М. И.", "mist", "seminar", [7, 7, 7]],
+        ["Политическая география", "world", "exam", 4, "Гончаров П. И.", "mist", "essay", [9, 9, 8, 9]],
+        ["Немецкий язык A2", "eng", "exam", 4, "Вагнер Х.", "peach", "lang", [7, 8, 7]],
+        ["Методы политического анализа", "micro", "credit", 3, "Захарова О. В.", "lilac", "credit", [8, 9]],
+        ["Анализ данных: основы", "py", "credit", 3, "Лаптев И. О.", "sand", "project", [9, 9]],
+      ],
+      [
+        ["Внешняя политика США", "world", "exam", 5, "Ким А. С.", "lilac", "essay", [8, 9, 8, 8]],
+        ["Международные организации", "law", "exam", 5, "Орлова М. И.", "mist", "seminar", [9, 8, 9]],
+        ["История дипломатии", "hist", "exam", 5, "Белов Г. Н.", "sand", "seminar", [8, 8, 8]],
+        ["Международные финансы", "econ", "exam", 5, "Соколов Д. В.", "sand", "math", [6, 7, 6, 6]],
+        ["Немецкий язык B1", "eng", "exam", 4, "Вагнер Х.", "peach", "lang", [8, 8, 8]],
+        ["Курсовая работа", "micro", "credit", 3, "Ким А. С.", "lilac", "project", [9, 9]],
+        ["Геополитика", "world", "credit", 3, "Гончаров П. И.", "mist", "credit", [8, 7]],
+      ],
+      [
+        ["Регионоведение: Восточная Азия", "world", "exam", 5, "Ли Ю. В.", "peach", "essay", [9, 9, 9, 8]],
+        ["Международная политэкономия", "econ", "exam", 5, "Соколов Д. В.", "sand", "essay", [8, 7, 8, 8]],
+        ["Дипломатический протокол", "hist", "exam", 4, "Белов Г. Н.", "sand", "seminar", [9, 9, 9]],
+        ["Право международной безопасности", "law", "exam", 5, "Орлова М. И.", "mist", "seminar", [7, 8, 7]],
+        ["Немецкий язык B2", "eng", "exam", 4, "Вагнер Х.", "peach", "lang", [8, 9, 8]],
+        ["Количественные методы", "py", "credit", 4, "Лаптев И. О.", "sand", "credit", [8, 8]],
+        ["Публичная дипломатия", "micro", "credit", 3, "Захарова О. В.", "lilac", "credit", [9, 9]],
+      ],
+      [
+        ["Внешняя политика Европейского союза", "world", "exam", 5, "Ким А. С.", "lilac", "essay", [8, 8, 8, 8]],
+        ["Переговорный процесс", "micro", "exam", 4, "Захарова О. В.", "lilac", "seminar", [9, 9, 9]],
+        ["Энергетическая политика", "econ", "exam", 6, "Соколов Д. В.", "sand", "essay", [7, 8, 7, 7]],
+        ["История холодной войны", "hist", "exam", 5, "Белов Г. Н.", "sand", "seminar", [9, 8, 8]],
+        ["Немецкий язык B2+", "eng", "exam", 4, "Вагнер Х.", "peach", "lang", [8, 8, 9]],
+        ["Курсовая работа", "py", "credit", 3, "Ким А. С.", "lilac", "project", [9, 10]],
+        ["Производственная практика", "law", "credit", 3, "Орлова М. И.", "mist", "project", [10, 9]],
+      ],
+    ],
+  },
+};
+
+// Даты сессии: осенняя — конец декабря и январь, весенняя — июнь; зачёты — до экзаменов
+const AUTUMN_EXAMS = ["12-22", "12-26", "12-29", "01-13", "01-16", "01-20"];
+const SPRING_EXAMS = ["06-08", "06-11", "06-15", "06-18", "06-22", "06-25"];
+for (const [login, { admission, semesters }] of Object.entries(ARCHIVE)) {
+  const uid = await userId(login);
+  for (const [si, list] of semesters.entries()) {
+    const semester = si + 1;
+    const autumn = semester % 2 === 1;
+    const year = admission + Math.floor(si / 2); // год начала учебного года
+    let exam = 0, credit = 0;
+    for (const [order, [title, color, assessment, credits, teacher, avatar, formula, scores]] of list.entries()) {
+      const comps = FORMULAS[formula];
+      const total = comps.reduce((s, [, w], i) => s + scores[i] * w, 0) / 100;
+      const md = assessment === "exam" ? (autumn ? AUTUMN_EXAMS : SPRING_EXAMS)[exam++] : autumn ? `12-${16 + credit++}` : `05-${26 + credit++}`;
+      const closedYear = autumn ? (md.startsWith("01") ? year + 1 : year) : year + 1;
+      await db.pastCourse.create({
+        data: {
+          userId: uid, semester, title, color, assessment, credits, order,
+          grade: assessment === "exam" ? Math.round(total) : null, passed: total >= 4,
+          teacherName: teacher, teacherAvatar: avatar, closedAt: at(`${closedYear}-${md}`),
+          components: { create: comps.map(([t, w], i) => ({ title: t, weight: w, score: scores[i], order: i })) },
+        },
+      });
+    }
+  }
+}
+
 // ---------- Офис: заявки и документы. Токены проверки у существующих документов сохраняются (QR в выданных PDF остаются рабочими) ----------
 interface SeedEvent { title: string; actor?: string; note?: string; at?: string }
 interface SeedReq {

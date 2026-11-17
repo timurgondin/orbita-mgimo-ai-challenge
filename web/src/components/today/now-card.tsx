@@ -16,7 +16,7 @@ export function NowCard({ lesson, nowMinutes }: { lesson: Lesson; nowMinutes: nu
 
   return (
     <Link
-      href="#"
+      href={`/time?open=${lesson.id}`}
       aria-label={`Текущая пара: ${lesson.title}`}
       className="relative flex min-h-[244px] flex-col overflow-hidden rounded-[26px] bg-s1 px-7 pt-[26px] pb-6 transition-colors duration-200 hover:bg-s2"
     >

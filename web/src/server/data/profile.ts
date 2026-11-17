@@ -1,6 +1,7 @@
 import "server-only";
 import { requireUser } from "@/server/auth/session";
 import { qrSvg, verifyUrl } from "@/server/office/documents";
+import { getArchive } from "./archive";
 import { avatarGradientByKey } from "./shared";
 import type { PersonRef, ProfileView, StudentCardView } from "./types";
 
@@ -24,6 +25,7 @@ function person(fio: string | null, avatar: string): PersonRef | null {
 export async function getProfile(): Promise<ProfileView> {
   const u = await requireUser();
   const student = u.role === "student";
+  const archive = student ? await getArchive() : null;
   return {
     student,
     email: `${u.login}@${EMAIL_DOMAIN}`,
@@ -40,6 +42,7 @@ export async function getProfile(): Promise<ProfileView> {
     curator: person(u.curatorName, "peach"),
     headman: person(u.headmanName, "mist"),
     hasCard: student && !!u.cardToken,
+    archive: archive?.semesters.length ? { semesters: archive.semesters.length, average: archive.average } : null,
   };
 }
 

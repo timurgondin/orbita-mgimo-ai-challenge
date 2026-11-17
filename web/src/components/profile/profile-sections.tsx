@@ -1,9 +1,11 @@
 "use client";
 
 import { useRef, useState, useTransition } from "react";
-import { Check, Copy, PenLine } from "lucide-react";
+import Link from "next/link";
+import { Check, ChevronRight, Copy, PenLine } from "lucide-react";
 import { useToast } from "@/components/ui/toast";
 import { normalizeContact, CONTACT_ERROR, type ContactField } from "@/lib/contacts";
+import { plural } from "@/lib/phrases";
 import { cn } from "@/lib/utils";
 import type { PersonRef, ProfileView } from "@/server/data/types";
 import { updateContact } from "@/server/profile/actions";
@@ -138,6 +140,14 @@ export function ProfileSections({ p }: { p: ProfileView }) {
               {p.recordBook && (
                 <Row k="Зачётная книжка" action={<CopyButton value={p.recordBook} label="номер зачётки" onDone={copied} />}>
                   <span className="tabular-nums">{p.recordBook}</span>
+                </Row>
+              )}
+              {p.archive && (
+                <Row k="Архив курсов" action={<ChevronRight aria-hidden="true" size={16} strokeWidth={1.6} className="mx-2 text-text-3 max-sm:col-start-2 max-sm:row-span-2 max-sm:row-start-1" />}>
+                  <Link href="/study/archive" data-archive-link className="after:absolute after:inset-0 after:rounded-[14px]">
+                    {p.archive.semesters} {plural(p.archive.semesters, "семестр", "семестра", "семестров")}
+                    {p.archive.average && <>, средний балл {p.archive.average}</>}
+                  </Link>
                 </Row>
               )}
               {p.curator && (

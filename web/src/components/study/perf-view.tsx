@@ -1,8 +1,10 @@
 import Link from "next/link";
-import type { StudyData } from "@/server/data/types";
+import { SectionHeader } from "@/components/today/section-header";
+import type { ArchiveSemester, StudyData } from "@/server/data/types";
+import { creditsLabel, plural } from "@/lib/phrases";
 import { cn } from "@/lib/utils";
 
-export function PerfView({ perf }: { perf: StudyData["perf"] }) {
+export function PerfView({ perf, past = [] }: { perf: StudyData["perf"]; past?: ArchiveSemester[] }) {
   const stats = [
     { value: perf.average, label: "средний балл" },
     perf.rank != null && perf.size != null ? { value: String(perf.rank), label: `место на курсе из ${perf.size}` } : null,
@@ -79,6 +81,33 @@ export function PerfView({ perf }: { perf: StudyData["perf"] }) {
               </div>
             </div>
           ))}
+        </section>
+      )}
+
+      {past.length > 0 && (
+        <section aria-label="Прошлые семестры" className="mt-12">
+          <SectionHeader title="Прошлые семестры" linkLabel="Архив" href="/study/archive" />
+          <div className="rows [--row-inset:14px]">
+            {past.map((s) => (
+              <Link
+                key={s.n}
+                href={`/study/archive?year=${s.year}`}
+                data-past-semester={s.n}
+                className="-mx-3.5 grid grid-cols-[minmax(0,1fr)_auto] items-center gap-4 rounded-2xl px-3.5 py-3 transition-colors duration-150 hover:bg-hover"
+              >
+                <span className="min-w-0">
+                  <span className="block truncate font-medium">{s.title}</span>
+                  <span className="block text-[13px] text-text-3">
+                    {s.courses.length} {plural(s.courses.length, "дисциплина", "дисциплины", "дисциплин")}, {creditsLabel(s.credits)}
+                  </span>
+                </span>
+                <span className="text-right">
+                  <b className="block text-lg leading-tight font-semibold tracking-[-.02em] tabular-nums">{s.average ?? "—"}</b>
+                  <small className="block text-[13px] text-text-3">средний балл</small>
+                </span>
+              </Link>
+            ))}
+          </div>
         </section>
       )}
     </>

@@ -52,6 +52,7 @@ model User {
   consultationsHosted Consultation[]
   officeRequests      OfficeRequest[]
   documents           Document[]
+  pastCourses         PastCourse[]
 }
 
 model Session {
@@ -193,6 +194,42 @@ model ConsultationSignup {
   user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([consultationId, userId])
+}
+
+// ---- Архив: дисциплины прошлых семестров. Отдельно от Course/Enrollment, чтобы не попадать в текущие экраны ----
+
+// Сданная дисциплина: итог зафиксирован. semester — номер семестра обучения (1 — осень первого курса)
+model PastCourse {
+  id            String          @id @default(cuid())
+  userId        String
+  semester      Int
+  title         String
+  color         String // ключ цвета курса
+  assessment    String // exam | credit
+  credits       Int
+  grade         Int? // итог по 10-балльной шкале; у зачёта — null
+  passed        Boolean         @default(true)
+  teacherName   String
+  teacherAvatar String          @default("sand")
+  closedAt      DateTime // дата экзамена или зачёта
+  order         Int             @default(0)
+  user          User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  components    PastComponent[]
+
+  @@index([userId, semester])
+}
+
+// Из чего сложился итог: элемент формулы и балл
+model PastComponent {
+  id           String     @id @default(cuid())
+  pastCourseId String
+  title        String
+  weight       Int // проценты
+  score        Float
+  order        Int        @default(0)
+  course       PastCourse @relation(fields: [pastCourseId], references: [id], onDelete: Cascade)
+
+  @@index([pastCourseId])
 }
 
 model OnlineProgress {

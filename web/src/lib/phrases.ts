@@ -10,3 +10,12 @@ export function kindAt(kind: string | undefined, place: Place): string {
   return place.label ? `${kind} в ${where}` : `${kind} ${where}`;
 }
 
+
+/** Слово к числу: plural(5, "кредит", "кредита", "кредитов") → «кредитов». */
+export function plural(n: number, one: string, few: string, many: string): string {
+  const d = n % 10, h = n % 100;
+  return d === 1 && h !== 11 ? one : d >= 2 && d <= 4 && (h < 12 || h > 14) ? few : many;
+}
+
+/** «6 кредитов», «1 кредит» */
+export const creditsLabel = (n: number) => `${n} ${plural(n, "кредит", "кредита", "кредитов")}`;

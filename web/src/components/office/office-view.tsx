@@ -31,17 +31,22 @@ export function OfficeView({ data }: { data: OfficeData }) {
   }, []);
   const close = useCallback(() => setOpen(false), []);
 
-  // ?request=R-2481 — открыть заявку сразу (так ведёт уведомление «Загрузить»); адрес чистим
+  // ?request=R-2481 — открыть заявку сразу (так ведёт уведомление «Загрузить»); ?new=grades — форму заявки (из «Архива»). Адрес чистим
   const params = useSearchParams();
   const router = useRouter();
   const wanted = params.get("request");
+  const wantedNew = params.get("new");
   useEffect(() => {
-    if (!wanted) return;
-    const r = data.requests.find((x) => x.number === wanted);
+    if (!wanted && !wantedNew) return;
+    const r = wanted ? data.requests.find((x) => x.number === wanted) : undefined;
+    const t = wantedNew ? getType(wantedNew) : undefined;
     // через кадр: страница успевает отрисоваться, окно открывается с обычной анимацией
-    requestAnimationFrame(() => r && openModal({ type: "req", id: r.id, snap: r }));
+    requestAnimationFrame(() => {
+      if (r) openModal({ type: "req", id: r.id, snap: r });
+      else if (t) openModal({ type: "form", id: t.id });
+    });
     router.replace("/office", { scroll: false });
-  }, [wanted, data.requests, router, openModal]);
+  }, [wanted, wantedNew, data.requests, router, openModal]);
 
   const req = shown?.type === "req" ? (data.requests.find((r) => r.id === shown.id) ?? shown.snap) : undefined;
   const doc = shown?.type === "doc" ? (data.documents.find((d) => d.id === shown.id) ?? shown.snap) : undefined;

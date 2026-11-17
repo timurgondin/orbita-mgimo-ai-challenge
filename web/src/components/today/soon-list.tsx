@@ -6,7 +6,7 @@ import { cn } from "@/lib/utils";
 function Item({ d }: { d: SoonItem }) {
   return (
     <Link
-      href="#"
+      href="/study?tab=tasks"
       className="-mx-3 flex items-center gap-3.5 rounded-[14px] px-3 py-[11px] transition-colors duration-150 hover:bg-hover"
     >
       <div className="min-w-0 flex-1">
@@ -27,7 +27,7 @@ function Item({ d }: { d: SoonItem }) {
 export function SoonList({ items }: { items: SoonItem[] }) {
   return (
     <section aria-label="Скоро">
-      <SectionHeader title="Скоро" linkLabel="Все задания" />
+      <SectionHeader title="Скоро" linkLabel="Все задания" href="/study?tab=tasks" />
       {items.map((d) => (
         <Item key={d.id} d={d} />
       ))}
