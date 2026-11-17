@@ -30,7 +30,7 @@ export function PerfView({ perf, past = [] }: { perf: StudyData["perf"]; past?: 
         {perf.rows.map((r) => (
           <Link
             key={r.id}
-            href="#"
+            href={`/study/${r.slug}`}
             style={{ "--cc": `var(--c-${r.color})` } as React.CSSProperties}
             className="-mx-3.5 grid grid-cols-[minmax(0,1.3fr)_minmax(0,2fr)_64px_92px] items-center gap-5 rounded-2xl p-3.5 transition-colors duration-150 hover:bg-hover max-sm:grid-cols-[minmax(0,1fr)_auto] max-sm:gap-x-3 max-sm:gap-y-2.5"
           >
@@ -66,7 +66,7 @@ export function PerfView({ perf, past = [] }: { perf: StudyData["perf"]; past?: 
         <section aria-label="Сессия" className="mt-12">
           <h2 className="mb-3.5 text-lg font-semibold tracking-[-.02em]">Сессия</h2>
           {perf.exams.map((e) => (
-            <div key={e.id} className="-mx-3.5 flex items-center gap-4 rounded-2xl px-3.5 py-3 hover:bg-hover">
+            <Link key={e.id} href={`/study/${e.slug}`} className="-mx-3.5 flex items-center gap-4 rounded-2xl px-3.5 py-3 transition-colors duration-150 hover:bg-hover">
               <div className="w-[52px] shrink-0 text-center">
                 <b className="block text-[22px] leading-none font-medium tracking-[-.02em]">{e.day}</b>
                 <small className="text-xs text-text-3">{e.month}</small>
@@ -79,7 +79,7 @@ export function PerfView({ perf, past = [] }: { perf: StudyData["perf"]; past?: 
                 <div className="font-medium tabular-nums">{e.time}</div>
                 {e.room && <div className="text-[13px] text-text-3">{e.room}</div>}
               </div>
-            </div>
+            </Link>
           ))}
         </section>
       )}

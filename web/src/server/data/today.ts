@@ -104,6 +104,7 @@ export async function getSoon(): Promise<SoonItem[]> {
       const due = formatDue(w.component.dueAt!);
       return {
         id: w.id,
+        taskId: w.componentId,
         title: w.component.title,
         course: w.component.course.title,
         color: w.component.course.color,

@@ -117,6 +117,7 @@ model GradeComponent {
   title      String
   shortTitle String? // для карточки курса: «Эссе», «Case study»
   subtitle   String? // «домашнее задание», «15% оценки»…
+  description String? // что сделать: абзацы через пустую строку, пункты списка — строки с «- »
   kind       String // test | homework | essay | project | exam | participation
   weight     Int // проценты
   dueAt      DateTime?

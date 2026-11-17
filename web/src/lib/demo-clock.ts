@@ -96,16 +96,3 @@ export function formatMonthShort(d: Date): string {
   return new Intl.DateTimeFormat("ru-RU", { month: "short", timeZone: TZ }).format(d).replace(".", "");
 }
 
-/** Начало семестра — понедельник 31 августа 2026. */
-const SEMESTER_START = "2026-08-31";
-const SEMESTER_WEEKS = 16;
-
-export function semesterLabel(now: Date = DEMO_NOW): string {
-  const week = Math.floor(daysBetween(dayStart(SEMESTER_START), now) / 7) + 1;
-  // фраза вместо «Осенний семестр · 12-я неделя из 16»: номер недели никому не нужен, нужен остаток
-  const left = Math.max(SEMESTER_WEEKS - week, 0);
-  if (left === 0) return "Сессия";
-  const d = left % 10, h = left % 100;
-  const word = d === 1 && h !== 11 ? "неделя" : d >= 2 && d <= 4 && (h < 12 || h > 14) ? "недели" : "недель";
-  return `До сессии ${left} ${word}`;
-}

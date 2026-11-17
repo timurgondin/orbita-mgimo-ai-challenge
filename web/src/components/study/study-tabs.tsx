@@ -14,13 +14,7 @@ type TabId = (typeof TABS)[number]["id"];
 const isTab = (v: string | null): v is TabId => TABS.some((t) => t.id === v);
 
 /** Вкладки живут в адресе (?tab=…), переключение — на клиенте, без запроса к серверу. */
-export function StudyTabs({
-  semester,
-  views,
-}: {
-  semester: string;
-  views: Record<TabId, React.ReactNode>;
-}) {
+export function StudyTabs({ views }: { views: Record<TabId, React.ReactNode> }) {
   const param = useSearchParams().get("tab");
   const tab: TabId = isTab(param) ? param : "courses";
   const segRef = useRef<HTMLDivElement>(null);
@@ -66,11 +60,8 @@ export function StudyTabs({
 
   return (
     <>
-      <div className="flex items-end justify-between gap-6 max-sm:flex-col max-sm:items-stretch max-sm:gap-5">
-        <div>
-          <div className="text-[15px] text-text-2">{semester}</div>
-          <h1 className="mt-1 text-[34px] leading-[1.15] font-medium tracking-[-.03em] max-sm:text-[28px]">Учёба</h1>
-        </div>
+      <div className="flex items-center justify-between gap-6 max-sm:flex-col max-sm:items-stretch max-sm:gap-5">
+        <h1 className="text-[34px] leading-[1.15] font-medium tracking-[-.03em] max-sm:text-[28px]">Учёба</h1>
         <div
           ref={segRef}
           role="tablist"

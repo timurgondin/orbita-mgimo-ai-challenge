@@ -61,6 +61,8 @@
 | Точечное поле (фирменный мотив) | `components/today/dot-field.tsx`, `components/login/orbit-canvas.tsx` |
 | Строки «ключ — значение» с копированием и правкой в строке | `components/profile/profile-sections.tsx` |
 | Окно студенческого (QR + минимум данных) | `components/profile/student-card.tsx` |
+| Окно задания: трекер этапов, «Что сделать» (абзацы и пункты), строки срок / вес / аудитория | `components/study/task-content.tsx` |
+| Страница с боковым списком (курс слева, содержимое справа; на телефоне — ссылка назад) | `components/study/course-page.tsx` |
 | Центр уведомлений: колокольчик, окно, карточка «нужно действие», строка уведомления с типом, полоса срочного | `components/notifications/*` (правила — `docs/notifications.md`) |
 | ИИ-помощник: окно-чат, «думает» — `thinking-orbs` 32 px с оттенком акцента и подписью шага, пустое окно — фирменная сфера `shell/orb.tsx`, сообщения без аватара, карточки ответа с действием | `components/assistant/*` |
 | Монограмма (аватар с инициалами): глубокий градиент `AVATAR_GRADIENTS`, белые буквы, блик — класс `.mono` | `lib/user-view.ts`, `components/ui/teacher-avatar.tsx` |

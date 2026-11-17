@@ -11,7 +11,8 @@ const SEG = {
 function Card({ c }: { c: CourseCardData }) {
   return (
     <Link
-      href="#"
+      href={`/study/${c.slug}`}
+      data-course={c.slug}
       style={{ "--cc": `var(--c-${c.color})` } as React.CSSProperties}
       className="course-card flex flex-col overflow-hidden rounded-3xl bg-s1 transition-colors duration-200 hover:bg-s2"
     >
@@ -23,17 +24,9 @@ function Card({ c }: { c: CourseCardData }) {
       <div className="flex flex-1 flex-col gap-0.5 px-5 pt-4 pb-5">
         <div className="text-[17px] font-semibold tracking-[-.02em]">{c.title}</div>
         <div className="text-sm text-text-3">{c.teacher}</div>
-        <div className="mt-[18px] flex items-end justify-between gap-3">
-          <span className="text-2xl leading-none font-medium tracking-[-.02em]">
-            {c.score}
-            {c.scoreSuffix && <small className="ml-[3px] text-[13px] font-normal text-text-3">{c.scoreSuffix}</small>}
-          </span>
-          {c.nextTitle && (
-            <span className="min-w-0 text-right text-[13px] text-text-3">
-              <b className="block truncate font-medium text-text-2">{c.nextTitle}</b>
-              {c.nextWhen}
-            </span>
-          )}
+        <div className="mt-auto pt-[18px] text-2xl leading-none font-medium tracking-[-.02em]">
+          {c.score}
+          {c.scoreSuffix && <small className="ml-[3px] text-[13px] font-normal text-text-3">{c.scoreSuffix}</small>}
         </div>
         {c.progress != null ? (
           <ProgressBar value={c.progress} label="Курс пройден" fill="var(--cc)" className="mt-3 h-1" />

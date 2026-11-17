@@ -60,6 +60,8 @@ export interface Lesson {
 
 export interface SoonItem {
   id: string;
+  /** элемент оценки: /study?tab=tasks&task=<id> */
+  taskId: string;
   title: string;
   course: string;
   /** ключ цвета курса */
@@ -114,6 +116,8 @@ export interface FormulaSegment {
 
 export interface CourseCardData {
   id: string;
+  /** адрес страницы курса: /study/<slug> */
+  slug: string;
   color: string;
   kindLabel: string;
   title: string;
@@ -122,8 +126,6 @@ export interface CourseCardData {
   score: string;
   /** Мелкое: «из 10», «из 12» */
   scoreSuffix: string;
-  nextTitle: string | null;
-  nextWhen: string | null;
   formula: FormulaSegment[];
   /** Для онлайн-курса: доля пройденных уроков, % */
   progress?: number;
@@ -131,22 +133,58 @@ export interface CourseCardData {
 
 export type TagKind = "upcoming" | "draft" | "in_progress" | "submitted" | "reviewing" | "returned";
 
-export interface TaskItemData {
+/** Этап задания для трекера «как у посылки»: начато → сдано → проверка → оценка. */
+export interface TaskStep {
+  label: string;
+  when: string;
+  state: "fin" | "cur" | "todo";
+}
+
+/** Элемент оценки курса со всем, что нужно для строки списка и окна задания. */
+export interface TaskDetail {
+  /** id элемента оценки */
   id: string;
+  courseSlug: string;
+  courseTitle: string;
   color: string;
+  kind: ComponentKind;
+  /** «Эссе», «Контрольная», «Домашнее задание», «Экзамен», «Работа на занятиях» */
+  kindLabel: string;
   title: string;
-  course: string;
-  /** мелко справа: «ауд. 1201», «15% оценки» или дата проверки */
-  note: string;
-  due: string;
+  weight: number;
+  /** null — уже оценено */
+  tag: TagKind | null;
+  /** «Четверг, 19 ноября, 23:59» */
+  dueLong: string | null;
+  /** «Сегодня, 23:59» / «Сб, 18:00» / «3 декабря» */
+  dueShort: string | null;
+  /** «23:59» */
+  dueTime: string | null;
+  /** для блока даты слева: «19» и «чт» / «дек» */
+  dueDay: string | null;
+  dueSub: string | null;
   dueHot: boolean;
-  status: TagKind | null;
-  score?: string;
-  feedback?: { text: string; initials: string; gradient: string };
+  /** «через 2 дня», «сегодня», «срок прошёл» */
+  dueLeft: string | null;
+  room: string | null;
+  /** пара в расписании, где пишется работа: /time?open=<id> */
+  eventId: string | null;
+  description: string | null;
+  /** «8», «8,2» */
+  score: string | null;
+  /** «10 ноября» */
+  gradedAt: string | null;
+  /** «18 ноября, 21:10» */
+  submittedAt: string | null;
+  feedback: string | null;
+  teacher: { name: string; initials: string; gradient: string };
+  /** только у заданий (не у экзамена и не у работы на занятиях) */
+  steps: TaskStep[] | null;
 }
 
 export interface PerfRowData {
   id: string;
+  slug: string;
   color: string;
   title: string;
   sub: string;
@@ -158,6 +196,7 @@ export interface PerfRowData {
 
 export interface ExamData {
   id: string;
+  slug: string;
   day: string;
   month: string;
   title: string;
@@ -166,11 +205,13 @@ export interface ExamData {
 }
 
 export interface StudyData {
-  semester: string;
   courses: CourseCardData[];
   online: CourseCardData[];
-  upcoming: TaskItemData[];
-  checked: TaskItemData[];
+  /** срок в ближайшие 10 дней */
+  upcoming: TaskDetail[];
+  /** срок дальше */
+  later: TaskDetail[];
+  checked: TaskDetail[];
   perf: {
     average: string;
     rank: number | null;
@@ -351,4 +392,56 @@ export interface TeacherView {
   courses: { title: string; color: string }[];
   /** ближайшая групповая консультация по его курсам */
   cons: { id: string; when: string } | null;
+}
+
+// ---- Страница курса ----
+export interface CourseNavItem {
+  slug: string;
+  title: string;
+  color: string;
+  online: boolean;
+}
+
+export interface CourseLesson {
+  id: string;
+  day: string;
+  /** «пн», «вт» */
+  weekday: string;
+  /** «Семинар «Олигополия»» */
+  title: string;
+  start: string;
+  end: string;
+  room: string;
+  /** сегодня */
+  today: boolean;
+}
+
+export interface CoursePageData {
+  nav: CourseNavItem[];
+  slug: string;
+  title: string;
+  color: string;
+  kindLabel: string;
+  online: boolean;
+  teacher: { name: string; initials: string; gradient: string };
+  credits: number;
+  assessment: Assessment;
+  /** «Экзамен 22 декабря», «Зачёт» */
+  finalLabel: string;
+  /** «8,1» */
+  score: string | null;
+  /** «8» — округлённый прогноз */
+  forecast: string | null;
+  /** доля формулы, по которой уже есть оценки, % */
+  doneWeight: number;
+  formula: FormulaSegment[];
+  components: TaskDetail[];
+  /** для калькулятора: Σ балл·вес по оценённым и вес ещё не оценённых */
+  calc: { gradedSum: number; remainingWeight: number; examOnly: boolean } | null;
+  lessons: CourseLesson[];
+  consultation: { id: string; when: string; place: string } | null;
+  /** онлайн-курс */
+  lessonsDone?: number;
+  lessonsTotal?: number;
+  nextLesson?: { title: string; minutes: number } | null;
 }
