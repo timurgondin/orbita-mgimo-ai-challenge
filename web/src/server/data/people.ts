@@ -1,6 +1,6 @@
 import "server-only";
 import { db } from "@/server/db/client";
-import { DEMO_DATE, DEMO_NOW, addDays, dayStart, formatLongDate, mskDate, mskTime } from "@/lib/demo-clock";
+import { DEMO_DATE, DEMO_NOW, addDays, dayStart, formatShortWeekday, mskDate, mskTime } from "@/lib/demo-clock";
 import { requireUser } from "@/server/auth/session";
 import { avatarGradientByKey, formatDue, teacherInitials } from "./shared";
 import type { EventKind, TeacherPageData } from "./types";
@@ -52,32 +52,48 @@ export async function getTeacher(slug: string): Promise<TeacherPageData | null> 
     }),
   ]);
 
-  // одна пара могла попасть в базу дважды (у разных студентов свой экземпляр курса) — схлопываем по времени и аудитории
+  // неделя целиком: Пн–Сб, даже пустые дни — так видно ритм нагрузки
+  const week: TeacherPageData["week"] = Array.from({ length: 6 }, (_, i) => {
+    const date = addDays(monday, i);
+    return { date, dow: formatShortWeekday(date), day: date.slice(8).replace(/^0/, ""), items: [] };
+  });
   const seen = new Set<string>();
-  const week: TeacherPageData["week"] = [];
   for (const e of events) {
+    // одна пара могла попасть в базу дважды (у разных студентов свой экземпляр курса) — схлопываем по времени и аудитории
     const key = `${e.startsAt.toISOString()}|${e.room}`;
     if (seen.has(key)) continue;
     seen.add(key);
-    const date = mskDate(e.startsAt);
-    let day = week.find((d) => d.date === date);
-    if (!day) week.push((day = { date, label: formatLongDate(date), items: [] }));
-    day.items.push({
+    week.find((d) => d.date === mskDate(e.startsAt))?.items.push({
       id: e.id,
       start: mskTime(e.startsAt),
       end: mskTime(e.endsAt),
-      title: e.title ?? KIND[e.kind as EventKind],
-      course: e.course?.title ?? "",
-      color: e.course?.color ?? "econ",
+      title: e.course?.title ?? e.title ?? "",
+      kind: KIND[e.kind as EventKind],
+      group: e.groupName ?? "",
+      color: e.course?.color ?? null,
       room: e.room,
       mine: !!e.course && enrolled.has(e.course.id),
     });
   }
 
-  const links: TeacherPageData["links"] = [];
-  if (t.orcid) links.push({ label: "ORCID", value: t.orcid, href: `https://orcid.org/${t.orcid}` });
-  if (t.scholar) links.push({ label: "Google Scholar", value: "Профиль и цитирования", href: `https://scholar.google.com/citations?user=${encodeURIComponent(t.scholar)}` });
-  if (t.elibrary) links.push({ label: "eLibrary", value: `SPIN-код ${t.elibrary}`, href: null });
+  const PROFILE: Record<string, { label: string; href: (id: string) => string; value?: (id: string) => string }> = {
+    orcid: { label: "ORCID", href: (id) => `https://orcid.org/${id}` },
+    scholar: { label: "Google Scholar", href: (id) => `https://scholar.google.com/citations?user=${encodeURIComponent(id)}&hl=ru`, value: () => "Профиль автора" },
+    elibrary: { label: "eLibrary, РИНЦ", href: (id) => `https://elibrary.ru/author_profile.asp?id=${id}`, value: (id) => `AuthorID ${id}` },
+    scopus: { label: "Scopus", href: (id) => `https://www.scopus.com/authid/detail.uri?authorId=${id}`, value: (id) => `Author ID ${id}` },
+    ssrn: { label: "SSRN", href: (id) => `https://papers.ssrn.com/sol3/cf_dev/AbsByAuth.cfm?per_id=${id}`, value: () => "Страница автора" },
+    site: { label: "Сайт", href: (id) => `https://${id}`, value: (id) => id },
+  };
+  const links = list<{ kind: string; id: string; metric?: string }>(t.profiles)
+    .filter((p) => PROFILE[p.kind])
+    .map((p) => ({
+      kind: p.kind,
+      label: PROFILE[p.kind].label,
+      value: PROFILE[p.kind].value?.(p.id) ?? p.id,
+      metric: p.metric ?? null,
+      href: PROFILE[p.kind].href(p.id),
+    }));
+  const items = week.flatMap((d) => d.items);
 
   return {
     slug: t.slug,
@@ -93,6 +109,7 @@ export async function getTeacher(slug: string): Promise<TeacherPageData | null> 
     interests: list<string>(t.interests),
     publications: list<{ title: string; venue: string; year: number }>(t.publications).sort((a, b) => b.year - a.year),
     links,
+    load: { pairs: items.length, groups: new Set(items.map((i) => i.group).filter(Boolean)).size },
     mine: t.courses.filter((c) => c.course.enrollments.length).map((c) => ({ slug: c.course.slug, title: c.course.title, color: c.course.color, role: c.role })),
     week,
     consultation: cons ? { id: cons.id, when: formatDue(cons.startsAt).label, place: cons.place, course: cons.course.title } : null,

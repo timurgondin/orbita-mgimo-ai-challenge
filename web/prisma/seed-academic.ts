@@ -16,9 +16,6 @@ export interface TeacherDef {
   bio: string;
   interests: string[];
   pubs: { title: string; venue: string; year: number }[];
-  orcid?: string;
-  scholar?: string;
-  elibrary?: string;
 }
 
 const T = (d: TeacherDef) => d;
@@ -35,7 +32,6 @@ export const TEACHERS: TeacherDef[] = [
       { title: "Микроэкономика: учебник для бакалавров", venue: "Издательство Университета Будущего", year: 2024 },
       { title: "Сетевые эффекты и концентрация на рынке такси-агрегаторов", venue: "Прикладная эконометрика", year: 2022 },
     ],
-    orcid: "0000-0002-7741-3208", scholar: "pEtR0vA2kQAAAAJ", elibrary: "4127-8830",
   }),
   T({
     slug: "larionov-po", short: "Ларионов П. О.", last: "Ларионов", first: "Павел", middle: "Олегович", avatar: "mist",
@@ -46,7 +42,6 @@ export const TEACHERS: TeacherDef[] = [
       { title: "Сговор в повторяющихся закупках: признаки по открытым данным", venue: "Вопросы теоретической экономики", year: 2025 },
       { title: "Задачи по микроэкономике с решениями", venue: "Издательство Университета Будущего", year: 2023 },
     ],
-    orcid: "0000-0001-5523-0917", elibrary: "9031-4475",
   }),
   T({
     slug: "sokolov-dv", short: "Соколов Д. В.", last: "Соколов", first: "Дмитрий", middle: "Валерьевич", avatar: "sand",
@@ -58,7 +53,6 @@ export const TEACHERS: TeacherDef[] = [
       { title: "Гетероскедастичность в малых выборках: сравнение поправок", venue: "Journal of Applied Econometric Methods", year: 2024 },
       { title: "Эконометрика для бакалавров: от регрессии к причинности", venue: "Издательство Университета Будущего", year: 2023 },
     ],
-    orcid: "0000-0003-1189-6624", scholar: "s0K0l0vDvAAAAJ", elibrary: "2210-5973",
   }),
   T({
     slug: "akhmedova-lr", short: "Ахмедова Л. Р.", last: "Ахмедова", first: "Лейла", middle: "Рашидовна", avatar: "lilac",
@@ -66,7 +60,6 @@ export const TEACHERS: TeacherDef[] = [
     bio: "Ведёт практикумы и лабораторные по эконометрике в R и Python. Аспирант второго года.",
     interests: ["Машинное обучение в экономике", "Воспроизводимые исследования"],
     pubs: [{ title: "Случайный лес против логит-модели в прогнозе дефолтов МСП", venue: "Финансы и кредит", year: 2025 }],
-    orcid: "0000-0002-9054-1176",
   }),
   T({
     slug: "kim-as", short: "Ким А. С.", last: "Ким", first: "Андрей", middle: "Сергеевич", avatar: "lilac",
@@ -78,7 +71,6 @@ export const TEACHERS: TeacherDef[] = [
       { title: "Глобальные цепочки поставок после 2022 года", venue: "Вестник Университета Будущего. Экономика", year: 2024 },
       { title: "Нетарифные барьеры в торговле электроникой", venue: "Journal of East Asian Trade", year: 2023 },
     ],
-    orcid: "0000-0001-8320-4459", scholar: "kImAnDr3yAAAAJ", elibrary: "6634-1092",
   }),
   T({
     slug: "morgan-k", short: "Morgan K.", last: "Morgan", first: "Kate", avatar: "mist",
@@ -89,7 +81,6 @@ export const TEACHERS: TeacherDef[] = [
       { title: "Peer feedback in L2 academic writing: a classroom study", venue: "Journal of English for Academic Purposes", year: 2024 },
       { title: "Case-based learning in business English", venue: "ELT Practice", year: 2022 },
     ],
-    orcid: "0000-0002-4410-8735",
   }),
   T({
     slug: "orlova-mi", short: "Орлова М. И.", last: "Орлова", first: "Марина", middle: "Игоревна", avatar: "mist",
@@ -101,7 +92,6 @@ export const TEACHERS: TeacherDef[] = [
       { title: "Венская конвенция 1980 года: комментарий для практиков", venue: "Издательство Университета Будущего", year: 2023 },
       { title: "Санкции и применимое право в трансграничных контрактах", venue: "Международное правосудие", year: 2023 },
     ],
-    orcid: "0000-0003-0275-6611", elibrary: "1188-2047",
   }),
   T({
     slug: "shevchenko-av", short: "Шевченко А. В.", last: "Шевченко", first: "Артём", middle: "Викторович", avatar: "sand",
@@ -109,7 +99,6 @@ export const TEACHERS: TeacherDef[] = [
     bio: "Ведёт семинары по международному праву, тренирует университетскую команду по моделированию судебных процессов.",
     interests: ["Международные суды", "Право договоров"],
     pubs: [{ title: "Толкование договоров в практике Международного суда ООН", venue: "Московский журнал международного права", year: 2024 }],
-    orcid: "0000-0001-6702-3394",
   }),
   T({
     slug: "belov-gn", short: "Белов Г. Н.", last: "Белов", first: "Глеб", middle: "Николаевич", avatar: "sand",
@@ -120,7 +109,6 @@ export const TEACHERS: TeacherDef[] = [
       { title: "Неформальные каналы на Венском конгрессе", venue: "Новая и новейшая история", year: 2024 },
       { title: "Протокол и власть: церемониал на конференциях XIX века", venue: "Вестник Университета Будущего. История", year: 2022 },
     ],
-    orcid: "0000-0002-3367-9182", elibrary: "5509-7316",
   }),
   // ---- Максим
   T({
@@ -132,7 +120,6 @@ export const TEACHERS: TeacherDef[] = [
       { title: "Баланс сил в многополярном мире: возвращение классики?", venue: "Международные процессы", year: 2025 },
       { title: "Теория международных отношений: учебник", venue: "Издательство Университета Будущего", year: 2022 },
     ],
-    orcid: "0000-0003-5512-0846",
   }),
   T({
     slug: "litvinova-ed", short: "Литвинова Е. Д.", last: "Литвинова", first: "Евгения", middle: "Дмитриевна", avatar: "peach",
@@ -354,4 +341,72 @@ export const SYLLABI: Record<string, Syllabus> = {
     questions: ["Принципы Вестфальской системы", "Венский конгресс: итоги и значение", "Версальская система и её кризис", "Ялтинско-Потсдамская система"],
     approved: APPROVED,
   },
+};
+
+// ---- Профили преподавателей: у каждого свой набор, как в жизни. Идентификаторы вымышленные ----
+export type ProfileDef = { kind: "orcid" | "scholar" | "elibrary" | "scopus" | "ssrn" | "site"; id: string; metric?: string };
+
+export const PROFILES: Record<string, ProfileDef[]> = {
+  "petrova-ea": [
+    { kind: "elibrary", id: "847213", metric: "38 публикаций в РИНЦ, h-индекс 9" },
+    { kind: "scholar", id: "pEtR0vA2kQAAAAJ", metric: "214 цитирований, h-индекс 7" },
+    { kind: "orcid", id: "0000-0002-7741-3208" },
+    { kind: "scopus", id: "57211934520" },
+  ],
+  "larionov-po": [
+    { kind: "elibrary", id: "1021448", metric: "11 публикаций в РИНЦ, h-индекс 3" },
+    { kind: "ssrn", id: "4412873", metric: "6 статей, 1 300 скачиваний" },
+  ],
+  "sokolov-dv": [
+    { kind: "scholar", id: "s0K0l0vDvAAAAJ", metric: "1 120 цитирований, h-индекс 15" },
+    { kind: "scopus", id: "56932118400", metric: "27 документов, h-индекс 11" },
+    { kind: "orcid", id: "0000-0003-1189-6624" },
+    { kind: "site", id: "datalab.orbita.edu", metric: "Лаборатория экономических данных" },
+  ],
+  "akhmedova-lr": [
+    { kind: "orcid", id: "0000-0002-9054-1176" },
+    { kind: "scholar", id: "aKhM3dLrAAAAJ", metric: "23 цитирования, h-индекс 2" },
+  ],
+  "kim-as": [
+    { kind: "scopus", id: "57190344812", metric: "14 документов, h-индекс 6" },
+    { kind: "elibrary", id: "690325", metric: "52 публикации в РИНЦ, h-индекс 12" },
+  ],
+  "morgan-k": [{ kind: "orcid", id: "0000-0002-4410-8735" }],
+  "orlova-mi": [
+    { kind: "elibrary", id: "512908", metric: "96 публикаций в РИНЦ, h-индекс 18" },
+    { kind: "ssrn", id: "3318470", metric: "9 статей, 2 400 скачиваний" },
+  ],
+  "shevchenko-av": [{ kind: "elibrary", id: "1186034", metric: "14 публикаций в РИНЦ, h-индекс 4" }],
+  "belov-gn": [
+    { kind: "elibrary", id: "733150", metric: "41 публикация в РИНЦ, h-индекс 8" },
+    { kind: "orcid", id: "0000-0002-3367-9182" },
+  ],
+  "gromov-vp": [
+    { kind: "elibrary", id: "301776", metric: "124 публикации в РИНЦ, h-индекс 21" },
+    { kind: "scopus", id: "55940218700", metric: "19 документов, h-индекс 8" },
+  ],
+  "litvinova-ed": [{ kind: "elibrary", id: "958412", metric: "22 публикации в РИНЦ, h-индекс 5" }],
+  "zaitseva-lk": [{ kind: "elibrary", id: "612097", metric: "47 публикаций в РИНЦ, h-индекс 10" }],
+  "ryabov-nt": [{ kind: "site", id: "mediation.orbita.edu", metric: "Центр медиации" }],
+  "frolov-is": [
+    { kind: "elibrary", id: "880214", metric: "31 публикация в РИНЦ, h-индекс 7" },
+    { kind: "orcid", id: "0000-0001-7790-2251" },
+  ],
+  "hughes-p": [{ kind: "orcid", id: "0000-0003-0628-4417" }],
+  "lebedeva-tr": [{ kind: "scholar", id: "lEb3dEvATrAAAAJ", metric: "312 цитирований, h-индекс 8" }],
+  "drozdov-am": [{ kind: "elibrary", id: "455019", metric: "29 публикаций в РИНЦ, h-индекс 6" }],
+};
+
+// ---- Нагрузка: что преподаватель ведёт у других групп на этой неделе (кроме пар наших студентов) ----
+// [дисциплина, вид, группы]; пары раскладываются по свободным слотам недели детерминированно
+export const LOAD: Record<string, [string, "lecture" | "seminar" | "practice", string[]][]> = {
+  "Петрова Е. А.": [["Микроэкономика", "seminar", ["МБ-24-3", "МБ-24-4"]], ["Экономика цифровых платформ", "lecture", ["Магистратура, 1 курс"]], ["Экономика цифровых платформ", "seminar", ["ЦЭ-26-М"]]],
+  "Ларионов П. О.": [["Микроэкономика", "seminar", ["МБ-24-2", "МБ-24-3", "МБ-24-4"]], ["Теория игр", "seminar", ["ЭК-23-1", "ЭК-23-2"]], ["Теория игр", "lecture", ["Поток ЭК-23"]]],
+  "Соколов Д. В.": [["Эконометрика", "lecture", ["Поток ЭК-24"]], ["Прикладная эконометрика", "lecture", ["Магистратура, 1 курс"]], ["Научный семинар лаборатории", "seminar", ["Аспиранты"]]],
+  "Ахмедова Л. Р.": [["Эконометрика", "practice", ["МБ-24-2", "МБ-24-3", "ЭК-24-1"]], ["Анализ данных в R", "practice", ["ЭК-25-1", "ЭК-25-2"]]],
+  "Ким А. С.": [["Мировая экономика", "seminar", ["МБ-24-2", "МБ-24-3"]], ["Экономика Восточной Азии", "lecture", ["Поток МО-23"]], ["Экономика Восточной Азии", "seminar", ["МО-23-1"]]],
+  "Morgan K.": [["Английский язык B2", "practice", ["МБ-24-2", "МБ-24-4"]], ["Academic Writing", "practice", ["Магистратура, 1 курс", "МО-25-1"]]],
+  "Орлова М. И.": [["Международное частное право", "lecture", ["Поток ЮР-23"]], ["Право международной торговли", "lecture", ["Магистратура, 2 курс"]], ["Международный коммерческий арбитраж", "seminar", ["ЮР-23-1"]]],
+  "Шевченко А. В.": [["Международное право", "seminar", ["МБ-24-2", "МБ-24-3", "МО-24-1"]], ["Моделирование судебных процессов", "practice", ["Клуб, все курсы"]]],
+  "Белов Г. Н.": [["История дипломатии", "seminar", ["МБ-24-2", "МО-25-1", "МО-25-2"]], ["Дипломатический протокол", "lecture", ["Поток МО-24"]]],
 };

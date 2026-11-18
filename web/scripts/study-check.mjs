@@ -116,7 +116,11 @@ try {
   await page.waitForURL((u) => u.pathname === "/people/petrova-ea");
   await page.waitForSelector("text=Публикации");
   const pp = await text(page);
-  check("teacher page: position, schedule, publications, ORCID", pp.includes("Доцент") && pp.includes("Расписание на неделе") && pp.includes("ORCID") && pp.includes("Ведёт у тебя"));
+  check("teacher page: position, week, publications, ORCID", pp.includes("Доцент") && pp.includes("Неделя") && pp.includes("ORCID") && pp.includes("Ведёт у тебя") && pp.includes("h-индекс 9"));
+  check("teacher page: interests as tags", (await page.locator("[data-interest]").count()) === 3);
+  check("teacher page: full week with other groups", (await page.locator("[data-week-item]").count()) >= 5 && pp.includes("МБ-24-3"));
+  await open(page, "/people/larionov-po");
+  check("teacher profiles differ (Ларионов: eLibrary and SSRN only)", (await page.locator("[data-profile]").evaluateAll((els) => els.map((e) => e.getAttribute("data-profile")).join(","))) === "elibrary,ssrn");
   await open(page, "/people/no-such-person");
   check("unknown teacher → not found", (await body(page)).includes("Преподаватель не найден"));
   await open(page, "/study/econometrics-24");

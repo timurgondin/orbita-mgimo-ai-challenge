@@ -530,10 +530,13 @@ export interface TeacherPageData {
   bio: string | null;
   interests: string[];
   publications: { title: string; venue: string; year: number }[];
-  links: { label: string; value: string; href: string | null }[];
+  /** профили в наукометрических базах: «ORCID», «Google Scholar» + метрика */
+  links: { kind: string; label: string; value: string; metric: string | null; href: string }[];
+  /** пар на неделе и групп */
+  load: { pairs: number; groups: number };
   /** курсы текущего студента у этого преподавателя */
   mine: { slug: string; title: string; color: string; role: string }[];
   /** занятия на этой неделе по дням */
-  week: { date: string; label: string; items: { id: string; start: string; end: string; title: string; course: string; color: string; room: string; mine: boolean }[] }[];
+  week: { date: string; /** «Пн» */ dow: string; day: string; items: { id: string; start: string; end: string; title: string; kind: string; group: string; color: string | null; room: string; mine: boolean }[] }[];
   consultation: { id: string; when: string; place: string; course: string } | null;
 }

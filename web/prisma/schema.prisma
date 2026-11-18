@@ -167,6 +167,7 @@ model ScheduleEvent {
   teacherName     String
   roomChangedFrom String?
   topic           String?
+  groupName       String? // «МБ-24-1», у лекции — поток «МБ-24»
   course          Course?         @relation(fields: [courseId], references: [id], onDelete: Cascade)
   component       GradeComponent? @relation(fields: [componentId], references: [id], onDelete: SetNull)
 
@@ -229,9 +230,7 @@ model Teacher {
   bio          String?
   interests    String          @default("[]") // JSON string[]
   publications String          @default("[]") // JSON {title, venue, year}[]
-  orcid        String?
-  scholar      String? // id профиля Google Scholar
-  elibrary     String? // SPIN-код eLibrary
+  profiles     String          @default("[]") // JSON {kind, id, metric?}[]: orcid | scholar | elibrary | scopus | ssrn | site
   courses      CourseTeacher[]
 }
 

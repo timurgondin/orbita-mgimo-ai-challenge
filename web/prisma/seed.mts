@@ -2,7 +2,7 @@ import { PrismaClient } from "@prisma/client";
 import { hashPassword, PEPPER_VERSION } from "../src/server/auth/password";
 import { BELLS } from "../src/lib/bells";
 import { randomBytes } from "node:crypto";
-import { AUTO_PASS, STAFF, SYLLABI, TASKS, TEACHERS } from "./seed-academic";
+import { AUTO_PASS, LOAD, PROFILES, STAFF, SYLLABI, TASKS, TEACHERS } from "./seed-academic";
 
 const db = new PrismaClient();
 const PASSWORD = "orbita-demo";
@@ -68,7 +68,7 @@ for (const t of TEACHERS) {
     data: {
       slug: t.slug, short: t.short, lastName: t.last, firstName: t.first, middleName: t.middle, avatar: t.avatar, position: t.position,
       department: t.department, degree: t.degree, email: t.email, office: t.office, bio: t.bio,
-      interests: JSON.stringify(t.interests), publications: JSON.stringify(t.pubs), orcid: t.orcid, scholar: t.scholar, elibrary: t.elibrary,
+      interests: JSON.stringify(t.interests), publications: JSON.stringify(t.pubs), profiles: JSON.stringify(PROFILES[t.slug] ?? []),
     },
   });
 }
@@ -518,6 +518,7 @@ for (const person of [ALISA, MAXIM, NIKA]) {
   }
 
   const courseOf = (slug: string) => person.courses.find((c) => c.slug === slug)!;
+  const group = users.find((u) => u.login === person.login)?.groupName ?? "";
   const eventTeacher = (slug: string, kind: string) => {
     const staff = STAFF[slug];
     if (!staff) return courseOf(slug).teacher;
@@ -531,6 +532,8 @@ for (const person of [ALISA, MAXIM, NIKA]) {
         componentId: e.comp ? compIds.get(`${e.course}|${e.comp}`) : null,
         kind: e.kind, title: e.title, pair: e.p, startsAt: at(`${e.d}T${from}`), endsAt: at(`${e.d}T${to}`), room: e.room,
         teacherName: eventTeacher(e.course, e.kind), roomChangedFrom: e.from, topic: e.topic,
+        // лекция — у потока, остальное — у группы
+        groupName: e.kind === "lecture" ? `Поток ${group.replace(/-\d+$/, "")}` : group,
       },
     });
   }
@@ -569,6 +572,35 @@ for (const person of [ALISA, MAXIM, NIKA]) {
         actorName: n.actor, actorAvatar: n.avatar, createdAt: at(n.at), readAt: n.read ? at(n.at) : null,
       },
     });
+  }
+}
+
+// ---------- Нагрузка преподавателей у других групп на демо-неделе (16–21 ноября): видна на их карточках ----------
+{
+  const WEEK = ["2026-11-16", "2026-11-17", "2026-11-18", "2026-11-19", "2026-11-20", "2026-11-21"];
+  const ROOMS = ["2104", "2207", "3112", "3214", "4108", "5203", "101", "1201"];
+  for (const [ti, [short, load]] of Object.entries(LOAD).entries()) {
+    const busy = new Set(
+      (await db.scheduleEvent.findMany({ where: { teacherName: short }, select: { startsAt: true } })).map((e) => e.startsAt.toISOString()),
+    );
+    let slot = ti * 5; // у разных преподавателей разные стартовые слоты
+    for (const [title, kind, groups] of load) {
+      for (const g of groups) {
+        for (let tries = 0; tries < 48; tries++, slot = (slot + 7) % 36) {
+          const d = WEEK[slot % 6];
+          const p = 1 + (Math.floor(slot / 6) % 6);
+          const [from, to] = BELLS[p];
+          const startsAt = at(`${d}T${from}`);
+          if (busy.has(startsAt.toISOString())) continue;
+          busy.add(startsAt.toISOString());
+          await db.scheduleEvent.create({
+            data: { kind, title, pair: p, startsAt, endsAt: at(`${d}T${to}`), room: ROOMS[(slot + ti) % ROOMS.length], teacherName: short, groupName: g },
+          });
+          slot = (slot + 7) % 36;
+          break;
+        }
+      }
+    }
   }
 }
 
