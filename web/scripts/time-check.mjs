@@ -73,7 +73,7 @@ try {
   await page.goto(BASE + "/time");
   await page.waitForSelector('[data-pair="6"]');
   const list = await text(page);
-  check("list: Thu bell grid with live pair 3, ещё 41 мин", (await page.locator('[data-pair="3"][data-state="live"]').first().textContent()).includes("ещё 41 мин") && list.includes("Микроэкономика") && list.includes("Олигополия") && list.includes("Нет пары"));
+  check("list: live pair 3 «ещё 41 мин», no empty slots, teacher by name", (await page.locator('[data-pair="3"][data-state="live"]').first().textContent()).includes("ещё 41 мин") && list.includes("Микроэкономика") && list.includes("Олигополия") && !list.includes("Нет пары") && list.includes("Ларионов П. О."));
   check("list: room change 2214 → 4105", list.includes("2214") && list.includes("→ 4105"));
   check("list: signed-up consultation in pair 6, «Вы записаны»", (await page.locator('[data-pair="6"]').first().textContent()).includes("Эконометрика") && list.includes("Вы записаны"));
   check("list: week title", list.includes("16 – 21 ноября"));
@@ -86,8 +86,8 @@ try {
   await page.waitForSelector("text=Контрольная №2");
   check("week 2 Monday: Контрольная №2 on pair 2", (await text(page)).includes("Контрольная №2") && (await text(page)).includes("09:30"));
   await page.goto(BASE + "/time?w=-3");
-  await page.waitForSelector("text=Пар нет");
-  check("empty past week renders «Пар нет»", (await text(page)).includes("Пар нет"));
+  await page.waitForSelector("text=Свободный день");
+  check("empty past week renders «Свободный день»", (await text(page)).includes("Свободный день"));
   await page.goto(BASE + "/time?view=week");
   await page.waitForSelector('button[aria-pressed="true"][aria-label="Неделя"]');
   check("?view=week opens the grid", (await page.locator("main button", { hasText: "ауд. 4105" }).count()) > 0);

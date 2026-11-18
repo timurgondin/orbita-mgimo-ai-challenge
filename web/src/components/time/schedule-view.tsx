@@ -1,11 +1,11 @@
 "use client";
 
-import { CalendarDays, ChevronLeft, ChevronRight, Rows3, Rss, Target } from "lucide-react";
+import { CalendarDays, ChevronLeft, ChevronRight, MapPin, Rows3, Rss, Target, User } from "lucide-react";
 import { BELLS } from "@/lib/bells";
 import { DEMO_DATE, DEMO_MINUTES, toMinutes } from "@/lib/demo-clock";
 import { cn } from "@/lib/utils";
 import { Segmented } from "@/components/ui/segmented";
-import { TeacherAvatar } from "@/components/ui/teacher-avatar";
+import { plural } from "@/lib/phrases";
 import type { TimeConsultation, TimeLesson } from "@/server/data/types";
 import { ACCENT, DOW, DOWL, cap, cc, dayMonth, dayNumber, relDay, slotStatus, weekDates, weekTitle } from "./helpers";
 import { ProgressBar } from "@/components/ui/progress";
@@ -16,16 +16,17 @@ export type View = "list" | "week";
 const WEEK_MIN = -3;
 const WEEK_MAX = 3;
 
-function Time({ pair }: { pair: number }) {
+function Time({ pair, dim }: { pair: number; dim?: boolean }) {
   const [s, e] = BELLS[pair];
   return (
-    <span className="text-sm leading-[1.3] text-text-2 max-sm:text-[13px]">
-      {s}
-      <small className="block text-text-3">{e}</small>
+    <span className={cn("leading-[1.25] tabular-nums", dim && "opacity-50")}>
+      <b className="block text-[17px] font-medium tracking-[-.02em] max-sm:text-[15px]">{s}</b>
+      <small className="block text-[13px] text-text-3">{e}</small>
     </span>
   );
 }
 
+/** Пара или консультация: время слева, название и вид, ниже аудитория и преподаватель по имени, справа статус. */
 function Slot({ item, date, onOpen }: { item: Item; date: string; onOpen: (item: Item) => void }) {
   const cons = item.type === "cons";
   const t = cons ? item.cons : item.lesson;
@@ -33,10 +34,10 @@ function Slot({ item, date, onOpen }: { item: Item; date: string; onOpen: (item:
   const style = cons ? ACCENT : cc(item.lesson.color);
   const mine = cons && st.state === "future";
   const l = cons ? null : item.lesson;
-  // вторая строка — фраза: «Семинар «Олигополия»»; место, человек и статус — своими элементами справа
+  const past = st.state === "past";
   const line2 = cons ? "Консультация" : l!.topic ? `${l!.kindLabel} «${l!.topic}»` : l!.kindLabel;
   const room = cons ? (
-    item.cons.place.replace(/^Каб\.\s*/, "каб.\u00a0")
+    item.cons.place.replace(/^Каб\.\s*/, "каб.\u00a0").replace(/^Ауд\.\s*/, "ауд.\u00a0")
   ) : l!.roomFrom ? (
     <>
       <s className="text-text-3">{l!.roomFrom}</s> <span className="font-medium text-urgent">→ {l!.room}</span>
@@ -52,33 +53,39 @@ function Slot({ item, date, onOpen }: { item: Item; date: string; onOpen: (item:
       data-pair={item.pair}
       data-state={st.state}
       className={cn(
-        "slot group -mx-4 grid w-[calc(100%+32px)] cursor-pointer grid-cols-[44px_96px_minmax(0,1fr)_96px_24px_150px] items-center gap-3.5 rounded-[18px] px-4 py-3.5 text-left transition-colors duration-150 hover:bg-hover max-[900px]:grid-cols-[44px_96px_minmax(0,1fr)_96px_150px] max-sm:grid-cols-[28px_46px_minmax(0,1fr)] max-sm:gap-x-2.5 max-sm:gap-y-1",
+        "slot group -mx-4 grid w-[calc(100%+32px)] cursor-pointer grid-cols-[64px_minmax(0,1fr)_auto] items-start gap-x-4 gap-y-2 rounded-[18px] px-4 py-3.5 text-left transition-colors duration-150 hover:bg-hover max-sm:grid-cols-[52px_minmax(0,1fr)] max-sm:gap-x-3",
         st.state === "live" && "bg-s1",
       )}
     >
-      <span className={cn("text-center text-2xl font-medium tracking-[-.03em] max-sm:text-xl", st.state === "live" ? "text-text" : "text-text-3", st.state === "past" && "opacity-50")}>{item.pair}</span>
-      <span className={cn(st.state === "past" && "opacity-50")}>
-        <Time pair={item.pair} />
-      </span>
-      <div className={cn("min-w-0", st.state === "past" && "opacity-50")}>
-        <div
-          className={cn(
-            "flex items-center gap-[9px] text-base font-semibold tracking-[-.015em]",
-            cons && "text-[color-mix(in_srgb,var(--accent)_40%,var(--text))]",
-          )}
-        >
+      <Time pair={item.pair} dim={past} />
+      <div className={cn("min-w-0", past && "opacity-50")}>
+        <div className={cn("flex items-center gap-[9px] text-base font-semibold tracking-[-.015em]", cons && "text-[color-mix(in_srgb,var(--accent)_40%,var(--text))]")}>
           {l?.isTest ? <Target size={15} strokeWidth={1.6} className="shrink-0 text-(--cc)" /> : <i className="size-2 shrink-0 rounded-full bg-(--cc)" />}
           <span className="min-w-0">{cons ? item.cons.courseTitle : l!.title}</span>
         </div>
-        <div className="mt-0.5 truncate pl-[17px] text-sm text-text-3">{line2}</div>
+        <div className="mt-0.5 truncate pl-[17px] text-sm text-text-2">{line2}</div>
+        <div className="mt-1.5 flex flex-wrap items-center gap-x-4 gap-y-1 pl-[17px] text-[13.5px] text-text-3">
+          <span className="inline-flex items-center gap-1.5 whitespace-nowrap">
+            <MapPin size={14} strokeWidth={1.6} />
+            {room}
+          </span>
+          {t.teacher && (
+            <span className="inline-flex min-w-0 items-center gap-1.5" data-teacher-name>
+              <User size={14} strokeWidth={1.6} className="shrink-0" />
+              <span className="truncate">{t.teacher}</span>
+            </span>
+          )}
+          {/* на телефоне статус — в той же строке, справа места нет */}
+          {(mine || st.text) && (
+            <span className={cn("sm:hidden", st.tone === "live" && "text-text", st.tone === "hot" && "text-urgent", mine && "text-(--st-green)")}>
+              {mine ? "Вы записаны" : st.text}
+            </span>
+          )}
+        </div>
       </div>
-      <span className={cn("text-sm whitespace-nowrap text-text-2 max-sm:col-start-3 max-sm:row-start-2 max-sm:justify-self-start max-sm:pl-[17px] max-sm:text-[13px]", st.state === "past" && "opacity-50")}>{room}</span>
-      <span className={cn("max-[900px]:hidden", st.state === "past" && "opacity-50")} title={t.teacher}>
-        <TeacherAvatar name={t.teacher} size={24} gradient={cons ? item.cons.teacherGradient : l!.teacherGradient} />
-      </span>
       <span
         className={cn(
-          "text-[13.5px] whitespace-nowrap text-text-3 max-sm:col-start-3 max-sm:row-start-2 max-sm:justify-self-end max-sm:text-[13px] max-sm:empty:hidden sm:text-right",
+          "pt-0.5 text-right text-[13.5px] whitespace-nowrap text-text-3 max-sm:hidden",
           st.tone === "live" && "text-text",
           st.tone === "hot" && "text-urgent",
           mine && "text-(--st-green)",
@@ -86,20 +93,8 @@ function Slot({ item, date, onOpen }: { item: Item; date: string; onOpen: (item:
       >
         {mine ? "Вы записаны" : st.text}
       </span>
-      {st.state === "live" && (
-        <ProgressBar value={st.progress ?? 0} label="Прошло от пары" className="col-[3/-1] mt-0.5" />
-      )}
+      {st.state === "live" && <ProgressBar value={st.progress ?? 0} label="Прошло от пары" className="col-[2/-1] mt-0.5" />}
     </button>
-  );
-}
-
-function EmptySlot({ pair }: { pair: number }) {
-  return (
-    <div className="-mx-4 grid grid-cols-[44px_96px_minmax(0,1fr)_auto] items-center gap-3.5 px-4 py-2.5 max-sm:grid-cols-[28px_46px_minmax(0,1fr)] max-sm:gap-x-2.5">
-      <span className="text-center text-2xl font-medium tracking-[-.03em] text-text-3 max-sm:text-xl">{pair}</span>
-      <Time pair={pair} />
-      <span className="text-sm text-text-3">Нет пары</span>
-    </div>
   );
 }
 
@@ -107,31 +102,30 @@ function DayBlock({ date, items, onOpen }: { date: string; items: Item[]; onOpen
   const rel = relDay(date);
   const dow = new Date(`${date}T12:00:00+03:00`).getUTCDay();
   const name = cap(DOWL[(dow + 6) % 7]);
-  const first = items[0]?.pair;
-  const last = items[items.length - 1]?.pair;
-  const rows: React.ReactNode[] = [];
-  if (items.length) {
-    for (let p = first; p <= last; p++) {
-      const it = items.find((x) => x.pair === p);
-      rows.push(
-        it ? (
-          <Slot key={`${it.type}-${p}-${it.type === "cons" ? it.cons.id : it.lesson.id}`} item={it} date={date} onOpen={onOpen} />
-        ) : (
-          <EmptySlot key={`e-${p}`} pair={p} />
-        ),
-      );
-    }
-  }
+  const n = items.length;
+  // сводка дня: сколько занятий и с какого до какого времени
+  const span = n ? `${n} ${plural(n, "занятие", "занятия", "занятий")}, с ${BELLS[items[0].pair][0].replace(/^0/, "")} до ${BELLS[items[n - 1].pair][1].replace(/^0/, "")}` : "";
   return (
-    <section aria-label={name} className="mb-9">
-      <div className="mb-1.5 flex items-baseline gap-2.5">
-        <h2 className="text-xl font-semibold tracking-[-.02em]">{rel ?? name}</h2>
-        <span className="text-[15px] text-text-3">
-          {rel ? `${name.toLowerCase()}, ` : ""}
-          {dayMonth(date)}
-        </span>
+    <section aria-label={name} className="mb-10">
+      <div className="mb-1.5 flex flex-wrap items-baseline justify-between gap-x-4 gap-y-0.5">
+        <div className="flex items-baseline gap-2.5">
+          <h2 className="text-xl font-semibold tracking-[-.02em]">{rel ?? name}</h2>
+          <span className="text-[15px] text-text-3">
+            {rel ? `${name.toLowerCase()}, ` : ""}
+            {dayMonth(date)}
+          </span>
+        </div>
+        {span && <span className="text-sm text-text-3">{span}</span>}
       </div>
-      {items.length ? <div className="rows">{rows}</div> : <div className="py-[18px] text-text-3">Пар нет</div>}
+      {n ? (
+        <div className="rows">
+          {items.map((it) => (
+            <Slot key={`${it.type}-${it.pair}-${it.type === "cons" ? it.cons.id : it.lesson.id}`} item={it} date={date} onOpen={onOpen} />
+          ))}
+        </div>
+      ) : (
+        <div className="py-[18px] text-text-3">Свободный день</div>
+      )}
     </section>
   );
 }
