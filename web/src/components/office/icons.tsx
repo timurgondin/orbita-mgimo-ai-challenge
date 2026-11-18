@@ -1,9 +1,11 @@
-import { Archive, ArrowLeftRight, Paperclip, BedDouble, CircleCheck, CircleX, FileText, ListChecks, LoaderCircle, Pause, Plane, RotateCcw, ScanSearch, Send, Shield, Undo2, type LucideIcon } from "lucide-react";
+import { Archive, ArrowLeftRight, Award, Banknote, FileBadge, HeartHandshake, HeartPulse, IdCard, Pencil, Receipt, Route, Shuffle, Ticket, TrendingUp, UserPen, Wallet, Paperclip, BedDouble, CircleCheck, CircleX, FileText, ListChecks, LoaderCircle, Pause, Plane, RotateCcw, ScanSearch, Send, Shield, Undo2, type LucideIcon } from "lucide-react";
 import { STATUS_TAGS } from "@/lib/office-catalog";
 
 const ICONS: Record<string, LucideIcon> = {
   "file-text": FileText, plane: Plane, "list-checks": ListChecks, shield: Shield, "rotate-ccw": RotateCcw,
   "arrow-left-right": ArrowLeftRight, "bed-double": BedDouble, pause: Pause,
+  wallet: Wallet, receipt: Receipt, "file-badge": FileBadge, "trending-up": TrendingUp, route: Route, shuffle: Shuffle, pencil: Pencil,
+  "id-card": IdCard, "user-pen": UserPen, award: Award, "heart-handshake": HeartHandshake, banknote: Banknote, "heart-pulse": HeartPulse, ticket: Ticket,
   send: Send, "loader-circle": LoaderCircle, "scan-search": ScanSearch, "circle-check": CircleCheck, archive: Archive, "circle-x": CircleX, "undo-2": Undo2, paperclip: Paperclip,
 };
 

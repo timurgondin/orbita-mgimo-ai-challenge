@@ -1,11 +1,11 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Building2, Download, FileBadge, MessageCircle, Plus, MapPin, Clock3 } from "lucide-react";
+import { Building2, ChevronRight, Download, FileBadge, Grid2x2Plus, MessageCircle, MapPin, Clock3 } from "lucide-react";
 import { Modal } from "@/components/time/modal";
 import { useToast } from "@/components/ui/toast";
-import { REQUEST_TYPES, OFFICE, getType, catalogLine } from "@/lib/office-catalog";
+import { CATEGORIES, REQUEST_TYPES, OFFICE, getType, catalogLine } from "@/lib/office-catalog";
 import { cn } from "@/lib/utils";
 import type { OfficeData, OfficeDocView, OfficeRequestView } from "@/server/data/types";
 import { DocContent, pdfHref } from "./doc-modal";
@@ -15,7 +15,7 @@ import { RequestCard } from "./request-card";
 import { RequestContent } from "./request-modal";
 
 /** snap — снимок на момент открытия: после отзыва заявка пропадает из данных, а модалка ещё закрывается */
-type ModalState = { type: "req"; id: string; snap: OfficeRequestView } | { type: "form"; id: string } | { type: "doc"; id: string; snap: OfficeDocView } | null;
+type ModalState = { type: "req"; id: string; snap: OfficeRequestView } | { type: "form"; id: string } | { type: "doc"; id: string; snap: OfficeDocView } | { type: "more" } | null;
 
 const H2 = ({ children }: { children: React.ReactNode }) => <h2 className="mb-3.5 text-lg font-semibold tracking-[-.02em]">{children}</h2>;
 
@@ -23,7 +23,6 @@ export function OfficeView({ data }: { data: OfficeData }) {
   const [open, setOpen] = useState(false);
   const [shown, setShown] = useState<ModalState>(null);
   const { toast, node } = useToast();
-  const catalog = useRef<HTMLElement>(null);
 
   const openModal = useCallback((m: NonNullable<ModalState>) => {
     setShown(m);
@@ -53,21 +52,11 @@ export function OfficeView({ data }: { data: OfficeData }) {
   const formType = shown?.type === "form" ? getType(shown.id) : undefined;
 
   const wide = shown?.type === "doc";
-  const title = req ? `Заявка ${req.number}` : doc ? doc.title : formType ? formType.title : "Офис";
+  const title = req ? `Заявка ${req.number}` : doc ? doc.title : formType ? formType.title : shown?.type === "more" ? "Все заявки" : "Офис";
 
   return (
     <>
-      <div className="flex items-end justify-between gap-6">
-        <h1 className="text-[34px] leading-[1.15] font-medium tracking-[-.03em] max-sm:text-[28px]">Офис</h1>
-        <button
-          type="button"
-          onClick={() => catalog.current?.scrollIntoView({ behavior: "smooth", block: "center" })}
-          className="inline-flex h-[42px] items-center gap-2 rounded-[13px] bg-text px-[18px] text-[14.5px] font-semibold text-bg transition-[opacity,transform] duration-150 hover:opacity-92 active:scale-[.97]"
-        >
-          <Plus size={17} strokeWidth={2} />
-          Новая заявка
-        </button>
-      </div>
+      <h1 className="text-[34px] leading-[1.15] font-medium tracking-[-.03em] max-sm:text-[28px]">Офис</h1>
 
       <section className="mt-11">
         <H2>В работе</H2>
@@ -82,10 +71,10 @@ export function OfficeView({ data }: { data: OfficeData }) {
         )}
       </section>
 
-      <section ref={catalog} className="mt-11 scroll-mt-24">
+      <section className="mt-11" aria-label="Заказать">
         <H2>Заказать</H2>
         <div className="grid grid-cols-4 gap-3 max-[900px]:grid-cols-2">
-          {REQUEST_TYPES.map((t) => {
+          {REQUEST_TYPES.filter((t) => t.popular).map((t) => {
             return (
               <button
                 key={t.id}
@@ -105,6 +94,20 @@ export function OfficeView({ data }: { data: OfficeData }) {
               </button>
             );
           })}
+          <button
+            type="button"
+            data-more
+            onClick={() => openModal({ type: "more" })}
+            className="flex flex-col gap-3.5 rounded-[20px] bg-s1 p-[18px] text-left transition-[background,transform] duration-300 ease-spring hover:bg-s2 active:scale-[.98]"
+          >
+            <span className="grid size-10 place-items-center rounded-[12px] bg-s3 text-text-2">
+              <Grid2x2Plus size={20} strokeWidth={1.7} />
+            </span>
+            <span>
+              <b className="block text-[15px] leading-tight font-semibold tracking-[-.01em]">Ещё</b>
+              <small className="mt-[3px] block text-[13px] text-text-3">{REQUEST_TYPES.length} видов заявок</small>
+            </span>
+          </button>
         </div>
       </section>
 
@@ -182,6 +185,37 @@ export function OfficeView({ data }: { data: OfficeData }) {
         {req && <RequestContent key={req.id} req={req} toast={toast} onClose={close} />}
         {formType && <FormContent key={formType.id} type={formType} toast={toast} onClose={close} />}
         {doc && <DocContent key={doc.id} doc={doc} toast={toast} />}
+        {shown?.type === "more" && (
+          <>
+            <h2 className="mb-1 text-[22px] font-semibold tracking-[-.025em]">Все заявки</h2>
+            {CATEGORIES.map((cat) => (
+              <section key={cat} aria-label={cat} className="mt-5">
+                <h3 className="mb-1 text-[13px] font-medium text-text-3">{cat}</h3>
+                <div className="rows [--row-inset:12px]">
+                  {REQUEST_TYPES.filter((t) => t.category === cat).map((t) => (
+                    <button
+                      key={t.id}
+                      type="button"
+                      data-more-type={t.id}
+                      onClick={() => openModal({ type: "form", id: t.id })}
+                      style={{ "--c": typeColor(t.color) } as React.CSSProperties}
+                      className="-mx-3 flex w-[calc(100%+24px)] items-center gap-3.5 rounded-[14px] px-3 py-2.5 text-left transition-colors duration-150 hover:bg-hover"
+                    >
+                      <span className="grid size-9 shrink-0 place-items-center rounded-[11px] bg-[color-mix(in_srgb,var(--c)_14%,transparent)] text-(--c)">
+                        <Ico name={t.icon} size={17} strokeWidth={1.7} />
+                      </span>
+                      <span className="min-w-0 flex-1">
+                        <b className="block truncate font-medium">{t.title}</b>
+                        <small className="text-[13px] text-text-3">{catalogLine(t)}</small>
+                      </span>
+                      <ChevronRight size={16} strokeWidth={1.6} className="text-text-3" />
+                    </button>
+                  ))}
+                </div>
+              </section>
+            ))}
+          </>
+        )}
       </Modal>
       {node}
     </>

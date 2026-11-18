@@ -89,6 +89,21 @@ try {
   check("created via UI: card in «В работе» with «Подана»", card.includes("Подана") && created.status === "sent");
   check("params stored validated", JSON.parse(created.params).purpose === "Работодатель");
 
+  // каталог: популярные плитками, остальное — в окне «Ещё» по категориям; кнопки «Новая заявка» нет
+  check("catalog: 7 popular tiles + «Ещё», no «Новая заявка»", (await page.locator("[data-type]").count()) === 7 && (await page.locator("[data-more]").count()) === 1 && !(await page.textContent("main")).includes("Новая заявка"));
+  await page.click("[data-more]");
+  await page.waitForSelector("dialog[open][aria-label='Все заявки']");
+  const more = (await page.textContent("dialog[open]")) ?? "";
+  check("«Ещё»: all types grouped by category", ["Справки", "Учёба", "Документы", "Стипендия и оплата", "Жизнь в университете"].every((c) => more.includes(c)) && more.includes("Повышенная стипендия") && more.includes("Дубликат студенческого"));
+  await page.click('[data-more-type="high-stipend"]');
+  await page.waitForSelector("dialog[open][aria-label='Повышенная стипендия']");
+  await page.click('button[role=radio]:has-text("Наука")');
+  await page.click('button:has-text("Отправить")');
+  await page.waitForSelector("text=Заявка отправлена");
+  await page.click('button:has-text("Готово")');
+  const stip = await db.officeRequest.findFirst({ where: { user: { login: "a.vorontsova" }, typeId: "high-stipend" } });
+  check("request from «Ещё» created and validated", !!stip && JSON.parse(stip.params).subject === "Наука");
+
   // подделки
   const before = await db.officeRequest.count();
   const f1 = await forge(ctx, "createRequest", ["hacker", goodCert]);
