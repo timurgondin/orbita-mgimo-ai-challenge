@@ -60,8 +60,8 @@ export interface Lesson {
 
 export interface SoonItem {
   id: string;
-  /** элемент оценки: /study?tab=tasks&task=<id> */
-  taskId: string;
+  /** куда ведёт строка: окно задания или контрольная в расписании */
+  href: string;
   title: string;
   course: string;
   /** ключ цвета курса */
@@ -140,7 +140,7 @@ export interface TaskStep {
   state: "fin" | "cur" | "todo";
 }
 
-export type AssignmentKind = "homework" | "essay" | "test" | "project" | "practice";
+export type AssignmentKind = "homework" | "essay" | "project" | "prep";
 
 /** Задание курса со всем, что нужно для строки списка и окна. */
 export interface TaskDetail {
@@ -179,6 +179,8 @@ export interface TaskDetail {
   /** проверено (с баллом или без) */
   done: boolean;
   gradedAt: string | null;
+  /** «Ноябрь» — для группировки проверенных по месяцам */
+  gradedMonth: string | null;
   submittedAt: string | null;
   feedback: string | null;
   teacher: { name: string; initials: string; gradient: string };
@@ -186,7 +188,11 @@ export interface TaskDetail {
   steps: TaskStep[] | null;
   upload: boolean;
   file: { name: string; size: string } | null;
+  /** можно прикрепить или заменить файл (черновик) */
+  canAttach: boolean;
+  /** файл прикреплён — можно отправить на проверку */
   canSubmit: boolean;
+  /** отправлено, но проверять ещё не начали */
   canWithdraw: boolean;
 }
 
@@ -241,6 +247,8 @@ export interface StudyData {
   later: TaskDetail[];
   /** сданы и ждут проверки */
   waiting: TaskDetail[];
+  /** подготовка к занятиям: не сдаётся и не оценивается */
+  prep: TaskDetail[];
   checked: TaskDetail[];
   perf: {
     average: string;

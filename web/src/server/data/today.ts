@@ -69,51 +69,72 @@ export async function getScheduleForToday(): Promise<{ today: Lesson[]; tomorrow
 
 const STATUS_NOTE: Partial<Record<WorkStatus, string>> = {
   draft: "черновик",
-  in_progress: "в работе",
   submitted: "отправлено",
   reviewing: "на проверке",
 };
 // Сначала то, что требует действия студента, затем ожидание ответа
 const PRIORITY: Record<string, number> = { submitted: 1, reviewing: 2 };
 
-/** «Скоро»: несданные задания на ближайшие 5 суток. Сначала то, что требует действия и идёт в оценку. */
+/** «Скоро»: несданные задания и контрольные на ближайшие 5 суток. Сначала то, что требует действия. */
 export async function getSoon(): Promise<SoonItem[]> {
   const user = await requireUser();
   const horizon = new Date(DEMO_NOW.getTime() + 5 * 86_400_000);
-  const works = await db.assignmentWork.findMany({
-    where: {
-      userId: user.id,
-      status: { not: "graded" },
-      assignment: { dueAt: { gte: DEMO_NOW, lt: horizon }, course: { enrollments: { some: { userId: user.id } } } },
-    },
-    include: {
-      assignment: {
-        include: { course: { select: { title: true, color: true } }, component: { select: { title: true, weight: true, aggregate: true } } },
+  const mine = { enrollments: { some: { userId: user.id } } };
+  const [works, tests] = await Promise.all([
+    db.assignmentWork.findMany({
+      where: {
+        userId: user.id,
+        status: { not: "graded" },
+        assignment: { kind: { not: "prep" }, dueAt: { gte: DEMO_NOW, lt: horizon }, course: mine },
       },
-    },
-  });
-  return works
-    .sort(
-      (a, b) =>
-        (PRIORITY[a.status] ?? 0) - (PRIORITY[b.status] ?? 0) ||
-        Number(!a.assignment.component) - Number(!b.assignment.component) ||
-        a.assignment.dueAt!.getTime() - b.assignment.dueAt!.getTime(),
-    )
-    .slice(0, 4)
-    .map((w) => {
+      include: {
+        assignment: {
+          include: { course: { select: { title: true, color: true } }, component: { select: { title: true, weight: true, aggregate: true } } },
+        },
+      },
+    }),
+    // контрольные — не задания, но их тоже важно видеть заранее; ведут в расписание
+    db.gradeComponent.findMany({
+      where: { kind: "test", dueAt: { gte: DEMO_NOW, lt: horizon }, course: mine, works: { none: { userId: user.id, status: "graded" } } },
+      include: { course: { select: { title: true, color: true } }, events: { select: { id: true }, take: 1 } },
+    }),
+  ]);
+  const items = [
+    ...works.map((w) => {
       const { assignment: a } = w;
-      const due = formatDue(a.dueAt!);
       return {
-        id: w.id,
-        taskId: a.id,
-        title: a.title,
-        course: a.course.title,
-        color: a.course.color,
-        // справа под сроком: где работа сейчас или сколько весит
-        note: STATUS_NOTE[w.status as WorkStatus] ?? (a.component ? (a.component.aggregate ? `в «${a.component.title.toLowerCase()}»` : `${a.component.weight}% оценки`) : "без оценки"),
-        due: due.label,
-        today: due.today,
+        rank: PRIORITY[w.status] ?? 0,
+        at: a.dueAt!,
+        item: {
+          id: w.id,
+          href: `/study?tab=tasks&task=${a.id}`,
+          title: a.title,
+          course: a.course.title,
+          color: a.course.color,
+          // справа под сроком: где работа сейчас или сколько весит
+          note: STATUS_NOTE[w.status as WorkStatus] ?? (a.component ? (a.component.aggregate ? `в «${a.component.title.toLowerCase()}»` : `${a.component.weight}% оценки`) : ""),
+        },
       };
+    }),
+    ...tests.map((c) => ({
+      rank: 0,
+      at: c.dueAt!,
+      item: {
+        id: c.id,
+        href: c.events[0] ? `/time?open=${c.events[0].id}` : "/time",
+        title: c.title,
+        course: c.course.title,
+        color: c.course.color,
+        note: c.room ? `ауд. ${c.room}` : `${c.weight}% оценки`,
+      },
+    })),
+  ];
+  return items
+    .sort((a, b) => a.rank - b.rank || a.at.getTime() - b.at.getTime())
+    .slice(0, 4)
+    .map(({ at, item }) => {
+      const due = formatDue(at);
+      return { ...item, due: due.label, today: due.today };
     });
 }
 

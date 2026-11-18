@@ -338,16 +338,14 @@ function Overview({ d, onComponent }: { d: CoursePageData; onComponent: (c: Form
 
 function Tasks({ tasks, onOpen }: { tasks: TaskDetail[]; onOpen: (t: TaskDetail) => void }) {
   const waiting = tasks.filter((t) => !t.done && (t.tag === "submitted" || t.tag === "reviewing"));
-  const open = tasks.filter((t) => !t.done && !waiting.includes(t));
+  const prep = tasks.filter((t) => t.kind === "prep");
+  const open = tasks.filter((t) => !t.done && !waiting.includes(t) && !prep.includes(t));
   const done = tasks.filter((t) => t.done).reverse();
-  const counted = tasks.filter((t) => t.counts).length;
   return (
     <>
-      <p className="mb-8 text-[15px] text-text-2">
-        {tasks.length} {plural(tasks.length, "задание", "задания", "заданий")} за семестр, в оценку идут {counted}. Остальные — для практики.
-      </p>
       <TaskGroup title="Открытые" items={open} onOpen={onOpen} showCourse={false} />
       <TaskGroup title="На проверке" items={waiting} onOpen={onOpen} showCourse={false} />
+      <TaskGroup title="Подготовка к занятиям" items={prep} onOpen={onOpen} showCourse={false} />
       <TaskGroup title="Выполненные" items={done} onOpen={onOpen} checked showCourse={false} />
       {!tasks.length && <p className="text-[15px] text-text-3">Заданий нет</p>}
     </>
@@ -426,9 +424,7 @@ export function CoursePage({ d }: { d: CoursePageData }) {
           <ChevronLeft size={17} strokeWidth={1.6} />
           Учёба
         </Link>
-        <div className="course-cover h-[132px] rounded-[26px] max-sm:h-[104px] max-sm:rounded-[22px]">
-          <span className="absolute top-5 left-6 text-[13px] font-medium text-[color-mix(in_srgb,var(--cc)_60%,var(--text))]">{d.kindLabel}</span>
-        </div>
+        <div className="course-cover h-[132px] rounded-[26px] max-sm:h-[104px] max-sm:rounded-[22px]" />
 
         <div className="mt-6 flex items-end justify-between gap-6 max-[700px]:flex-col max-[700px]:items-stretch max-[700px]:gap-4">
           <div className="min-w-0">

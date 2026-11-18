@@ -50,9 +50,8 @@ const COMPONENT_LABEL: Record<ComponentKind, string> = {
 const TASK_LABEL: Record<AssignmentKind, string> = {
   homework: "Домашнее задание",
   essay: "Письменная работа",
-  test: "Проверочная работа",
   project: "Проект",
-  practice: "Для практики",
+  prep: "Подготовка к занятию",
 };
 const EVENT_LABEL: Record<EventKind, string> = {
   lecture: "Лекция",
@@ -70,12 +69,21 @@ const STATUS_WORD: Record<WorkStatus, string> = {
   graded: "проверено",
   returned: "на доработку",
 };
-/** Статусы, при которых тег не нужен: «впереди» и так понятно по сроку. */
-const QUIET: WorkStatus[] = ["upcoming", "graded"];
-const OPEN_FOR_UPLOAD: WorkStatus[] = ["upcoming", "draft", "in_progress", "returned"];
+/**
+ * Статус работы меняется действиями, а не руками:
+ * файл прикреплён → «Черновик»; «Отправить» → «Отправлено»; преподаватель открыл работу → «На проверке»;
+ * поставил балл → проверено; вернул → «На доработку». Пока ничего не прикреплено — тега нет, видно только срок.
+ */
+const QUIET: WorkStatus[] = ["upcoming", "in_progress", "graded"];
+const ATTACHABLE: WorkStatus[] = ["upcoming", "in_progress", "draft", "returned"];
 
 export const fileSize = (b: number) => (b < 1024 * 1024 ? `${Math.max(1, Math.round(b / 1024))} КБ` : `${(b / 1024 / 1024).toFixed(1).replace(".", ",")} МБ`);
 const dayTime = (d: Date) => `${formatDayMonth(d)}, ${mskTime(d)}`;
+/** «Ноябрь» */
+const monthName = (d: Date) => {
+  const m = new Intl.DateTimeFormat("ru-RU", { month: "long", timeZone: "Europe/Moscow" }).format(d);
+  return m.charAt(0).toUpperCase() + m.slice(1);
+};
 
 /** Сколько осталось до срока: «2 дня 6 ч», «5 ч», «40 мин». */
 function timeLeft(due: Date): string {
@@ -88,17 +96,17 @@ function timeLeft(due: Date): string {
   return `${days} ${plural(days, "день", "дня", "дней")}${hours && days < 3 ? ` ${hours} ч` : ""}`;
 }
 
-/** Трекер задания: в работе → сдано → проверка → оценка. */
+/** Трекер задания: файл → отправлено → проверка → оценка. */
 function steps(status: WorkStatus, sent: Date | null, graded: Date | null): TaskStep[] {
-  const cur = { upcoming: -1, draft: 0, in_progress: 0, submitted: -1, reviewing: 2, returned: 0, graded: -1 }[status];
-  const fin = { upcoming: -1, draft: -1, in_progress: -1, submitted: 1, reviewing: 1, returned: -1, graded: 3 }[status];
+  const cur = { upcoming: -1, in_progress: -1, draft: 1, submitted: 2, reviewing: 2, returned: 0, graded: -1 }[status];
+  const fin = { upcoming: -1, in_progress: -1, draft: 0, submitted: 1, reviewing: 1, returned: -1, graded: 3 }[status];
   const when = [
-    status === "draft" ? "черновик" : status === "returned" ? "на доработку" : "",
-    sent ? dayTime(sent) : "",
-    status === "reviewing" ? "идёт" : "",
+    status === "draft" ? "прикреплён" : status === "returned" ? "на доработку" : "",
+    sent ? dayTime(sent) : status === "draft" ? "не отправлено" : "",
+    status === "reviewing" ? "преподаватель смотрит" : status === "submitted" ? "ждёт" : "",
     graded ? formatDayMonth(graded) : "",
   ];
-  return ["В работе", "Сдано", "Проверка", "Оценка"].map((label, i) => ({ label, when: when[i], state: i <= fin ? "fin" : i === cur ? "cur" : "todo" }));
+  return ["Файл", "Отправлено", "Проверка", "Оценка"].map((label, i) => ({ label, when: when[i], state: i <= fin ? "fin" : i === cur ? "cur" : "todo" }));
 }
 
 // ---- Загрузка курсов с заданиями ----
@@ -183,13 +191,15 @@ function taskDetail(c: Loaded, a: Loaded["assignments"][number]): TaskDetail {
     score: graded && work?.score != null ? fmtWork(work.score) : null,
     done: graded,
     gradedAt: work?.gradedAt ? formatDayMonth(work.gradedAt) : null,
+    gradedMonth: work?.gradedAt ? monthName(work.gradedAt) : null,
     submittedAt: work?.submittedAt ? dayTime(work.submittedAt) : null,
     feedback: work?.feedback ?? null,
     teacher: checkerOf(c),
-    steps: a.upload || kind === "test" ? steps(status, work?.submittedAt ?? null, work?.gradedAt ?? null) : null,
+    steps: a.upload ? steps(status, work?.submittedAt ?? null, work?.gradedAt ?? null) : null,
     upload: a.upload,
     file: work?.fileName ? { name: work.fileName, size: fileSize(work.fileSize ?? 0) } : null,
-    canSubmit: a.upload && OPEN_FOR_UPLOAD.includes(status),
+    canAttach: a.upload && ATTACHABLE.includes(status),
+    canSubmit: a.upload && status === "draft" && !!work?.fileName,
     canWithdraw: a.upload && status === "submitted",
   };
 }
@@ -238,6 +248,7 @@ export async function getStudyData(): Promise<StudyData | null> {
   const upcoming: (TaskDetail & { at: number })[] = [];
   const later: (TaskDetail & { at: number })[] = [];
   const waiting: (TaskDetail & { at: number })[] = [];
+  const prep: (TaskDetail & { at: number })[] = [];
   const checked: (TaskDetail & { at: number })[] = [];
   const rows: PerfRowData[] = [];
   const exams: (ExamData & { at: number })[] = [];
@@ -281,6 +292,10 @@ export async function getStudyData(): Promise<StudyData | null> {
     for (const a of course.assignments) {
       const t = taskDetail(course, a);
       const work = a.works[0];
+      if (a.kind === "prep") {
+        if (a.dueAt && a.dueAt >= now) prep.push({ ...t, at: a.dueAt.getTime() });
+        continue;
+      }
       if (t.done) checked.push({ ...t, at: work?.gradedAt?.getTime() ?? 0 });
       else if (work?.status === "submitted" || work?.status === "reviewing") waiting.push({ ...t, at: work.submittedAt?.getTime() ?? 0 });
       else if (!a.dueAt) continue;
@@ -343,6 +358,7 @@ export async function getStudyData(): Promise<StudyData | null> {
     upcoming: strip(upcoming.sort((a, b) => a.at - b.at)),
     later: strip(later.sort((a, b) => a.at - b.at)),
     waiting: strip(waiting.sort((a, b) => b.at - a.at)),
+    prep: strip(prep.sort((a, b) => a.at - b.at)),
     checked: strip(checked.sort((a, b) => b.at - a.at)),
     perf: {
       average,
@@ -471,7 +487,8 @@ export async function getCourse(slug: string): Promise<CoursePageData | null> {
     };
   });
 
-  const tasks = course.assignments.map((a) => taskDetail(course, a));
+  // подготовка к прошедшим занятиям уже не нужна
+  const tasks = course.assignments.filter((a) => a.kind !== "prep" || (a.dueAt && a.dueAt >= DEMO_NOW)).map((a) => taskDetail(course, a));
   const [events, cons] = await Promise.all([
     db.scheduleEvent.findMany({ where: { courseId: course.id, endsAt: { gte: DEMO_NOW }, pair: { not: null } }, orderBy: { startsAt: "asc" }, take: 4 }),
     db.consultation.findFirst({ where: { courseId: course.id, startsAt: { gte: DEMO_NOW } }, orderBy: { startsAt: "asc" } }),

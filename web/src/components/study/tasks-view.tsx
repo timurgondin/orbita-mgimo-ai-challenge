@@ -2,7 +2,8 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { Check } from "lucide-react";
+import { Check, ChevronRight } from "lucide-react";
+import { plural } from "@/lib/phrases";
 import { Modal } from "@/components/time/modal";
 import { useToast } from "@/components/ui/toast";
 import { cn } from "@/lib/utils";
@@ -22,7 +23,6 @@ function Sub({ t, showCourse }: { t: TaskDetail; showCourse: boolean }) {
           <span className="truncate">{t.courseTitle}</span>
         </span>
       )}
-      {!t.counts && <span className="shrink-0 whitespace-nowrap">без оценки</span>}
     </span>
   );
 }
@@ -51,7 +51,9 @@ export function OpenRow({ t, onOpen, showCourse = true }: { t: TaskDetail; onOpe
         ) : (
           <span className="block text-sm text-text-3">сдано</span>
         )}
-        <span className="block text-[13px] whitespace-nowrap text-text-3 tabular-nums">до {t.dueTime}</span>
+        <span className="block text-[13px] whitespace-nowrap text-text-3 tabular-nums">
+          {t.kind === "prep" ? "к" : "до"} {t.dueTime}
+        </span>
       </span>
     </button>
   );
@@ -88,32 +90,30 @@ export function CheckedRow({ t, onOpen, showCourse = true }: { t: TaskDetail; on
   );
 }
 
-const CHECKED_SHOWN = 8;
-
 export function TaskGroup({
   title,
   items,
   onOpen,
   checked,
   showCourse = true,
+  count = true,
 }: {
   title: string;
   items: TaskDetail[];
   onOpen: (t: TaskDetail) => void;
   checked?: boolean;
   showCourse?: boolean;
+  count?: boolean;
 }) {
-  const [all, setAll] = useState(false);
   if (!items.length) return null;
-  const shown = checked && !all ? items.slice(0, CHECKED_SHOWN) : items;
   return (
     <section aria-label={title} className="mt-12 first:mt-0">
       <h2 className="mb-2 flex items-baseline gap-2.5 text-lg font-semibold tracking-[-.02em]">
         {title}
-        <span className="text-[15px] font-normal text-text-3 tabular-nums">{items.length}</span>
+        {count && <span className="text-[15px] font-normal text-text-3 tabular-nums">{items.length}</span>}
       </h2>
       <div className="rows [--row-inset:14px]">
-        {shown.map((t) =>
+        {items.map((t) =>
           checked ? (
             <CheckedRow key={t.id} t={t} onOpen={() => onOpen(t)} showCourse={showCourse} />
           ) : (
@@ -121,11 +121,6 @@ export function TaskGroup({
           ),
         )}
       </div>
-      {shown.length < items.length && (
-        <button type="button" onClick={() => setAll(true)} className="mt-2 -ml-2 rounded-lg px-2 py-1 text-sm text-text-2 transition-colors hover:bg-hover hover:text-text">
-          Показать все {items.length}
-        </button>
-      )}
     </section>
   );
 }
@@ -154,27 +149,111 @@ export function useTaskModal(all: TaskDetail[], showCourse = true) {
   return { openTask, modal };
 }
 
-/** Задания: ближайшие, позже, проверенные. ?task=<id> открывает окно сразу (так ведёт «Скоро» на «Сегодня»). */
-export function TasksView({ upcoming, waiting, later, checked }: { upcoming: TaskDetail[]; waiting: TaskDetail[]; later: TaskDetail[]; checked: TaskDetail[] }) {
-  const all = [...upcoming, ...waiting, ...later, ...checked];
-  const { openTask, modal } = useTaskModal(all);
+const CHIP = "inline-flex h-9 items-center gap-2 rounded-xl px-3.5 text-sm font-medium transition-[background,color] duration-150";
+const chip = (on: boolean) => cn(CHIP, on ? "bg-text text-bg" : "bg-s1 text-text-2 hover:bg-s2 hover:text-text");
 
-  const wanted = useSearchParams().get("task");
+/** Все проверенные работы: фильтр по курсу, группы по месяцам — отдельный вид, а не хвост списка. */
+function DoneView({ checked, onOpen }: { checked: TaskDetail[]; onOpen: (t: TaskDetail) => void }) {
+  const [course, setCourse] = useState<string | null>(null);
+  const courses = [...new Map(checked.map((t) => [t.courseSlug, t])).values()];
+  const list = course ? checked.filter((t) => t.courseSlug === course) : checked;
+  const scored = list.filter((t) => t.score != null);
+  const avg = scored.length ? scored.reduce((s, t) => s + Number(t.score!.replace(",", ".")), 0) / scored.length : null;
+  const months = [...new Set(list.map((t) => t.gradedMonth ?? ""))];
+  return (
+    <>
+      <div className="flex flex-wrap gap-1.5" role="group" aria-label="Курс">
+        <button type="button" aria-pressed={!course} onClick={() => setCourse(null)} className={chip(!course)}>
+          Все курсы
+        </button>
+        {courses.map((c) => (
+          <button key={c.courseSlug} type="button" aria-pressed={course === c.courseSlug} onClick={() => setCourse(c.courseSlug)} className={chip(course === c.courseSlug)}>
+            <i className="size-1.5 rounded-full" style={{ background: `var(--c-${c.color})` }} />
+            {c.courseTitle}
+          </button>
+        ))}
+      </div>
+      <p className="mt-6 text-[15px] text-text-2" data-done-summary>
+        Проверено {list.length} {plural(list.length, "работа", "работы", "работ")}
+        {avg != null && (
+          <>
+            , средний балл <b className="font-semibold text-text tabular-nums">{avg.toFixed(1).replace(".", ",")}</b>
+          </>
+        )}
+      </p>
+      {months.map((m) => (
+        <TaskGroup key={m} title={m} items={list.filter((t) => (t.gradedMonth ?? "") === m)} onOpen={onOpen} checked showCourse={!course} />
+      ))}
+    </>
+  );
+}
+
+/** Задания: текущие (ближайшие, на проверке, подготовка, позже) и отдельно — все проверенные. ?task=<id> открывает окно сразу. */
+export function TasksView({
+  upcoming,
+  waiting,
+  prep,
+  later,
+  checked,
+}: {
+  upcoming: TaskDetail[];
+  waiting: TaskDetail[];
+  prep: TaskDetail[];
+  later: TaskDetail[];
+  checked: TaskDetail[];
+}) {
+  const all = [...upcoming, ...waiting, ...prep, ...later, ...checked];
+  const { openTask, modal } = useTaskModal(all);
+  const params = useSearchParams();
+  const done = params.get("view") === "done";
+  const setView = (d: boolean) => window.history.pushState(null, "", d ? "/study?tab=tasks&view=done" : "/study?tab=tasks");
+
+  const wanted = params.get("task");
   useEffect(() => {
     if (!wanted) return;
-    const t = [...upcoming, ...waiting, ...later, ...checked].find((x) => x.id === wanted);
+    const t = [...upcoming, ...waiting, ...prep, ...later, ...checked].find((x) => x.id === wanted);
     // через кадр: страница успевает отрисоваться, окно открывается с обычной анимацией
     if (t) requestAnimationFrame(() => openTask(t));
     window.history.replaceState(null, "", "/study?tab=tasks");
-  }, [wanted, upcoming, waiting, later, checked, openTask]);
+  }, [wanted, upcoming, waiting, prep, later, checked, openTask]);
 
   return (
     <>
-      <TaskGroup title="Ближайшие" items={upcoming} onOpen={openTask} />
-      <TaskGroup title="На проверке" items={waiting} onOpen={openTask} />
-      <TaskGroup title="Позже" items={later} onOpen={openTask} />
-      <TaskGroup title="Проверенные" items={checked} onOpen={openTask} checked />
-      {!all.length && <p className="text-[15px] text-text-3">Заданий пока нет</p>}
+      <div className="mb-10 flex gap-1.5" role="group" aria-label="Какие задания">
+        <button type="button" aria-pressed={!done} onClick={() => setView(false)} className={chip(!done)}>
+          Текущие
+        </button>
+        <button type="button" aria-pressed={done} onClick={() => setView(true)} className={chip(done)} data-view-done>
+          Проверенные
+          <span className={cn("tabular-nums", done ? "text-bg/60" : "text-text-3")}>{checked.length}</span>
+        </button>
+      </div>
+
+      {done ? (
+        <DoneView checked={checked} onOpen={openTask} />
+      ) : (
+        <>
+          <TaskGroup title="Ближайшие" items={upcoming} onOpen={openTask} />
+          <TaskGroup title="На проверке" items={waiting} onOpen={openTask} />
+          <TaskGroup title="Подготовка к занятиям" items={prep} onOpen={openTask} />
+          <TaskGroup title="Позже" items={later} onOpen={openTask} />
+          {checked.length > 0 && (
+            <section aria-label="Недавно проверено" className="mt-12">
+              <TaskGroup title="Недавно проверено" items={checked.slice(0, 3)} onOpen={openTask} checked count={false} />
+              <button
+                type="button"
+                onClick={() => setView(true)}
+                className="mt-3 inline-flex h-10 items-center gap-1 rounded-xl bg-s1 px-4 text-sm font-medium transition-colors hover:bg-s2"
+              >
+                Все проверенные работы
+                <span className="text-text-3 tabular-nums">{checked.length}</span>
+                <ChevronRight size={15} strokeWidth={1.6} className="text-text-3" />
+              </button>
+            </section>
+          )}
+          {!all.length && <p className="text-[15px] text-text-3">Заданий пока нет</p>}
+        </>
+      )}
       {modal}
     </>
   );

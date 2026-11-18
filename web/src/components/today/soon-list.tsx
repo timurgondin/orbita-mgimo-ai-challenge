@@ -6,7 +6,7 @@ import { cn } from "@/lib/utils";
 function Item({ d }: { d: SoonItem }) {
   return (
     <Link
-      href={`/study?tab=tasks&task=${d.taskId}`}
+      href={d.href}
       className="-mx-3 flex items-center gap-3.5 rounded-[14px] px-3 py-[11px] transition-colors duration-150 hover:bg-hover"
     >
       <div className="min-w-0 flex-1">

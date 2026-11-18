@@ -76,7 +76,7 @@ const teacherIdByShort = new Map((await db.teacher.findMany({ select: { id: true
 
 const at = (iso: string) => new Date(iso.length === 10 ? `${iso}T12:00:00+03:00` : `${iso}:00+03:00`);
 
-type Work = { s: string; score?: number; fb?: string; g?: string; sent?: string };
+type Work = { s: string; score?: number; fb?: string; g?: string; sent?: string; file?: [string, number] };
 interface Comp {
   t: string;
   short?: string;
@@ -158,7 +158,7 @@ const ALISA: Person = {
       comps: [
         { t: "Контрольная №1", kind: "test", w: 20, due: "2026-11-10T11:00", work: { s: "graded", score: 8, g: "2026-11-10T16:00", fb: "Хорошо с графиками. В задаче 3 не учтены постоянные издержки." } },
         { t: "Работа на семинарах", kind: "participation", w: 20, work: { s: "graded", score: 8.2, g: "2026-11-14T12:00" } },
-        { t: "Домашние задания", kind: "homework", w: 20, agg: true, work: { s: "in_progress" } },
+        { t: "Домашние задания", kind: "homework", w: 20, agg: true, work: { s: "upcoming" } },
         { t: "Экзамен", kind: "exam", w: 40, due: "2026-12-22T10:00", room: "101", work: { s: "upcoming" } },
       ],
     },
@@ -167,8 +167,8 @@ const ALISA: Person = {
       teacher: "Соколов Д. В.", avatar: "sand",
       comps: [
         { t: "Работа на практикумах", kind: "participation", w: 20, work: { s: "graded", score: 7, g: "2026-11-12T12:00" } },
-        { t: "Расчётные работы", kind: "homework", w: 20, agg: true, work: { s: "in_progress" } },
-        { t: "Лабораторные работы", kind: "homework", w: 20, agg: true, work: { s: "in_progress" } },
+        { t: "Расчётные работы", kind: "homework", w: 20, agg: true, work: { s: "upcoming" } },
+        { t: "Лабораторные работы", kind: "homework", w: 20, agg: true, work: { s: "upcoming" } },
         { t: "Контрольная №2", kind: "test", w: 20, due: "2026-11-23T09:30", room: "1201", sub: "аудитория 1201", work: { s: "upcoming" } },
         { t: "Экзамен", kind: "exam", w: 20, due: "2026-12-25T10:00", room: "1201", work: { s: "upcoming" } },
       ],
@@ -178,8 +178,8 @@ const ALISA: Person = {
       teacher: "Ким А. С.", avatar: "lilac",
       comps: [
         { t: "Семинарские доклады", kind: "participation", w: 25, work: { s: "graded", score: 9, g: "2026-11-11T12:00" } },
-        { t: "Эссе «Глобальные цепочки поставок»", short: "Эссе", kind: "essay", w: 15, due: "2026-11-19T23:59", sub: "15% оценки", work: { s: "draft" } },
-        { t: "Практические задания", kind: "homework", w: 20, agg: true, work: { s: "in_progress" } },
+        { t: "Эссе «Глобальные цепочки поставок»", short: "Эссе", kind: "essay", w: 15, due: "2026-11-19T23:59", sub: "15% оценки", work: { s: "draft", file: ["esse_cepochki_postavok.docx", 48_200] } },
+        { t: "Практические задания", kind: "homework", w: 20, agg: true, work: { s: "upcoming" } },
         { t: "Экзамен", kind: "exam", w: 40, due: "2026-12-28T12:00", room: "2302", work: { s: "upcoming" } },
       ],
     },
@@ -188,7 +188,8 @@ const ALISA: Person = {
       teacher: "Morgan K.", avatar: "mist",
       comps: [
         { t: "Essay: Remote work", kind: "essay", w: 30, due: "2026-11-06T23:59", work: { s: "graded", score: 9, g: "2026-11-06T18:00", fb: "Strong structure. Watch the articles." } },
-        { t: "Speaking", kind: "participation", w: 30, work: { s: "graded", score: 9, g: "2026-11-12T12:00" } },
+        { t: "Speaking", kind: "participation", w: 20, work: { s: "graded", score: 9, g: "2026-11-12T12:00" } },
+        { t: "Домашние задания", kind: "homework", w: 10, agg: true, work: { s: "upcoming" } },
         { t: "Case study: Tesla in China", short: "Case study", kind: "essay", w: 10, due: "2026-11-22T23:59", sub: "письменная работа", work: { s: "reviewing", sent: "2026-11-18T22:00" } },
         { t: "Экзамен", kind: "exam", w: 30, due: "2027-01-13T09:30", room: "4105", work: { s: "upcoming" } },
       ],
@@ -198,8 +199,9 @@ const ALISA: Person = {
       teacher: "Орлова М. И.", avatar: "mist",
       comps: [
         { t: "Тест по источникам права", kind: "test", w: 10, due: "2026-11-03T11:00", work: { s: "graded", score: 6, g: "2026-11-03T17:00" } },
-        { t: "Коллоквиум", kind: "participation", w: 20, work: { s: "graded", score: 8.7, g: "2026-11-10T12:00" } },
-        { t: "Анализ договора поставки", short: "Анализ договора", kind: "homework", w: 30, due: "2026-11-24T23:59", sub: "домашнее задание", work: { s: "in_progress" } },
+        { t: "Коллоквиум", kind: "participation", w: 10, work: { s: "graded", score: 8.7, g: "2026-11-10T12:00" } },
+        { t: "Казусы", kind: "homework", w: 10, agg: true, work: { s: "upcoming" } },
+        { t: "Анализ договора поставки", short: "Анализ договора", kind: "homework", w: 30, due: "2026-11-24T23:59", sub: "домашнее задание", work: { s: "draft", file: ["analiz_dogovora_postavki.docx", 36_900] } },
         { t: "Экзамен", kind: "exam", w: 40, work: { s: "upcoming" } },
       ],
     },
@@ -282,7 +284,7 @@ const MAXIM: Person = {
       comps: [
         { t: "Коллоквиум 1", kind: "test", w: 20, due: "2026-11-09T11:00", work: { s: "graded", score: 7, g: "2026-11-09T18:00", fb: "Неплохо по реализму, слабее — неореализм и либерализм." } },
         { t: "Работа на семинарах", kind: "participation", w: 20, work: { s: "graded", score: 7.4, g: "2026-11-13T12:00" } },
-        { t: "Эссе «Баланс сил в XXI веке»", short: "Эссе", kind: "essay", w: 20, due: "2026-11-26T23:59", sub: "письменная работа", work: { s: "in_progress" } },
+        { t: "Эссе «Баланс сил в XXI веке»", short: "Эссе", kind: "essay", w: 20, due: "2026-11-26T23:59", sub: "письменная работа", work: { s: "upcoming" } },
         { t: "Экзамен", kind: "exam", w: 40, due: "2026-12-23T10:00", room: "5101", work: { s: "upcoming" } },
       ],
     },
@@ -302,7 +304,7 @@ const MAXIM: Person = {
       comps: [
         { t: "Кейс-анализ №1", kind: "homework", w: 20, due: "2026-11-04T23:59", work: { s: "graded", score: 7, g: "2026-11-09T12:00", fb: "Хорошая структура, мало сравнений между случаями." } },
         { t: "Тест 1", kind: "test", w: 20, due: "2026-11-11T11:40", work: { s: "graded", score: 8, g: "2026-11-11T17:00" } },
-        { t: "Кейс-анализ №2", kind: "homework", w: 20, due: "2026-11-20T23:59", sub: "домашнее задание", work: { s: "draft" } },
+        { t: "Кейс-анализ №2", kind: "homework", w: 20, due: "2026-11-20T23:59", sub: "домашнее задание", work: { s: "draft", file: ["keys_2_chernovik.pdf", 412_000] } },
         { t: "Экзамен", kind: "exam", w: 40, due: "2026-12-24T10:00", room: "5102", work: { s: "upcoming" } },
       ],
     },
@@ -321,7 +323,7 @@ const MAXIM: Person = {
       teacher: "Hughes P.", avatar: "sand",
       comps: [
         { t: "Debate: climate policy", kind: "participation", w: 40, work: { s: "graded", score: 8, g: "2026-11-12T12:00" } },
-        { t: "Policy brief", kind: "essay", w: 30, due: "2026-11-23T23:59", sub: "письменная работа", work: { s: "in_progress" } },
+        { t: "Policy brief", kind: "essay", w: 30, due: "2026-11-23T23:59", sub: "письменная работа", work: { s: "draft", file: ["policy_brief_draft.docx", 31_400] } },
         { t: "Итоговое собеседование", kind: "exam", w: 30, work: { s: "upcoming" } },
       ],
     },
@@ -364,7 +366,7 @@ const NIKA: Person = {
       teacher: "Лебедева Т. Р.", avatar: "peach",
       comps: [
         { t: "Тест 1", kind: "test", w: 20, due: "2026-11-12T11:40", work: { s: "graded", score: 8.5, g: "2026-11-12T16:00", fb: "Отличный старт. Повторите сегментирование." } },
-        { t: "Мини-кейс", kind: "homework", w: 20, due: "2026-11-22T23:59", sub: "домашнее задание", work: { s: "in_progress" } },
+        { t: "Мини-кейс", kind: "homework", w: 20, due: "2026-11-22T23:59", sub: "домашнее задание", work: { s: "upcoming" } },
         { t: "Экзамен", kind: "exam", w: 60, due: "2027-01-15T10:00", room: "1105", work: { s: "upcoming" } },
       ],
     },
@@ -372,7 +374,7 @@ const NIKA: Person = {
       slug: "economics-basics-26", title: "Основы экономики", color: "econ", assessment: "exam", credits: 4, kinds: "Лекции",
       teacher: "Дроздов А. М.", avatar: "mist",
       comps: [
-        { t: "Домашнее задание 2", kind: "homework", w: 20, due: "2026-11-20T23:59", sub: "домашнее задание", work: { s: "draft" } },
+        { t: "Домашнее задание 2", kind: "homework", w: 20, due: "2026-11-20T23:59", sub: "домашнее задание", work: { s: "draft", file: ["dz2.pdf", 640_000] } },
         { t: "Экзамен", kind: "exam", w: 80, due: "2027-01-18T10:00", room: "1201", work: { s: "upcoming" } },
       ],
     },
@@ -474,12 +476,17 @@ for (const person of [ALISA, MAXIM, NIKA]) {
       });
       compIds.set(`${c.slug}|${k.t}`, comp.id);
       // контрольная, эссе, проект — это и элемент формулы, и задание с той же работой
-      if (!k.agg && ["test", "homework", "essay", "project"].includes(k.kind)) {
+      if (!k.agg && ["homework", "essay", "project"].includes(k.kind)) {
         await db.assignment.create({
           data: {
             courseId: course.id, componentId: comp.id, title: k.t, kind: k.kind, description: DESCRIPTIONS[`${c.slug}|${k.t}`], dueAt: k.due ? at(k.due) : null,
-            room: k.room, upload: k.kind !== "test", order: 100 + i,
-            works: { create: { userId: uid, status: k.work.s, score: k.work.score, feedback: k.work.fb, gradedAt: k.work.g ? at(k.work.g) : null, submittedAt: k.work.sent ? at(k.work.sent) : null } },
+            room: k.room, upload: true, order: 100 + i,
+            works: {
+              create: {
+                userId: uid, status: k.work.s, score: k.work.score, feedback: k.work.fb, gradedAt: k.work.g ? at(k.work.g) : null,
+                submittedAt: k.work.sent ? at(k.work.sent) : null, fileName: k.work.file?.[0], fileSize: k.work.file?.[1],
+              },
+            },
           },
         });
       }

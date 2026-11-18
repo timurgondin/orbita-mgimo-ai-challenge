@@ -64,7 +64,7 @@ try {
   await page.click("#tab-tasks");
   await page.waitForSelector("text=Ближайшие");
   check("tab click: URL ?tab=tasks, no reload", page.url().endsWith("/study?tab=tasks") && (await page.evaluate(() => window.__marker)) === 1, page.url());
-  check("tasks view shows statuses and feedback", (await text(page)).includes("Хорошо с графиками") && (await text(page)).includes("Черновик"));
+  check("tasks view shows statuses and feedback", (await text(page)).includes("Верная квалификация") && (await text(page)).includes("Черновик"));
   await page.click("#tab-perf");
   await page.waitForSelector("text=По дисциплинам");
   const perf = await text(page);
