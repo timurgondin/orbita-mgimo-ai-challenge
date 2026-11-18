@@ -2,7 +2,7 @@ import { PrismaClient } from "@prisma/client";
 import { hashPassword, PEPPER_VERSION } from "../src/server/auth/password";
 import { BELLS } from "../src/lib/bells";
 import { randomBytes } from "node:crypto";
-import { AUTO_PASS, LOAD, PROFILES, STAFF, SYLLABI, TASKS, TEACHERS } from "./seed-academic";
+import { AUTO_PASS, DISCIPLINE_BY_TITLE, LOAD, PLANNED, PROFILES, STAFF, SYLLABI, TASKS, TEACHERS } from "./seed-academic";
 
 const db = new PrismaClient();
 const PASSWORD = "orbita-demo";
@@ -452,7 +452,7 @@ for (const person of [ALISA, MAXIM, NIKA]) {
         teacherId: c.teacherLogin ? await userId(c.teacherLogin) : null,
         lessonsTotal: c.online?.total, providerName: c.online?.provider,
         syllabus: SYLLABI[c.slug] ? JSON.stringify(SYLLABI[c.slug]) : null,
-        autoPassFrom: AUTO_PASS[c.slug]?.from, autoPassRule: AUTO_PASS[c.slug]?.rule,
+        autoPassFrom: AUTO_PASS[c.slug]?.from, autoPassRule: AUTO_PASS[c.slug]?.rule, discipline: DISCIPLINE_BY_TITLE[c.title],
       },
     });
     // состав: лектор и семинарист; у онлайн-курсов преподавателя нет
@@ -606,6 +606,13 @@ for (const person of [ALISA, MAXIM, NIKA]) {
 
 // ---------- Архив: прошлые семестры (вымышленные дисциплины и оценки). Итог = Σ балл·вес, округлён до целого ----------
 await db.pastCourse.deleteMany();
+await db.plannedCourse.deleteMany();
+for (const [login, list] of Object.entries(PLANNED)) {
+  const uid = await userId(login);
+  for (const [order, [semester, title, credits, assessment]] of list.entries()) {
+    await db.plannedCourse.create({ data: { userId: uid, semester, title, credits, assessment, discipline: DISCIPLINE_BY_TITLE[title], order } });
+  }
+}
 
 // Формулы оценки прошлых курсов: [название, вес %]
 const FORMULAS: Record<string, [string, number][]> = {
@@ -723,7 +730,7 @@ for (const [login, { admission, semesters }] of Object.entries(ARCHIVE)) {
         data: {
           userId: uid, semester, title, color, assessment, credits, order,
           grade: assessment === "exam" ? Math.round(total) : null, passed: total >= 4,
-          teacherName: teacher, teacherAvatar: avatar, closedAt: at(`${closedYear}-${md}`),
+          teacherName: teacher, teacherAvatar: avatar, closedAt: at(`${closedYear}-${md}`), discipline: DISCIPLINE_BY_TITLE[title],
           components: { create: comps.map(([t, w], i) => ({ title: t, weight: w, score: scores[i], order: i })) },
         },
       });

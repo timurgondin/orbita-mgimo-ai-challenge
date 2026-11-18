@@ -54,6 +54,7 @@ model User {
   documents           Document[]
   pastCourses         PastCourse[]
   assignmentWorks     AssignmentWork[]
+  plannedCourses      PlannedCourse[]
 }
 
 model Session {
@@ -96,6 +97,7 @@ model Course {
   syllabus       String? // JSON: программа дисциплины — аннотация, результаты, темы, литература, вопросы (src/server/data/types.ts, Syllabus)
   autoPassFrom   Float? // автомат: с какого текущего балла экзамен можно не сдавать
   autoPassRule   String? // условие автомата словами
+  discipline     String? // строка в приложении к диплому, если дисциплина идёт несколько семестров («Иностранный язык (английский)»)
   staff          CourseTeacher[]
   assignments    Assignment[]
   enrollments    Enrollment[]
@@ -294,9 +296,25 @@ model PastCourse {
   teacherName   String
   teacherAvatar String          @default("sand")
   closedAt      DateTime // дата экзамена или зачёта
+  discipline    String? // строка в приложении к диплому, если дисциплина шла несколько семестров
   order         Int             @default(0)
   user          User            @relation(fields: [userId], references: [id], onDelete: Cascade)
   components    PastComponent[]
+
+  @@index([userId, semester])
+}
+
+// Учебный план: дисциплины будущих семестров (для «Диплома» — что ещё впереди)
+model PlannedCourse {
+  id         String  @id @default(cuid())
+  userId     String
+  semester   Int
+  title      String
+  credits    Int
+  assessment String // exam | credit
+  discipline String?
+  order      Int     @default(0)
+  user       User    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId, semester])
 }

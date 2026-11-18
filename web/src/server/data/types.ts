@@ -405,9 +405,11 @@ export interface ArchiveSemester {
   n: number;
   /** курс обучения */
   year: number;
-  /** «1 курс, осень 2025» */
+  /** «1 курс, 1 семестр» */
   title: string;
-  /** «Осень 2025» */
+  /** «1 семестр» — когда курс уже выбран переключателем */
+  short: string;
+  /** «осень 2025» */
   season: string;
   /** средний балл по экзаменам, взвешен по кредитам */
   average: string | null;
@@ -539,4 +541,61 @@ export interface TeacherPageData {
   /** занятия на этой неделе по дням */
   week: { date: string; /** «Пн» */ dow: string; day: string; items: { id: string; start: string; end: string; title: string; kind: string; group: string; color: string | null; room: string; mine: boolean }[] }[];
   consultation: { id: string; when: string; place: string; course: string } | null;
+}
+
+/** Пройденный курс (/study/past/<id>): итог, из чего сложился, куда пошёл в диплом. */
+export interface PastCoursePage {
+  id: string;
+  title: string;
+  color: string;
+  /** «1 курс, 1 семестр» */
+  semester: string;
+  season: string;
+  year: number;
+  assessment: Assessment;
+  credits: number;
+  grade: string;
+  gradeWord: string;
+  passed: boolean;
+  total: string;
+  closedAt: string;
+  teacher: string;
+  teacherInitials: string;
+  teacherGradient: string;
+  /** карточка преподавателя, если он есть в базе */
+  teacherSlug: string | null;
+  components: { title: string; weight: number; score: string }[];
+  /** строка в дипломе и что там будет */
+  diploma: { title: string; note: string };
+  /** остальные дисциплины того же семестра — боковой список */
+  nav: { id: string; title: string; color: string }[];
+}
+
+/** «Диплом»: что уже в приложении к диплому, что идёт, что впереди. */
+export interface DiplomaRow {
+  title: string;
+  credits: number;
+  /** «9», «Зачёт», «—» */
+  grade: string;
+  /** «отлично», «зачтено» */
+  word: string;
+  /** «1–2 семестры», «3 семестр» */
+  when: string;
+  /** оценки по семестрам для многосеместровых: «9, 9» */
+  parts?: string;
+  /** ссылка: пройденный курс или текущий */
+  href?: string;
+  color?: string;
+}
+
+export interface DiplomaData {
+  done: DiplomaRow[];
+  /** закончатся в эту сессию — оценка уйдёт в диплом */
+  closing: DiplomaRow[];
+  /** идут несколько семестров: часть позади */
+  ongoing: (DiplomaRow & { progress: string })[];
+  planned: { semester: number; label: string; items: { title: string; credits: number; assessment: Assessment }[] }[];
+  stats: { inDiploma: number; total: number; average: string | null; excellentShare: number | null };
+  /** диплом с отличием: ≥ 75% «отлично» и нет «удовлетворительно» */
+  honors: { ok: boolean; text: string } | null;
 }

@@ -1,5 +1,6 @@
 import Link from "next/link";
-import type { CourseCardData } from "@/server/data/types";
+import { SectionHeader } from "@/components/today/section-header";
+import type { ArchiveSemester, CourseCardData } from "@/server/data/types";
 import { ProgressBar } from "@/components/ui/progress";
 
 const SEG = {
@@ -44,7 +45,7 @@ function Card({ c }: { c: CourseCardData }) {
 
 const GRID = "grid grid-cols-3 gap-4 max-[1000px]:grid-cols-2 max-[640px]:grid-cols-1";
 
-export function CoursesView({ courses, online }: { courses: CourseCardData[]; online: CourseCardData[] }) {
+export function CoursesView({ courses, online, past = [] }: { courses: CourseCardData[]; online: CourseCardData[]; past?: ArchiveSemester[] }) {
   return (
     <>
       <section aria-label="Курсы">
@@ -60,6 +61,31 @@ export function CoursesView({ courses, online }: { courses: CourseCardData[]; on
           <div className={GRID}>
             {online.map((c) => (
               <Card key={c.id} c={c} />
+            ))}
+          </div>
+        </section>
+      )}
+      {past.length > 0 && (
+        <section className="mt-12" aria-label="Пройденные курсы">
+          <SectionHeader title="Пройденные курсы" linkLabel="Архив" href="/study/archive" />
+          <div className="grid grid-cols-3 gap-4 max-[1000px]:grid-cols-2 max-[640px]:grid-cols-1">
+            {past.map((s) => (
+              <Link
+                key={s.n}
+                href={`/study/archive?year=${s.year}`}
+                data-past-semester-card={s.n}
+                className="rounded-3xl bg-s1 px-5 py-4 transition-colors duration-200 hover:bg-s2"
+              >
+                <b className="block text-[15px] font-semibold">{s.title}</b>
+                <small className="text-[13px] text-text-3">
+                  {s.season}, средний {s.average ?? "—"}
+                </small>
+                <span className="mt-3 flex flex-wrap gap-1.5" aria-hidden="true">
+                  {s.courses.map((c) => (
+                    <i key={c.id} title={c.title} className="size-2 rounded-full" style={{ background: `var(--c-${c.color})` }} />
+                  ))}
+                </span>
+              </Link>
             ))}
           </div>
         </section>

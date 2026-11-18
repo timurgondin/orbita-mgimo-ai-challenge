@@ -20,7 +20,7 @@ export default async function StudyPage() {
   return (
     <StudyTabs
       views={{
-        courses: <CoursesView courses={data.courses} online={data.online} />,
+        courses: <CoursesView courses={data.courses} online={data.online} past={archive?.semesters} />,
         tasks: <TasksView upcoming={data.upcoming} waiting={data.waiting} prep={data.prep} later={data.later} checked={data.checked} />,
         perf: <PerfView perf={data.perf} past={archive?.semesters} />,
       }}

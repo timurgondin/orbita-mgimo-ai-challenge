@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { ChevronRight, GraduationCap } from "lucide-react";
 import { SectionHeader } from "@/components/today/section-header";
 import type { ArchiveSemester, StudyData } from "@/server/data/types";
 import { creditsLabel, plural } from "@/lib/phrases";
@@ -85,6 +86,18 @@ export function PerfView({ perf, past = [] }: { perf: StudyData["perf"]; past?: 
       )}
 
       {past.length > 0 && (
+        <Link
+          href="/study/diploma"
+          data-diploma-link
+          className="mt-12 flex items-center gap-3.5 rounded-3xl bg-s1 px-5 py-4 transition-colors duration-200 hover:bg-s2"
+        >
+          <GraduationCap size={22} strokeWidth={1.5} className="shrink-0 text-text-2" />
+          <b className="min-w-0 flex-1 text-[17px] font-semibold tracking-[-.01em]">Что идёт в диплом</b>
+          <ChevronRight size={18} strokeWidth={1.6} className="text-text-3" />
+        </Link>
+      )}
+
+      {past.length > 0 && (
         <section aria-label="Прошлые семестры" className="mt-12">
           <SectionHeader title="Прошлые семестры" linkLabel="Архив" href="/study/archive" />
           <div className="rows [--row-inset:14px]">
@@ -98,7 +111,7 @@ export function PerfView({ perf, past = [] }: { perf: StudyData["perf"]; past?: 
                 <span className="min-w-0">
                   <span className="block truncate font-medium">{s.title}</span>
                   <span className="block text-[13px] text-text-3">
-                    {s.courses.length} {plural(s.courses.length, "дисциплина", "дисциплины", "дисциплин")}, {creditsLabel(s.credits)}
+                    {s.season.charAt(0).toUpperCase() + s.season.slice(1)}, {s.courses.length} {plural(s.courses.length, "дисциплина", "дисциплины", "дисциплин")}, {creditsLabel(s.credits)}
                   </span>
                 </span>
                 <span className="text-right">

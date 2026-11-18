@@ -55,25 +55,37 @@ try {
   await page.waitForSelector("[data-semester]");
   await page.waitForLoadState("networkidle");
   const t = await text(page);
-  check("Alisa: two semesters of the 1st year", (await page.locator("[data-semester]:visible").count()) === 2 && t.includes("1 курс, осень 2025") && t.includes("1 курс, весна 2026"));
+  check("Alisa: two semesters of the 1st year", (await page.locator("[data-semester]:visible").count()) === 2 && t.includes("1 курс, 1 семестр") && t.includes("осень 2025") && t.includes("1 курс, 2 семестр") && t.includes("весна 2026"));
   check("Alisa: totals (14 disciplines, 60 / 240 credits)", t.includes("14") && t.includes("дисциплин сдано") && t.includes("60") && t.includes("/ 240"));
   check("Alisa: own courses only", t.includes("Введение в экономику") && t.includes("Статистика") && !t.includes("Переговорный процесс") && !t.includes("Введение в политологию"));
   check("Alisa: one year → no year switcher", (await page.locator('[role=tablist][aria-label="Курс обучения"]:visible').count()) === 0);
 
-  // окно курса: формула оценки и итог
+  // пройденный курс открывается страницей: итог, формула, преподаватель, куда в диплом
   await page.click('[data-archive-course]:has-text("Введение в экономику")');
-  const dlg = page.locator("dialog[open]");
-  await dlg.waitFor();
-  const d = (await dlg.textContent()) ?? "";
-  check("course modal: grade, formula, teacher", d.includes("из 10, отлично") && d.includes("Домашние задания") && d.includes("40%") && d.includes("Сумма с весами 8,4") && d.includes("Петрова Е. А."));
-  await page.keyboard.press("Escape");
-  await dlg.waitFor({ state: "hidden" });
+  await page.waitForURL((u) => u.pathname.startsWith("/study/past/"));
+  await page.waitForSelector("text=Как сложилась оценка");
+  const d = await text(page);
+  check("past course page: grade, formula, teacher, diploma", d.includes("отлично") && d.includes("Домашние задания") && d.includes("40%") && d.includes("Сумма с весами 8,4") && d.includes("Петрова Е. А.") && d.includes("В диплом идёт эта оценка"));
+  const pastId = new URL(page.url()).pathname.split("/").pop();
+  await page.click('aside a:has-text("Математический анализ")');
+  await page.waitForSelector("text=Математика");
+  check("multi-semester past course: diploma line «Математика»", ((await page.textContent("[data-diploma-note]")) ?? "").includes("Дисциплина идёт 2 семестра"));
+
+  // диплом
+  await page.goto(BASE + "/study/diploma");
+  await page.waitForSelector("text=Уже в дипломе");
+  const dip = await text(page);
+  check("diploma: done, closing this session, multi-semester, planned", dip.includes("Математика") && dip.includes("оценки 6 и 7") && dip.includes("Закончатся в эту сессию") && dip.includes("Иностранный язык (английский)") && dip.includes("позади 2 из 4") && dip.includes("Впереди по учебному плану"));
+  check("diploma: honors estimate", (await page.getAttribute("[data-honors]", "data-honors")) === "yes");
 
   // «Выписка оценок» → форма заявки в «Офисе»
+  await page.goto(BASE + "/study/archive");
+  await page.waitForSelector("[data-semester]");
   await page.click('a[href="/office?new=grades"]');
   await page.waitForURL((u) => u.pathname === "/office");
   await page.waitForSelector("dialog[open][aria-label='Выписка оценок']");
   check("«Выписка оценок» opens the office form", true);
+  await page.waitForURL((u) => u.search === "", { timeout: 5000 }).catch(() => {});
   check("office: address is cleaned after opening", new URL(page.url()).search === "");
   // подделанный тип заявки — окна нет
   await page.goto(BASE + "/office?new=../../etc");
@@ -83,7 +95,8 @@ try {
   // «Успеваемость» → прошлые семестры → архив
   await page.goto(BASE + "/study?tab=perf");
   await page.waitForSelector("[data-past-semester]");
-  check("perf: past semesters listed newest first", (await page.locator("[data-past-semester]").first().textContent())?.includes("весна 2026"));
+  check("perf: past semesters listed newest first", (await page.locator("[data-past-semester]").first().textContent())?.includes("2 семестр"));
+  check("perf: diploma link", (await page.locator("[data-diploma-link]").count()) === 1);
   await page.click("[data-past-semester]");
   await page.waitForURL((u) => u.pathname === "/study/archive");
   check("perf: past semester leads to archive", true);
@@ -131,7 +144,7 @@ try {
   await mp.goto(BASE + "/study/archive");
   await mp.waitForSelector("[data-semester]");
   await mp.waitForLoadState("networkidle");
-  check("Maxim: latest year by default", (await text(mp)).includes("Весна 2026") && (await mp.locator('[role=tab][aria-selected=true]:visible').textContent()) === "3 курс");
+  check("Maxim: latest year by default", (await text(mp)).includes("весна 2026") && (await mp.locator('[role=tab][aria-selected=true]:visible').textContent()) === "3 курс");
   await mp.getByRole("tab", { name: "1 курс" }).click();
   await mp.waitForSelector("text=Введение в политологию");
   check("Maxim: year switch updates URL", new URL(mp.url()).searchParams.get("year") === "1");
@@ -139,16 +152,27 @@ try {
   await mp.goto(BASE + "/study/archive?year=99");
   await mp.waitForSelector("[data-semester]");
   await mp.waitForLoadState("networkidle");
-  check("Maxim: bogus ?year= falls back to latest", (await text(mp)).includes("Весна 2026"));
+  check("Maxim: bogus ?year= falls back to latest", (await text(mp)).includes("весна 2026"));
 
   // ---- Ника, 1 курс: архив пуст
   const { page: np } = await login("n.lanskaya");
   await np.goto(BASE + "/study/archive");
   await np.waitForSelector("text=Здесь появятся курсы после первой сессии");
+  await np.goto(BASE + "/study/diploma");
+  await np.waitForSelector("text=После первой сессии");
+  check("first-year: empty diploma", true);
   check("first-year: empty archive", (await np.locator("[data-semester]:visible").count()) === 0);
   await np.goto(BASE + "/profile");
   await np.waitForSelector("text=Контакты");
   check("first-year: no archive row in profile", (await np.locator("[data-archive-link]").count()) === 0);
+
+  // ---- чужой пройденный курс — не найден
+  await mp.goto(BASE + "/study/past/" + pastId);
+  await mp.waitForSelector("text=Курс не найден");
+  check("Maxim: Alisa's past course → not found", !(await text(mp)).includes("Введение в экономику"));
+  await mp.goto(BASE + "/study/diploma");
+  await mp.waitForSelector("text=Уже в дипломе");
+  check("Maxim diploma: German, 4 semesters, done", (await text(mp)).includes("Второй иностранный язык (немецкий)"));
 
   // ---- преподаватель: архива студента нет
   const { page: tp } = await login("e.petrova");
