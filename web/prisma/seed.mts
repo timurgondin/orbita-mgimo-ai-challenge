@@ -2,6 +2,7 @@ import { PrismaClient } from "@prisma/client";
 import { hashPassword, PEPPER_VERSION } from "../src/server/auth/password";
 import { BELLS } from "../src/lib/bells";
 import { randomBytes } from "node:crypto";
+import { AUTO_PASS, STAFF, SYLLABI, TASKS, TEACHERS } from "./seed-academic";
 
 const db = new PrismaClient();
 const PASSWORD = "orbita-demo";
@@ -60,7 +61,18 @@ await db.studentWork.deleteMany();
 await db.onlineProgress.deleteMany();
 await db.enrollment.deleteMany();
 await db.gradeComponent.deleteMany();
-await db.course.deleteMany();
+await db.course.deleteMany(); // задания, работы по ним и составы курсов — каскадом
+await db.teacher.deleteMany();
+for (const t of TEACHERS) {
+  await db.teacher.create({
+    data: {
+      slug: t.slug, short: t.short, lastName: t.last, firstName: t.first, middleName: t.middle, avatar: t.avatar, position: t.position,
+      department: t.department, degree: t.degree, email: t.email, office: t.office, bio: t.bio,
+      interests: JSON.stringify(t.interests), publications: JSON.stringify(t.pubs), orcid: t.orcid, scholar: t.scholar, elibrary: t.elibrary,
+    },
+  });
+}
+const teacherIdByShort = new Map((await db.teacher.findMany({ select: { id: true, short: true } })).map((t) => [t.short, t.id]));
 
 const at = (iso: string) => new Date(iso.length === 10 ? `${iso}T12:00:00+03:00` : `${iso}:00+03:00`);
 
@@ -73,6 +85,8 @@ interface Comp {
   w: number;
   due?: string;
   room?: string;
+  /** балл — среднее по заданиям этого элемента (TASKS в seed-academic) */
+  agg?: boolean;
   work: Work;
 }
 interface CourseDef {
@@ -144,7 +158,7 @@ const ALISA: Person = {
       comps: [
         { t: "Контрольная №1", kind: "test", w: 20, due: "2026-11-10T11:00", work: { s: "graded", score: 8, g: "2026-11-10T16:00", fb: "Хорошо с графиками. В задаче 3 не учтены постоянные издержки." } },
         { t: "Работа на семинарах", kind: "participation", w: 20, work: { s: "graded", score: 8.2, g: "2026-11-14T12:00" } },
-        { t: "Problem set 6", kind: "homework", w: 20, due: "2026-11-21T18:00", sub: "домашнее задание", work: { s: "submitted", sent: "2026-11-18T21:10" } },
+        { t: "Домашние задания", kind: "homework", w: 20, agg: true, work: { s: "in_progress" } },
         { t: "Экзамен", kind: "exam", w: 40, due: "2026-12-22T10:00", room: "101", work: { s: "upcoming" } },
       ],
     },
@@ -153,8 +167,8 @@ const ALISA: Person = {
       teacher: "Соколов Д. В.", avatar: "sand",
       comps: [
         { t: "Работа на практикумах", kind: "participation", w: 20, work: { s: "graded", score: 7, g: "2026-11-12T12:00" } },
-        { t: "Расчётные работы", kind: "participation", w: 20, work: { s: "reviewing" } },
-        { t: "Лабораторные работы", kind: "participation", w: 20, work: { s: "graded", score: 7.8, g: "2026-11-13T12:00" } },
+        { t: "Расчётные работы", kind: "homework", w: 20, agg: true, work: { s: "in_progress" } },
+        { t: "Лабораторные работы", kind: "homework", w: 20, agg: true, work: { s: "in_progress" } },
         { t: "Контрольная №2", kind: "test", w: 20, due: "2026-11-23T09:30", room: "1201", sub: "аудитория 1201", work: { s: "upcoming" } },
         { t: "Экзамен", kind: "exam", w: 20, due: "2026-12-25T10:00", room: "1201", work: { s: "upcoming" } },
       ],
@@ -165,7 +179,7 @@ const ALISA: Person = {
       comps: [
         { t: "Семинарские доклады", kind: "participation", w: 25, work: { s: "graded", score: 9, g: "2026-11-11T12:00" } },
         { t: "Эссе «Глобальные цепочки поставок»", short: "Эссе", kind: "essay", w: 15, due: "2026-11-19T23:59", sub: "15% оценки", work: { s: "draft" } },
-        { t: "Практические задания", kind: "participation", w: 20, work: { s: "graded", score: 8.1, g: "2026-11-13T12:00" } },
+        { t: "Практические задания", kind: "homework", w: 20, agg: true, work: { s: "in_progress" } },
         { t: "Экзамен", kind: "exam", w: 40, due: "2026-12-28T12:00", room: "2302", work: { s: "upcoming" } },
       ],
     },
@@ -390,6 +404,10 @@ const NIKA: Person = {
 const DESCRIPTIONS: Record<string, string> = {
   "micro-24|Контрольная №1": "Письменная контрольная на семинаре, 80 минут. Темы: спрос и предложение, эластичность, издержки фирмы.\n\n- 4 задачи, одна с графиком\n- Можно непрограммируемый калькулятор",
   "micro-24|Problem set 6": "Шесть задач по теме «Олигополия»: модели Курно и Бертрана, картель, лидерство по Штакельбергу.\n\n- Решения с выкладками, графики — от руки или в любом редакторе\n- Один PDF до 10 МБ",
+  "micro-24|Домашние задания": "Problem set раз в две недели. Балл элемента — среднее по всем; несданный — 0. Можно сдать один Problem set с опозданием до 48 часов без штрафа.",
+  "econometrics-24|Расчётные работы": "Две расчётные работы за семестр на реальных данных. Балл — среднее за обе.",
+  "econometrics-24|Лабораторные работы": "Пять лабораторных в R или Python раз в две недели. Балл — среднее; для автомата нужны все пять.",
+  "world-economy-24|Практические задания": "Пять практических заданий по данным мировой торговли. Балл — среднее по всем.",
   "micro-24|Экзамен": "Письменный экзамен, 120 минут: 2 теоретических вопроса и 3 задачи по всему курсу. Демо-вариант — в материалах курса.",
   "econometrics-24|Контрольная №2": "Контрольная в аудитории, 80 минут. Множественная регрессия, проверка гипотез, мультиколлинеарность, гетероскедастичность.\n\n- Свой ноутбук не нужен: расчёты по готовым распечаткам\n- Формулы выдаются на листе",
   "econometrics-24|Экзамен": "Устно-письменный экзамен: задача на расчёт в аудитории, затем разговор по билету.",
@@ -431,8 +449,15 @@ for (const person of [ALISA, MAXIM, NIKA]) {
         credits: c.credits, kindsLabel: c.kinds ?? "", teacherName: c.teacher, teacherAvatar: c.avatar,
         teacherId: c.teacherLogin ? await userId(c.teacherLogin) : null,
         lessonsTotal: c.online?.total, providerName: c.online?.provider,
+        syllabus: SYLLABI[c.slug] ? JSON.stringify(SYLLABI[c.slug]) : null,
+        autoPassFrom: AUTO_PASS[c.slug]?.from, autoPassRule: AUTO_PASS[c.slug]?.rule,
       },
     });
+    // состав: лектор и семинарист; у онлайн-курсов преподавателя нет
+    const staff = STAFF[c.slug] ?? (teacherIdByShort.has(c.teacher) ? [[c.teacher, "Занятия"] as [string, string]] : []);
+    for (const [i, [short, role]] of staff.entries()) {
+      await db.courseTeacher.create({ data: { courseId: course.id, teacherId: teacherIdByShort.get(short)!, role, order: i } });
+    }
     courseIds.set(c.slug, course.id);
     await db.enrollment.create({ data: { userId: uid, courseId: course.id, order } });
     if (c.online) {
@@ -444,10 +469,20 @@ for (const person of [ALISA, MAXIM, NIKA]) {
       const comp = await db.gradeComponent.create({
         data: {
           courseId: course.id, title: k.t, shortTitle: k.short, subtitle: k.sub, kind: k.kind, weight: k.w, dueAt: k.due ? at(k.due) : null, room: k.room, order: i,
-          description: DESCRIPTIONS[`${c.slug}|${k.t}`],
+          description: DESCRIPTIONS[`${c.slug}|${k.t}`], aggregate: !!k.agg,
         },
       });
       compIds.set(`${c.slug}|${k.t}`, comp.id);
+      // контрольная, эссе, проект — это и элемент формулы, и задание с той же работой
+      if (!k.agg && ["test", "homework", "essay", "project"].includes(k.kind)) {
+        await db.assignment.create({
+          data: {
+            courseId: course.id, componentId: comp.id, title: k.t, kind: k.kind, description: DESCRIPTIONS[`${c.slug}|${k.t}`], dueAt: k.due ? at(k.due) : null,
+            room: k.room, upload: k.kind !== "test", order: 100 + i,
+            works: { create: { userId: uid, status: k.work.s, score: k.work.score, feedback: k.work.fb, gradedAt: k.work.g ? at(k.work.g) : null, submittedAt: k.work.sent ? at(k.work.sent) : null } },
+          },
+        });
+      }
       await db.studentWork.create({
         data: {
           userId: uid, componentId: comp.id, status: k.work.s, score: k.work.score, feedback: k.work.fb,
@@ -457,7 +492,30 @@ for (const person of [ALISA, MAXIM, NIKA]) {
     }
   }
 
+  // задания по неделям: в элемент формулы или вне оценки
+  for (const c of person.courses) {
+    for (const [i, k] of (TASKS[c.slug] ?? []).entries()) {
+      await db.assignment.create({
+        data: {
+          courseId: courseIds.get(c.slug)!, componentId: k.comp ? compIds.get(`${c.slug}|${k.comp}`) : null, title: k.t, kind: k.kind,
+          description: k.desc, dueAt: at(k.due), room: k.room, upload: k.upload ?? true, order: i,
+          works: {
+            create: {
+              userId: uid, status: k.work.s, score: k.work.score, feedback: k.work.fb, gradedAt: k.work.g ? at(k.work.g) : null,
+              submittedAt: k.work.sent ? at(k.work.sent) : null, fileName: k.work.file?.[0], fileSize: k.work.file?.[1],
+            },
+          },
+        },
+      });
+    }
+  }
+
   const courseOf = (slug: string) => person.courses.find((c) => c.slug === slug)!;
+  const eventTeacher = (slug: string, kind: string) => {
+    const staff = STAFF[slug];
+    if (!staff) return courseOf(slug).teacher;
+    return (kind === "lecture" ? staff.find(([, r]) => r === "Лекции") : staff.find(([, r]) => r !== "Лекции"))?.[0] ?? staff[0][0];
+  };
   for (const e of person.events) {
     const [from, to] = BELLS[e.p];
     await db.scheduleEvent.create({
@@ -465,7 +523,7 @@ for (const person of [ALISA, MAXIM, NIKA]) {
         courseId: courseIds.get(e.course),
         componentId: e.comp ? compIds.get(`${e.course}|${e.comp}`) : null,
         kind: e.kind, title: e.title, pair: e.p, startsAt: at(`${e.d}T${from}`), endsAt: at(`${e.d}T${to}`), room: e.room,
-        teacherName: courseOf(e.course).teacher, roomChangedFrom: e.from, topic: e.topic,
+        teacherName: eventTeacher(e.course, e.kind), roomChangedFrom: e.from, topic: e.topic,
       },
     });
   }

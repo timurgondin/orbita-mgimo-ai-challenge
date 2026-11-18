@@ -1,13 +1,17 @@
 "use client";
 
+import { useState, useTransition } from "react";
 import Link from "next/link";
-import { BookOpen, CalendarClock, ChevronRight, MapPin, Target } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { BookOpen, CalendarClock, Check, ChevronRight, FileText, MapPin, Target, Upload, X } from "lucide-react";
+import type { Toast } from "@/components/ui/toast";
 import { cn } from "@/lib/utils";
 import type { TaskDetail } from "@/server/data/types";
+import { submitWork, withdrawWork } from "@/server/study/actions";
 import { StatusTag } from "./status-tag";
 
-/** Текст задания: абзацы через пустую строку, строки с «- » — пункты списка. */
-function Description({ text }: { text: string }) {
+/** Текст: абзацы через пустую строку, строки с «- » — пункты списка. */
+export function Description({ text }: { text: string }) {
   return (
     <div className="flex flex-col gap-2.5 text-[15px] leading-relaxed text-text-2">
       {text.split(/\n\s*\n/).map((block, i) => {
@@ -28,11 +32,11 @@ function Description({ text }: { text: string }) {
   );
 }
 
-const IconBox = ({ children }: { children: React.ReactNode }) => (
+export const IconBox = ({ children }: { children: React.ReactNode }) => (
   <span className="grid size-9 shrink-0 place-items-center rounded-[11px] bg-s3 text-text-2">{children}</span>
 );
 
-function Row({ icon, title, sub, href }: { icon: React.ReactNode; title: React.ReactNode; sub?: React.ReactNode; href?: string }) {
+export function InfoRow({ icon, title, sub, href }: { icon: React.ReactNode; title: React.ReactNode; sub?: React.ReactNode; href?: string }) {
   const inner = (
     <>
       {icon}
@@ -70,21 +74,128 @@ function Steps({ steps }: { steps: NonNullable<TaskDetail["steps"]> }) {
   );
 }
 
-/** Содержимое окна задания (элемента оценки): срок, этапы, что сделать, оценка и отзыв. */
-export function TaskContent({ t, showCourse = true }: { t: TaskDetail; showCourse?: boolean }) {
+const fmtSize = (b: number) => (b < 1024 * 1024 ? `${Math.max(1, Math.round(b / 1024))} КБ` : `${(b / 1024 / 1024).toFixed(1).replace(".", ",")} МБ`);
+const ACCEPT = ".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.zip,.txt,.jpg,.jpeg,.png,.r,.py,.ipynb";
+
+function FileChip({ name, size, children }: { name: string; size: string; children?: React.ReactNode }) {
+  return (
+    <div className="flex items-center gap-3 rounded-2xl bg-s2 px-3.5 py-3">
+      <FileText size={20} strokeWidth={1.5} className="shrink-0 text-text-2" />
+      <span className="min-w-0 flex-1">
+        <b className="block truncate text-[15px] font-medium">{name}</b>
+        <small className="text-[13px] text-text-3">{size}</small>
+      </span>
+      {children}
+    </div>
+  );
+}
+
+/** Сдача работы. В прототипе файл не уходит на сервер: сохраняются имя и размер. */
+function Submit({ t, toast }: { t: TaskDetail; toast: Toast }) {
+  const [file, setFile] = useState<File | null>(null);
+  const [drag, setDrag] = useState(false);
+  const [pending, start] = useTransition();
+  const router = useRouter();
+
+  const pick = (f?: File | null) => {
+    if (!f) return;
+    if (f.size > 20 * 1024 * 1024) return toast("Файл больше 20 МБ", "error");
+    setFile(f);
+  };
+  const run = (action: () => Promise<{ ok: true; message: string } | { ok: false; error: string }>) =>
+    start(async () => {
+      const r = await action();
+      toast(r.ok ? r.message : r.error, r.ok ? "ok" : "error");
+      if (r.ok) {
+        setFile(null);
+        router.refresh();
+      }
+    });
+
+  if (t.file && !t.canSubmit) {
+    return (
+      <FileChip name={t.file.name} size={t.submittedAt ? `${t.file.size}, отправлено ${t.submittedAt}` : t.file.size}>
+        {t.canWithdraw && (
+          <button
+            type="button"
+            disabled={pending}
+            onClick={() => run(() => withdrawWork(t.id))}
+            className="h-8 rounded-[9px] bg-s3 px-3 text-[13px] font-medium transition-colors hover:bg-hover disabled:opacity-50"
+          >
+            Отозвать
+          </button>
+        )}
+      </FileChip>
+    );
+  }
+  if (!t.canSubmit) return null;
+
+  return file ? (
+    <div className="flex flex-col gap-2.5" data-upload>
+      <FileChip name={file.name} size={fmtSize(file.size)}>
+        <button type="button" aria-label="Убрать файл" onClick={() => setFile(null)} className="grid size-8 place-items-center rounded-[9px] text-text-3 hover:bg-s3 hover:text-text">
+          <X size={16} strokeWidth={1.6} />
+        </button>
+      </FileChip>
+      <button
+        type="button"
+        disabled={pending}
+        onClick={() => run(() => submitWork(t.id, { name: file.name, size: file.size }))}
+        className="inline-flex h-11 items-center justify-center gap-2 rounded-[13px] bg-text text-[15px] font-semibold text-bg transition-[opacity,transform] duration-150 hover:opacity-90 active:scale-[.98] disabled:opacity-60"
+      >
+        {pending ? "Отправляю…" : "Отправить на проверку"}
+      </button>
+    </div>
+  ) : (
+    <label
+      data-upload
+      onDragOver={(e) => {
+        e.preventDefault();
+        setDrag(true);
+      }}
+      onDragLeave={() => setDrag(false)}
+      onDrop={(e) => {
+        e.preventDefault();
+        setDrag(false);
+        pick(e.dataTransfer.files[0]);
+      }}
+      className={cn(
+        "flex cursor-pointer flex-col items-center gap-1.5 rounded-2xl border border-dashed px-4 py-6 text-center transition-colors duration-150 has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-accent",
+        drag ? "border-accent bg-[color-mix(in_srgb,var(--accent)_8%,transparent)]" : "border-line bg-s2/40 hover:bg-s2",
+      )}
+    >
+      <Upload size={20} strokeWidth={1.6} className="text-text-2" />
+      <b className="text-[15px] font-medium">Выбрать файл или перетащить сюда</b>
+      <small className="text-[13px] text-text-3">PDF, документ, таблица или архив, до 20 МБ</small>
+      <input type="file" accept={ACCEPT} className="sr-only" onChange={(e) => pick(e.target.files?.[0])} />
+    </label>
+  );
+}
+
+/** Окно задания: срок и сколько осталось, этапы, что сделать, сдача файла, оценка и отзыв. */
+export function TaskContent({ t, toast, showCourse = true }: { t: TaskDetail; toast: Toast; showCourse?: boolean }) {
   return (
     <>
       <div className="text-sm text-text-2">{t.kindLabel}</div>
       <div className="mt-1 text-[26px] leading-[1.15] font-semibold tracking-[-.03em]">{t.title}</div>
       <div className="mt-2.5 flex flex-wrap items-center gap-x-3 gap-y-2">
         {t.tag && <StatusTag status={t.tag} />}
-        {t.dueLeft && <span className={cn("text-sm", t.dueHot ? "text-urgent" : "text-text-2")}>Срок {t.dueLeft}</span>}
+        {t.left && <span className={cn("text-sm", t.dueHot ? "text-urgent" : "text-text-2")}>Осталось {t.left}</span>}
       </div>
 
-      {t.score != null && (
+      {t.done && (
         <div className="mt-5 flex items-end gap-3">
-          <b className="text-[44px] leading-none font-medium tracking-[-.035em] tabular-nums">{t.score}</b>
-          <span className="pb-1 text-[15px] text-text-2">из 10{t.gradedAt && `, проверено ${t.gradedAt}`}</span>
+          {t.score != null ? (
+            <>
+              <b className="text-[44px] leading-none font-medium tracking-[-.035em] tabular-nums">{t.score}</b>
+              <span className="pb-1 text-[15px] text-text-2">из 10{t.gradedAt && `, проверено ${t.gradedAt}`}</span>
+            </>
+          ) : (
+            <span className="inline-flex items-center gap-2 text-[17px] font-medium">
+              <Check size={20} strokeWidth={1.8} />
+              Выполнено{t.gradedAt && <span className="text-[15px] font-normal text-text-2">, отмечено {t.gradedAt}</span>}
+            </span>
+          )}
         </div>
       )}
       {t.feedback && (
@@ -99,7 +210,7 @@ export function TaskContent({ t, showCourse = true }: { t: TaskDetail; showCours
         </div>
       )}
 
-      {t.steps && t.score == null && (
+      {t.steps && !t.done && (
         <div className="mt-5">
           <Steps steps={t.steps} />
         </div>
@@ -107,16 +218,27 @@ export function TaskContent({ t, showCourse = true }: { t: TaskDetail; showCours
 
       {t.description && (
         <section className="mt-6">
-          <h3 className="mb-2 text-[15px] font-semibold">{t.score != null ? "Задание" : "Что сделать"}</h3>
+          <h3 className="mb-2 text-[15px] font-semibold">{t.done ? "Задание" : "Что сделать"}</h3>
           <Description text={t.description} />
         </section>
       )}
 
+      {t.upload && (t.canSubmit || t.file) && (
+        <section className="mt-6" aria-label="Сдача работы">
+          <h3 className="mb-2 text-[15px] font-semibold">{t.canSubmit ? "Сдать работу" : "Отправленный файл"}</h3>
+          <Submit key={t.id + (t.file?.name ?? "")} t={t} toast={toast} />
+        </section>
+      )}
+
       <div className="mt-5">
-        {t.dueLong && <Row icon={<IconBox><CalendarClock size={16} strokeWidth={1.6} /></IconBox>} title={t.dueLong} sub={t.submittedAt ? `Сдано ${t.submittedAt}` : "Срок"} />}
-        <Row icon={<IconBox><Target size={16} strokeWidth={1.6} /></IconBox>} title={`${t.weight}% итоговой оценки`} sub={t.kind === "participation" ? "Складывается из занятий" : undefined} />
+        {t.dueLong && <InfoRow icon={<IconBox><CalendarClock size={16} strokeWidth={1.6} /></IconBox>} title={t.dueLong} sub="Срок сдачи" />}
+        <InfoRow
+          icon={<IconBox><Target size={16} strokeWidth={1.6} /></IconBox>}
+          title={t.counts ?? "Не входит в оценку"}
+          sub={t.counts ? undefined : "Для практики: в итоговый балл не идёт"}
+        />
         {t.room && (
-          <Row
+          <InfoRow
             icon={<IconBox><MapPin size={16} strokeWidth={1.6} /></IconBox>}
             title={`Аудитория ${t.room}`}
             sub={t.eventId ? "Открыть в расписании" : undefined}
@@ -124,12 +246,7 @@ export function TaskContent({ t, showCourse = true }: { t: TaskDetail; showCours
           />
         )}
         {showCourse && (
-          <Row
-            icon={<IconBox><BookOpen size={16} strokeWidth={1.6} /></IconBox>}
-            title={t.courseTitle}
-            sub="Страница курса"
-            href={`/study/${t.courseSlug}`}
-          />
+          <InfoRow icon={<IconBox><BookOpen size={16} strokeWidth={1.6} /></IconBox>} title={t.courseTitle} sub="Страница курса" href={`/study/${t.courseSlug}`} />
         )}
       </div>
     </>

@@ -140,19 +140,22 @@ export interface TaskStep {
   state: "fin" | "cur" | "todo";
 }
 
-/** Элемент оценки курса со всем, что нужно для строки списка и окна задания. */
+export type AssignmentKind = "homework" | "essay" | "test" | "project" | "practice";
+
+/** Задание курса со всем, что нужно для строки списка и окна. */
 export interface TaskDetail {
-  /** id элемента оценки */
+  /** id задания */
   id: string;
   courseSlug: string;
   courseTitle: string;
   color: string;
-  kind: ComponentKind;
-  /** «Эссе», «Контрольная», «Домашнее задание», «Экзамен», «Работа на занятиях» */
+  kind: AssignmentKind;
+  /** «Домашнее задание», «Эссе», «Для практики» */
   kindLabel: string;
   title: string;
-  weight: number;
-  /** null — уже оценено */
+  /** куда идёт балл: «В «Домашние задания» — 20% оценки»; null — не входит в оценку */
+  counts: string | null;
+  /** статус для тега; null — тег не нужен (впереди или уже проверено) */
   tag: TagKind | null;
   /** «Четверг, 19 ноября, 23:59» */
   dueLong: string | null;
@@ -163,23 +166,48 @@ export interface TaskDetail {
   /** для блока даты слева: «19» и «чт» / «дек» */
   dueDay: string | null;
   dueSub: string | null;
+  /** до срока меньше суток */
   dueHot: boolean;
-  /** «через 2 дня», «сегодня», «срок прошёл» */
-  dueLeft: string | null;
+  /** сколько осталось: «2 дня 6 ч», «5 ч»; null — уже сдано или проверено */
+  left: string | null;
   room: string | null;
   /** пара в расписании, где пишется работа: /time?open=<id> */
   eventId: string | null;
   description: string | null;
-  /** «8», «8,2» */
+  /** «8», «8,2»; null — без балла */
   score: string | null;
-  /** «10 ноября» */
+  /** проверено (с баллом или без) */
+  done: boolean;
   gradedAt: string | null;
-  /** «18 ноября, 21:10» */
   submittedAt: string | null;
   feedback: string | null;
   teacher: { name: string; initials: string; gradient: string };
-  /** только у заданий (не у экзамена и не у работы на занятиях) */
+  /** трекер этапов; null — задание не сдаётся */
   steps: TaskStep[] | null;
+  upload: boolean;
+  file: { name: string; size: string } | null;
+  canSubmit: boolean;
+  canWithdraw: boolean;
+}
+
+/** Элемент формулы оценки на странице курса. */
+export interface FormulaItem {
+  id: string;
+  title: string;
+  kindLabel: string;
+  weight: number;
+  state: FormulaSegment["state"];
+  score: string | null;
+  /** «проверено 5 из 7», «28 ноября», «по занятиям» */
+  sub: string;
+  hot: boolean;
+  description: string | null;
+  dueLong: string | null;
+  room: string | null;
+  eventId: string | null;
+  /** балл — среднее по заданиям */
+  aggregate: boolean;
+  tasks: { id: string; title: string; score: string | null; status: string }[];
 }
 
 export interface PerfRowData {
@@ -211,6 +239,8 @@ export interface StudyData {
   upcoming: TaskDetail[];
   /** срок дальше */
   later: TaskDetail[];
+  /** сданы и ждут проверки */
+  waiting: TaskDetail[];
   checked: TaskDetail[];
   perf: {
     average: string;
@@ -244,6 +274,8 @@ export interface TimeLesson {
   teacher: string;
   teacherInitials: string;
   teacherGradient: string;
+  /** карточка преподавателя /people/<slug> */
+  teacherSlug: string | null;
   test?: { weight: number; score: string | null };
 }
 
@@ -386,10 +418,12 @@ export interface ArchiveData {
 
 /** Преподаватель текущих курсов: для окна «Преподаватели» на «Сегодня». */
 export interface TeacherView {
+  /** карточка /people/<slug> */
+  slug: string;
   name: string;
   initials: string;
   gradient: string;
-  courses: { title: string; color: string }[];
+  courses: { title: string; color: string; role: string }[];
   /** ближайшая групповая консультация по его курсам */
   cons: { id: string; when: string } | null;
 }
@@ -416,6 +450,28 @@ export interface CourseLesson {
   today: boolean;
 }
 
+export interface StaffRef {
+  slug: string;
+  name: string;
+  initials: string;
+  gradient: string;
+  /** «Лекции», «Семинары» */
+  role: string;
+  position: string;
+}
+
+/** Программа дисциплины (JSON в Course.syllabus). */
+export interface Syllabus {
+  code: string;
+  hours: { lectures: number; seminars: number; self: number };
+  annotation: string;
+  outcomes: string[];
+  topics: string[];
+  literature: { main: string[]; extra: string[] };
+  questions: string[];
+  approved: string;
+}
+
 export interface CoursePageData {
   nav: CourseNavItem[];
   slug: string;
@@ -423,10 +479,12 @@ export interface CoursePageData {
   color: string;
   kindLabel: string;
   online: boolean;
-  teacher: { name: string; initials: string; gradient: string };
+  /** онлайн-курс: кто ведёт */
+  provider: string | null;
+  staff: StaffRef[];
   credits: number;
   assessment: Assessment;
-  /** «Экзамен 22 декабря», «Зачёт» */
+  /** «Экзамен», «Зачёт» */
   finalLabel: string;
   /** «8,1» */
   score: string | null;
@@ -435,13 +493,39 @@ export interface CoursePageData {
   /** доля формулы, по которой уже есть оценки, % */
   doneWeight: number;
   formula: FormulaSegment[];
-  components: TaskDetail[];
+  components: FormulaItem[];
+  tasks: TaskDetail[];
   /** для калькулятора: Σ балл·вес по оценённым и вес ещё не оценённых */
   calc: { gradedSum: number; remainingWeight: number; examOnly: boolean } | null;
+  autoPass: { from: string; rule: string; ok: boolean; gap: string | null } | null;
   lessons: CourseLesson[];
   consultation: { id: string; when: string; place: string } | null;
-  /** онлайн-курс */
+  syllabus: Syllabus | null;
+  /** шапка документов: «Факультет международного бизнеса», «Международный бизнес», «3 семестр» */
+  docMeta: { faculty: string; program: string; semester: string; exam: string };
   lessonsDone?: number;
   lessonsTotal?: number;
   nextLesson?: { title: string; minutes: number } | null;
+}
+
+/** Страница преподавателя /people/<slug>. */
+export interface TeacherPageData {
+  slug: string;
+  name: string;
+  initials: string;
+  gradient: string;
+  position: string;
+  department: string;
+  degree: string | null;
+  email: string;
+  office: string | null;
+  bio: string | null;
+  interests: string[];
+  publications: { title: string; venue: string; year: number }[];
+  links: { label: string; value: string; href: string | null }[];
+  /** курсы текущего студента у этого преподавателя */
+  mine: { slug: string; title: string; color: string; role: string }[];
+  /** занятия на этой неделе по дням */
+  week: { date: string; label: string; items: { id: string; start: string; end: string; title: string; course: string; color: string; room: string; mine: boolean }[] }[];
+  consultation: { id: string; when: string; place: string; course: string } | null;
 }

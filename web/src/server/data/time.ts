@@ -33,6 +33,7 @@ export async function getTimeData(): Promise<TimeData | null> {
 
   const enrolled = (await db.enrollment.findMany({ where: { userId: user.id }, select: { courseId: true } })).map((e) => e.courseId);
 
+  const teachers = new Map((await db.teacher.findMany({ select: { short: true, slug: true, avatar: true } })).map((t) => [t.short, t]));
   const [events, consultations] = await Promise.all([
     db.scheduleEvent.findMany({
       where: { courseId: { in: enrolled }, startsAt: { gte: from, lt: to }, pair: { not: null } },
@@ -91,7 +92,8 @@ export async function getTimeData(): Promise<TimeData | null> {
         roomFrom: e.roomChangedFrom ?? undefined,
         teacher: e.teacherName,
         teacherInitials: teacherInitials(e.teacherName),
-        teacherGradient: avatarGradientByKey(e.course!.teacherAvatar),
+        teacherGradient: avatarGradientByKey(teachers.get(e.teacherName)?.avatar ?? e.course!.teacherAvatar),
+        teacherSlug: teachers.get(e.teacherName)?.slug ?? null,
         test,
       };
     }),

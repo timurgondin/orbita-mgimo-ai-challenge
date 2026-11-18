@@ -40,7 +40,9 @@ function TeacherRow({ t }: { t: TeacherView }) {
         {t.courses.map((c) => (
           <span key={c.title} className="flex items-center gap-2 text-sm text-text-3">
             <i className="size-1.5 shrink-0 rounded-full" style={{ background: `var(--c-${c.color})` }} />
-            <span className="truncate">{c.title}</span>
+            <span className="truncate">
+              {c.title}, {c.role.toLowerCase()}
+            </span>
           </span>
         ))}
       </span>
@@ -52,15 +54,10 @@ function TeacherRow({ t }: { t: TeacherView }) {
       )}
     </>
   );
-  const row = "-mx-3 flex items-center gap-3.5 rounded-[14px] px-3 py-3";
-  return t.cons ? (
-    <Link href={`/time?tab=cons&open=${t.cons.id}`} data-teacher={t.name} className={`${row} transition-colors duration-150 hover:bg-hover`}>
+  return (
+    <Link href={`/people/${t.slug}`} data-teacher={t.name} className="-mx-3 flex items-center gap-3.5 rounded-[14px] px-3 py-3 transition-colors duration-150 hover:bg-hover">
       {inner}
     </Link>
-  ) : (
-    <div data-teacher={t.name} className={row}>
-      {inner}
-    </div>
   );
 }
 

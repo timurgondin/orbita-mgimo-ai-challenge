@@ -4,7 +4,6 @@ import { requireUser } from "@/server/auth/session";
 import { DEMO_NOW, DEMO_DATE, addDays, dayStart, mskDate, mskTime } from "@/lib/demo-clock";
 import { avatarGradientByKey, formatDue, getStudent, teacherInitials } from "./shared";
 import type { EventKind, Lesson, SoonItem, TeacherView, WorkStatus } from "./types";
-import { TASK_KINDS } from "./types";
 
 const FORMAT: Partial<Record<EventKind, string>> = { lecture: "Лекция", seminar: "Семинар", practice: "Практика", test: "Контрольная" };
 
@@ -77,46 +76,48 @@ const STATUS_NOTE: Partial<Record<WorkStatus, string>> = {
 // Сначала то, что требует действия студента, затем ожидание ответа
 const PRIORITY: Record<string, number> = { submitted: 1, reviewing: 2 };
 
-/** «Скоро»: непроверенные задания на ближайшие 5 суток, сначала требующие действия. */
+/** «Скоро»: несданные задания на ближайшие 5 суток. Сначала то, что требует действия и идёт в оценку. */
 export async function getSoon(): Promise<SoonItem[]> {
   const user = await requireUser();
   const horizon = new Date(DEMO_NOW.getTime() + 5 * 86_400_000);
-  const works = await db.studentWork.findMany({
+  const works = await db.assignmentWork.findMany({
     where: {
       userId: user.id,
       status: { not: "graded" },
-      component: {
-        kind: { in: TASK_KINDS },
-        dueAt: { gte: DEMO_NOW, lt: horizon },
-        course: { enrollments: { some: { userId: user.id } } },
+      assignment: { dueAt: { gte: DEMO_NOW, lt: horizon }, course: { enrollments: { some: { userId: user.id } } } },
+    },
+    include: {
+      assignment: {
+        include: { course: { select: { title: true, color: true } }, component: { select: { title: true, weight: true, aggregate: true } } },
       },
     },
-    include: { component: { include: { course: { select: { title: true, color: true } } } } },
   });
   return works
     .sort(
       (a, b) =>
         (PRIORITY[a.status] ?? 0) - (PRIORITY[b.status] ?? 0) ||
-        a.component.dueAt!.getTime() - b.component.dueAt!.getTime(),
+        Number(!a.assignment.component) - Number(!b.assignment.component) ||
+        a.assignment.dueAt!.getTime() - b.assignment.dueAt!.getTime(),
     )
     .slice(0, 4)
     .map((w) => {
-      const due = formatDue(w.component.dueAt!);
+      const { assignment: a } = w;
+      const due = formatDue(a.dueAt!);
       return {
         id: w.id,
-        taskId: w.componentId,
-        title: w.component.title,
-        course: w.component.course.title,
-        color: w.component.course.color,
-        // справа под сроком: где работа сейчас или её вес
-        note: STATUS_NOTE[w.status as WorkStatus] ?? `${w.component.weight}% оценки`,
+        taskId: a.id,
+        title: a.title,
+        course: a.course.title,
+        color: a.course.color,
+        // справа под сроком: где работа сейчас или сколько весит
+        note: STATUS_NOTE[w.status as WorkStatus] ?? (a.component ? (a.component.aggregate ? `в «${a.component.title.toLowerCase()}»` : `${a.component.weight}% оценки`) : "без оценки"),
         due: due.label,
         today: due.today,
       };
     });
 }
 
-/** Преподаватели текущих курсов студента и их ближайшие консультации. Только его записи на курсы. */
+/** Преподаватели текущих курсов студента (лекторы и семинаристы) и их ближайшие консультации. Только его записи на курсы. */
 export async function getTeachers(): Promise<TeacherView[]> {
   const user = await getStudent();
   if (!user) return [];
@@ -126,28 +127,29 @@ export async function getTeachers(): Promise<TeacherView[]> {
     select: {
       course: {
         select: {
-          title: true, color: true, teacherName: true, teacherAvatar: true,
-          consultations: { where: { startsAt: { gte: DEMO_NOW } }, orderBy: { startsAt: "asc" }, take: 1, select: { id: true, startsAt: true } },
+          title: true, color: true,
+          staff: { orderBy: { order: "asc" }, select: { role: true, teacher: { select: { slug: true, short: true, avatar: true } } } },
+          consultations: { where: { startsAt: { gte: DEMO_NOW } }, orderBy: { startsAt: "asc" }, take: 1, select: { id: true, startsAt: true, teacherName: true } },
         },
       },
     },
   });
 
-  const byName = new Map<string, TeacherView & { at: number }>();
+  const bySlug = new Map<string, TeacherView & { at: number }>();
   for (const { course: c } of enrollments) {
-    const t =
-      byName.get(c.teacherName) ??
-      byName
-        .set(c.teacherName, {
-          name: c.teacherName, initials: teacherInitials(c.teacherName), gradient: avatarGradientByKey(c.teacherAvatar), courses: [], cons: null, at: Infinity,
-        })
-        .get(c.teacherName)!;
-    t.courses.push({ title: c.title, color: c.color });
-    const next = c.consultations[0];
-    if (next && next.startsAt.getTime() < t.at) {
-      t.at = next.startsAt.getTime();
-      t.cons = { id: next.id, when: formatDue(next.startsAt).label };
+    for (const { role, teacher } of c.staff) {
+      let t = bySlug.get(teacher.slug);
+      if (!t) {
+        t = { slug: teacher.slug, name: teacher.short, initials: teacherInitials(teacher.short), gradient: avatarGradientByKey(teacher.avatar), courses: [], cons: null, at: Infinity };
+        bySlug.set(teacher.slug, t);
+      }
+      t.courses.push({ title: c.title, color: c.color, role });
+      const next = c.consultations[0];
+      if (next && next.teacherName === teacher.short && next.startsAt.getTime() < t.at) {
+        t.at = next.startsAt.getTime();
+        t.cons = { id: next.id, when: formatDue(next.startsAt).label };
+      }
     }
   }
-  return [...byName.values()].map(({ at: _at, ...t }) => (void _at, t));
+  return [...bySlug.values()].map(({ at: _at, ...t }) => (void _at, t));
 }

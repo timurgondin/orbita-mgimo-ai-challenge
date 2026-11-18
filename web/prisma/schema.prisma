@@ -53,6 +53,7 @@ model User {
   officeRequests      OfficeRequest[]
   documents           Document[]
   pastCourses         PastCourse[]
+  assignmentWorks     AssignmentWork[]
 }
 
 model Session {
@@ -92,6 +93,11 @@ model Course {
   teacher        User?            @relation(fields: [teacherId], references: [id])
   lessonsTotal   Int? // онлайн
   providerName   String? // онлайн
+  syllabus       String? // JSON: программа дисциплины — аннотация, результаты, темы, литература, вопросы (src/server/data/types.ts, Syllabus)
+  autoPassFrom   Float? // автомат: с какого текущего балла экзамен можно не сдавать
+  autoPassRule   String? // условие автомата словами
+  staff          CourseTeacher[]
+  assignments    Assignment[]
   enrollments    Enrollment[]
   components     GradeComponent[]
   events         ScheduleEvent[]
@@ -123,9 +129,11 @@ model GradeComponent {
   dueAt      DateTime?
   room       String?
   order      Int             @default(0)
+  aggregate  Boolean         @default(false) // балл — среднее по заданиям этого элемента («Домашние задания 20%»)
   course     Course          @relation(fields: [courseId], references: [id], onDelete: Cascade)
   works      StudentWork[]
   events     ScheduleEvent[]
+  assignments Assignment[]
 }
 
 // Состояние компонента у конкретного студента
@@ -163,6 +171,80 @@ model ScheduleEvent {
   component       GradeComponent? @relation(fields: [componentId], references: [id], onDelete: SetNull)
 
   @@index([startsAt])
+}
+
+// ---- Задания и преподаватели ----
+
+// Задание курса: что студент делает и сдаёт. componentId — в какой элемент формулы идёт балл; null — не входит в оценку
+model Assignment {
+  id          String           @id @default(cuid())
+  courseId    String
+  componentId String?
+  title       String
+  kind        String // homework | essay | test | project | practice
+  description String? // абзацы через пустую строку, пункты — строки с «- »
+  dueAt       DateTime?
+  room        String? // пишется в аудитории
+  upload      Boolean          @default(true) // сдаётся файлом
+  order       Int              @default(0)
+  course      Course           @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  component   GradeComponent?  @relation(fields: [componentId], references: [id], onDelete: SetNull)
+  works       AssignmentWork[]
+
+  @@index([courseId])
+}
+
+// Работа студента по заданию. Файл в прототипе не хранится — только имя и размер (интерфейс сдачи)
+model AssignmentWork {
+  id           String     @id @default(cuid())
+  assignmentId String
+  userId       String
+  status       String // upcoming | draft | in_progress | submitted | reviewing | graded | returned
+  score        Float?
+  feedback     String?
+  submittedAt  DateTime?
+  gradedAt     DateTime?
+  fileName     String?
+  fileSize     Int?
+  assignment   Assignment @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
+  user         User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([assignmentId, userId])
+}
+
+// Преподаватель: публичная карточка (/people/<slug>). Вымышленные данные
+model Teacher {
+  id           String          @id @default(cuid())
+  slug         String          @unique
+  short        String          @unique // «Петрова Е. А.» — так имя записано в курсах и расписании
+  lastName     String
+  firstName    String
+  middleName   String?
+  avatar       String          @default("sand")
+  position     String // «Доцент»
+  department   String // «Кафедра экономики»
+  degree       String? // «Кандидат экономических наук»
+  email        String
+  office       String? // «Каб. 518»
+  bio          String?
+  interests    String          @default("[]") // JSON string[]
+  publications String          @default("[]") // JSON {title, venue, year}[]
+  orcid        String?
+  scholar      String? // id профиля Google Scholar
+  elibrary     String? // SPIN-код eLibrary
+  courses      CourseTeacher[]
+}
+
+model CourseTeacher {
+  id        String  @id @default(cuid())
+  courseId  String
+  teacherId String
+  role      String // Лекции | Семинары | Практика | Занятия
+  order     Int     @default(0)
+  course    Course  @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  teacher   Teacher @relation(fields: [teacherId], references: [id], onDelete: Cascade)
+
+  @@unique([courseId, teacherId])
 }
 
 // Групповая консультация преподавателя: запись по курсу, лимит мест, вопрос заранее

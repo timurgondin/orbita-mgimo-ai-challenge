@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import Link from "next/link";
 import { ArrowRightLeft, Apple, BookOpen, Calendar, ChevronRight, FileSearch, FolderOpen, Mail, MapPin, Navigation, Target, UsersRound, Video } from "lucide-react";
 import { BELLS } from "@/lib/bells";
 import { cn } from "@/lib/utils";
@@ -59,7 +60,12 @@ export function LessonContent({ lesson: l }: { lesson: TimeLesson }) {
       )}
       <div className="mt-4">
         <Row icon={<IconBox><MapPin size={16} strokeWidth={1.6} /></IconBox>} title={`Аудитория ${l.room}`} sub={roomHint(l.room)} action={<Act><Navigation size={14} strokeWidth={1.6} />Как пройти</Act>} />
-        <Row icon={<Avatar initials={l.teacherInitials} gradient={l.teacherGradient} />} title={l.teacher} sub="Преподаватель" action={<Act><Mail size={14} strokeWidth={1.6} />Написать</Act>} />
+        <Row
+          icon={<Avatar initials={l.teacherInitials} gradient={l.teacherGradient} />}
+          title={l.teacherSlug ? <Link href={`/people/${l.teacherSlug}`} className="hover:underline">{l.teacher}</Link> : l.teacher}
+          sub="Преподаватель"
+          action={<Act><Mail size={14} strokeWidth={1.6} />Написать</Act>}
+        />
         {l.test && (
           <>
             <Row link icon={<IconBox><Target size={16} strokeWidth={1.6} /></IconBox>} title={`${l.test.weight}% итоговой оценки`} sub={l.test.score ? `Сейчас ${l.test.score}` : undefined} />

@@ -56,7 +56,7 @@ try {
   await page.goto(BASE + "/study");
   await page.waitForSelector("#tab-courses");
   const aStudy = await text(page);
-  check("Alisa /study shows her courses incl. Эконометрика", ALISA_ONLY.every((t) => aStudy.includes(t)) && aStudy.includes("8,1"));
+  check("Alisa /study shows her courses incl. Эконометрика", ALISA_ONLY.every((t) => aStudy.includes(t)) && aStudy.includes("8,3"));
   check("Alisa /study has none of Maxim's courses", MAXIM_ONLY.every((t) => !aStudy.includes(t)));
 
   // вкладки: клиентское переключение, URL, без полной перезагрузки

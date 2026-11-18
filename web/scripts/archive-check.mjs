@@ -110,9 +110,8 @@ try {
   const td = (await tDlg.textContent()) ?? "";
   check("teachers modal: own teachers", td.includes("Петрова Е. А.") && td.includes("Микроэкономика") && td.includes("Соколов Д. В.") && !td.includes("Лебедева"));
   await page.click('[data-teacher="Соколов Д. В."]');
-  await page.waitForURL((u) => u.pathname === "/time");
-  await page.waitForSelector("dialog[open][aria-label^='Консультация: Эконометрика']");
-  check("teacher row opens their consultation in «Время»", true);
+  await page.waitForURL((u) => u.pathname === "/people/sokolov-dv");
+  check("teacher row opens the teacher page", true);
 
   await page.goto(BASE + "/");
   await page.getByRole("button", { name: "Библиотека" }).click();
