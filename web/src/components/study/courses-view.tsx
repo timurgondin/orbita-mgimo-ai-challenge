@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { SectionHeader } from "@/components/today/section-header";
+import { Archive, ChevronRight } from "lucide-react";
 import type { ArchiveSemester, CourseCardData } from "@/server/data/types";
 import { ProgressBar } from "@/components/ui/progress";
 
@@ -67,12 +67,12 @@ export function CoursesView({ courses, online, past = [] }: { courses: CourseCar
       )}
       {past.length > 0 && (
         <section className="mt-12" aria-label="Пройденные курсы">
-          <SectionHeader title="Пройденные курсы" linkLabel="Архив" href="/study/archive" />
+          <h2 className="mb-3.5 text-lg font-semibold tracking-[-.02em]">Пройденные курсы</h2>
           <div className="grid grid-cols-3 gap-4 max-[1000px]:grid-cols-2 max-[640px]:grid-cols-1">
             {past.map((s) => (
               <Link
                 key={s.n}
-                href={`/study/archive?year=${s.year}`}
+                href={`/study/semester/${s.n}`}
                 data-past-semester-card={s.n}
                 className="rounded-3xl bg-s1 px-5 py-4 transition-colors duration-200 hover:bg-s2"
               >
@@ -88,6 +88,15 @@ export function CoursesView({ courses, online, past = [] }: { courses: CourseCar
               </Link>
             ))}
           </div>
+          <Link
+            href="/study/archive"
+            data-archive-link
+            className="mt-4 inline-flex h-10 items-center gap-2 rounded-xl bg-s1 px-4 text-sm font-medium transition-[background,transform] duration-150 hover:bg-s2 active:scale-[.97]"
+          >
+            <Archive size={16} strokeWidth={1.7} />
+            Весь архив
+            <ChevronRight size={15} strokeWidth={1.7} className="text-text-3" />
+          </Link>
         </section>
       )}
     </>

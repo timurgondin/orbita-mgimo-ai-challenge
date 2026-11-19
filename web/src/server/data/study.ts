@@ -12,11 +12,13 @@ import {
   mskTime,
 } from "@/lib/demo-clock";
 import { plural } from "@/lib/phrases";
+import { getRatingSummary } from "./rating";
 import { avatarGradientByKey, fmt1, fmtWork, formatDue, getStudent, round1, teacherInitials } from "./shared";
 import type {
   Assessment,
   AssignmentKind,
   ComponentKind,
+  ComponentPrepare,
   CourseCardData,
   CourseLesson,
   CoursePageData,
@@ -51,7 +53,6 @@ const TASK_LABEL: Record<AssignmentKind, string> = {
   homework: "Домашнее задание",
   essay: "Письменная работа",
   project: "Проект",
-  prep: "Подготовка к занятию",
 };
 const EVENT_LABEL: Record<EventKind, string> = {
   lecture: "Лекция",
@@ -237,6 +238,17 @@ function courseScore(c: Loaded) {
 // ---- Экран «Учёба» ----
 
 /** Всё для экрана «Учёба» текущего студента. Только его записи на курсы и его работы. */
+/** Подготовка к контролю: из элемента формулы; у экзамена без своих данных — вопросы из программы дисциплины. */
+function prepareOf(comp: { kind: string; prepare: string | null; description: string | null }, syllabus: Syllabus | null): ComponentPrepare | null {
+  if (comp.prepare) {
+    try {
+      return JSON.parse(comp.prepare) as ComponentPrepare;
+    } catch {}
+  }
+  if (comp.kind === "exam" && syllabus?.questions.length) return { topics: syllabus.questions };
+  return null;
+}
+
 export async function getStudyData(): Promise<StudyData | null> {
   const user = await getStudent();
   if (!user) return null;
@@ -248,7 +260,6 @@ export async function getStudyData(): Promise<StudyData | null> {
   const upcoming: (TaskDetail & { at: number })[] = [];
   const later: (TaskDetail & { at: number })[] = [];
   const waiting: (TaskDetail & { at: number })[] = [];
-  const prep: (TaskDetail & { at: number })[] = [];
   const checked: (TaskDetail & { at: number })[] = [];
   const rows: PerfRowData[] = [];
   const exams: (ExamData & { at: number })[] = [];
@@ -292,10 +303,6 @@ export async function getStudyData(): Promise<StudyData | null> {
     for (const a of course.assignments) {
       const t = taskDetail(course, a);
       const work = a.works[0];
-      if (a.kind === "prep") {
-        if (a.dueAt && a.dueAt >= now) prep.push({ ...t, at: a.dueAt.getTime() });
-        continue;
-      }
       if (t.done) checked.push({ ...t, at: work?.gradedAt?.getTime() ?? 0 });
       else if (work?.status === "submitted" || work?.status === "reviewing") waiting.push({ ...t, at: work.submittedAt?.getTime() ?? 0 });
       else if (!a.dueAt) continue;
@@ -348,6 +355,7 @@ export async function getStudyData(): Promise<StudyData | null> {
     }
   }
 
+  const rating = await getRatingSummary();
   const credits = examScores.reduce((s, e) => s + e.credits, 0);
   const average = credits ? fmt1(Math.round((examScores.reduce((s, e) => s + e.score * e.credits, 0) / credits) * 10) / 10) : "—";
   const strip = <T extends { at: number }>(xs: T[]) => xs.map(({ at: _at, ...t }) => (void _at, t));
@@ -358,12 +366,12 @@ export async function getStudyData(): Promise<StudyData | null> {
     upcoming: strip(upcoming.sort((a, b) => a.at - b.at)),
     later: strip(later.sort((a, b) => a.at - b.at)),
     waiting: strip(waiting.sort((a, b) => b.at - a.at)),
-    prep: strip(prep.sort((a, b) => a.at - b.at)),
     checked: strip(checked.sort((a, b) => b.at - a.at)),
     perf: {
       average,
-      rank: user.courseRank,
-      size: user.courseSize,
+      rank: rating?.rank ?? null,
+      size: rating?.size ?? null,
+      top: rating?.top ?? null,
       credits: user.creditsEarned,
       creditsPlan: CREDITS_PLAN,
       rows,
@@ -478,6 +486,7 @@ export async function getCourse(slug: string): Promise<CoursePageData | null> {
       room: comp.room,
       eventId: comp.events[0]?.id ?? null,
       aggregate: comp.aggregate,
+      prepare: prepareOf(comp, base.syllabus),
       tasks: linked.map((a) => ({
         id: a.id,
         title: a.title,
@@ -487,8 +496,7 @@ export async function getCourse(slug: string): Promise<CoursePageData | null> {
     };
   });
 
-  // подготовка к прошедшим занятиям уже не нужна
-  const tasks = course.assignments.filter((a) => a.kind !== "prep" || (a.dueAt && a.dueAt >= DEMO_NOW)).map((a) => taskDetail(course, a));
+  const tasks = course.assignments.map((a) => taskDetail(course, a));
   const [events, cons] = await Promise.all([
     db.scheduleEvent.findMany({ where: { courseId: course.id, endsAt: { gte: DEMO_NOW }, pair: { not: null } }, orderBy: { startsAt: "asc" }, take: 4 }),
     db.consultation.findFirst({ where: { courseId: course.id, startsAt: { gte: DEMO_NOW } }, orderBy: { startsAt: "asc" } }),
@@ -535,6 +543,7 @@ export async function getCourse(slug: string): Promise<CoursePageData | null> {
         end: mskTime(e.endsAt),
         room: e.room,
         today: mskDate(e.startsAt) === DEMO_DATE,
+        prep: e.prep,
       }),
     ),
     consultation: cons ? { id: cons.id, when: formatDue(cons.startsAt).label, place: cons.place } : null,

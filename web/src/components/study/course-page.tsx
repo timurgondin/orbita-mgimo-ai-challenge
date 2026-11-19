@@ -1,9 +1,9 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { BookOpenText, CalendarClock, ChevronLeft, ChevronRight, ClipboardCheck, MapPin, MessagesSquare, PlayCircle, Target } from "lucide-react";
+import { BookOpenText, CalendarClock, ChevronLeft, ChevronRight, ClipboardCheck, FileText, Info, MapPin, MessagesSquare, Paperclip, PlayCircle, Target } from "lucide-react";
 import { Modal } from "@/components/time/modal";
 import { ProgressBar } from "@/components/ui/progress";
 import { Segmented } from "@/components/ui/segmented";
@@ -98,7 +98,78 @@ function ComponentRow({ c, onOpen }: { c: FormulaItem; onOpen: () => void }) {
   );
 }
 
-function ComponentContent({ c, onTask }: { c: FormulaItem; onTask: (id: string) => void }) {
+/** Темы, формат и демоверсия контрольной или экзамена. */
+function Prepare({ c, onDemo }: { c: FormulaItem; onDemo: () => void }) {
+  const p = c.prepare!;
+  return (
+    <section className="mt-6" data-prepare>
+      <h3 className="mb-1.5 text-[15px] font-semibold">{c.kindLabel === "Экзамен" || c.kindLabel === "Зачёт" ? "Вопросы и темы" : "Темы"}</h3>
+      <ol className="flex flex-col gap-1">
+        {p.topics.map((t, i) => (
+          <li key={t} className="flex gap-2.5 text-[15px] text-text-2">
+            <span className="w-4 shrink-0 text-right text-text-3 tabular-nums">{i + 1}</span>
+            {t}
+          </li>
+        ))}
+      </ol>
+      {p.demo && (
+        <button
+          type="button"
+          onClick={onDemo}
+          data-demo-open
+          className="mt-4 flex w-full items-center gap-3.5 rounded-2xl bg-s3 px-3.5 py-3 text-left transition-colors duration-150 hover:bg-[color-mix(in_srgb,var(--s3)_70%,var(--text)_8%)]"
+        >
+          <span className="grid size-9 shrink-0 place-items-center rounded-[11px] bg-(--cc)/15 text-(--cc)">
+            <FileText size={17} strokeWidth={1.6} />
+          </span>
+          <span className="min-w-0 flex-1">
+            <b className="block font-medium">Демоверсия</b>
+            <small className="text-[13px] text-text-3">
+              {p.demo.tasks.length} {plural(p.demo.tasks.length, "задание", "задания", "заданий")}, {p.demo.minutes} минут
+            </small>
+          </span>
+          <ChevronRight size={16} strokeWidth={1.6} className="text-text-3" />
+        </button>
+      )}
+    </section>
+  );
+}
+
+/** Демоверсия листом бумаги: шапка, время, задания с баллами. */
+function DemoSheet({ c, course }: { c: FormulaItem; course: string }) {
+  const p = c.prepare!;
+  const total = p.demo!.tasks.reduce((s, t) => s + t.points, 0);
+  return (
+    <article data-demo className="rounded-[10px] bg-[#FBFBF9] px-10 py-9 text-[14px] leading-relaxed text-[#1b1b1d] shadow-[0_20px_50px_-20px_rgba(0,0,0,.6)] max-sm:px-5 max-sm:py-6">
+      <header className="flex justify-between gap-4 border-b-[.5px] border-[#ddd] pb-4 text-[12.5px] text-[#666]">
+        <b className="font-semibold text-[#1b1b1d]">Университет Будущего</b>
+        <span>Демонстрационный вариант</span>
+      </header>
+      <h2 className="mt-6 text-center text-[13px] tracking-[.12em] text-[#555] uppercase">{c.title}</h2>
+      <div className="mt-1 text-center text-[20px] font-semibold tracking-[-.01em]">«{course}»</div>
+      <p className="mt-4 text-center text-[13px] text-[#666]">
+        Время — {p.demo!.minutes} минут, максимум — {total} {plural(total, "балл", "балла", "баллов")}
+      </p>
+      {p.allowed && <p className="text-center text-[13px] text-[#666]">{p.allowed}</p>}
+      <ol className="mt-7 flex flex-col gap-5">
+        {p.demo!.tasks.map((t, i) => (
+          <li key={i} className="grid grid-cols-[28px_minmax(0,1fr)_auto] gap-x-2">
+            <b className="font-semibold">{i + 1}.</b>
+            <span>{t.text}</span>
+            <span className="text-[12.5px] whitespace-nowrap text-[#777] tabular-nums">
+              {t.points} {plural(t.points, "балл", "балла", "баллов")}
+            </span>
+          </li>
+        ))}
+      </ol>
+      <footer className="mt-8 border-t-[.5px] border-[#ddd] pt-3 text-[12.5px] text-[#777]">
+        Вариант показывает формат и сложность. Задания на {c.kindLabel === "Экзамен" ? "экзамене" : "контрольной"} будут другими.
+      </footer>
+    </article>
+  );
+}
+
+function ComponentContent({ c, onTask, onDemo }: { c: FormulaItem; onTask: (id: string) => void; onDemo: () => void }) {
   return (
     <>
       {c.kindLabel !== c.title && <div className="text-sm text-text-2">{c.kindLabel}</div>}
@@ -114,6 +185,7 @@ function ComponentContent({ c, onTask }: { c: FormulaItem; onTask: (id: string) 
           <Description text={c.description} />
         </section>
       )}
+      {c.prepare && <Prepare c={c} onDemo={onDemo} />}
       {c.tasks.length > 0 && (
         <section className="mt-6">
           <h3 className="mb-1 text-[15px] font-semibold">{c.aggregate ? "Из чего складывается" : "Задание"}</h3>
@@ -129,6 +201,9 @@ function ComponentContent({ c, onTask }: { c: FormulaItem; onTask: (id: string) 
       )}
       <div className="mt-5">
         <InfoRow icon={<IconBox><Target size={16} strokeWidth={1.6} /></IconBox>} title={`${c.weight}% итоговой оценки`} />
+        {c.prepare?.format && !c.description && <InfoRow icon={<IconBox><Info size={16} strokeWidth={1.6} /></IconBox>} title={c.prepare.format} sub="Формат" />}
+        {c.prepare?.allowed && <InfoRow icon={<IconBox><Paperclip size={16} strokeWidth={1.6} /></IconBox>} title={c.prepare.allowed} sub="Можно взять с собой" />}
+        {c.prepare?.materials && <InfoRow icon={<IconBox><BookOpenText size={16} strokeWidth={1.6} /></IconBox>} title={c.prepare.materials} />}
         {c.dueLong && <InfoRow icon={<IconBox><CalendarClock size={16} strokeWidth={1.6} /></IconBox>} title={c.dueLong} />}
         {c.room && (
           <InfoRow
@@ -296,6 +371,11 @@ function Overview({ d, onComponent }: { d: CoursePageData; onComponent: (c: Form
                     <span className="block text-[13px] text-text-3 tabular-nums">
                       с {l.start} до {l.end}
                     </span>
+                    {l.prep && (
+                      <span data-lesson-prep className="mt-1 block text-[13px] text-text-2">
+                        К занятию: {l.prep}
+                      </span>
+                    )}
                   </span>
                   <span className="text-[13px] whitespace-nowrap text-text-3">ауд. {l.room}</span>
                 </Link>
@@ -338,14 +418,12 @@ function Overview({ d, onComponent }: { d: CoursePageData; onComponent: (c: Form
 
 function Tasks({ tasks, onOpen }: { tasks: TaskDetail[]; onOpen: (t: TaskDetail) => void }) {
   const waiting = tasks.filter((t) => !t.done && (t.tag === "submitted" || t.tag === "reviewing"));
-  const prep = tasks.filter((t) => t.kind === "prep");
-  const open = tasks.filter((t) => !t.done && !waiting.includes(t) && !prep.includes(t));
+  const open = tasks.filter((t) => !t.done && !waiting.includes(t));
   const done = tasks.filter((t) => t.done).reverse();
   return (
     <>
       <TaskGroup title="Открытые" items={open} onOpen={onOpen} showCourse={false} />
       <TaskGroup title="На проверке" items={waiting} onOpen={onOpen} showCourse={false} />
-      <TaskGroup title="Подготовка к занятиям" items={prep} onOpen={onOpen} showCourse={false} />
       <TaskGroup title="Выполненные" items={done} onOpen={onOpen} checked showCourse={false} />
       {!tasks.length && <p className="text-[15px] text-text-3">Заданий нет</p>}
     </>
@@ -412,7 +490,22 @@ export function CoursePage({ d }: { d: CoursePageData }) {
   const [comp, setComp] = useState<FormulaItem | null>(null);
   const [docOpen, setDocOpen] = useState(false);
   const [doc, setDoc] = useState<DocKind>("program");
+  const [demoOpen, setDemoOpen] = useState(false);
   const closeComp = useCallback(() => setCompOpen(false), []);
+  const closeDemo = useCallback(() => setDemoOpen(false), []);
+
+  // ?comp=<id> — окно элемента формулы сразу (из расписания: «Темы и демоверсия»)
+  const wantedComp = useSearchParams().get("comp");
+  useEffect(() => {
+    if (!wantedComp) return;
+    const c = d.components.find((x) => x.id === wantedComp);
+    if (c)
+      requestAnimationFrame(() => {
+        setComp(c);
+        setCompOpen(true);
+      });
+    window.history.replaceState(null, "", `/study/${d.slug}`);
+  }, [wantedComp, d.components, d.slug]);
   const closeDoc = useCallback(() => setDocOpen(false), []);
 
   return (
@@ -470,8 +563,15 @@ export function CoursePage({ d }: { d: CoursePageData }) {
               setCompOpen(false);
               if (t) openTask(t);
             }}
+            onDemo={() => {
+              setCompOpen(false);
+              setDemoOpen(true);
+            }}
           />
         )}
+      </Modal>
+      <Modal open={demoOpen} onClose={closeDemo} accent={`var(--c-${d.color})`} cover={false} title="Демоверсия" width={760}>
+        {comp?.prepare?.demo && <DemoSheet c={comp} course={d.title} />}
       </Modal>
       <Modal open={docOpen} onClose={closeDoc} accent={`var(--c-${d.color})`} cover={false} title={doc === "program" ? "Программа дисциплины" : "Оценочные материалы"} width={760}>
         {d.syllabus && <CourseDoc kind={doc} d={d} />}

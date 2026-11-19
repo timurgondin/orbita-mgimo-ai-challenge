@@ -140,7 +140,7 @@ export interface TaskStep {
   state: "fin" | "cur" | "todo";
 }
 
-export type AssignmentKind = "homework" | "essay" | "project" | "prep";
+export type AssignmentKind = "homework" | "essay" | "project";
 
 /** Задание курса со всем, что нужно для строки списка и окна. */
 export interface TaskDetail {
@@ -214,6 +214,19 @@ export interface FormulaItem {
   /** балл — среднее по заданиям */
   aggregate: boolean;
   tasks: { id: string; title: string; score: string | null; status: string }[];
+  /** контрольные и экзамены: формат, темы, демоверсия */
+  prepare: ComponentPrepare | null;
+}
+
+/** Подготовка к контролю (GradeComponent.prepare, JSON). */
+export interface ComponentPrepare {
+  format?: string;
+  /** что можно взять с собой */
+  allowed?: string;
+  topics: string[];
+  demo?: { minutes: number; tasks: { text: string; points: number }[] };
+  /** где ещё материалы: «Задачи для самопроверки — в материалах курса» */
+  materials?: string;
 }
 
 export interface PerfRowData {
@@ -248,12 +261,13 @@ export interface StudyData {
   /** сданы и ждут проверки */
   waiting: TaskDetail[];
   /** подготовка к занятиям: не сдаётся и не оценивается */
-  prep: TaskDetail[];
   checked: TaskDetail[];
   perf: {
     average: string;
     rank: number | null;
     size: number | null;
+    /** «топ-N%» по накопленному рейтингу */
+    top: number | null;
     credits: number | null;
     creditsPlan: number;
     rows: PerfRowData[];
@@ -284,7 +298,11 @@ export interface TimeLesson {
   teacherGradient: string;
   /** карточка преподавателя /people/<slug> */
   teacherSlug: string | null;
-  test?: { weight: number; score: string | null };
+  courseSlug: string;
+  /** что сделать к занятию */
+  prep: string | null;
+  /** контрольная: вес, текущий балл, сколько тем и есть ли демоверсия (открываются на странице курса, ?comp=) */
+  test?: { weight: number; score: string | null; componentId: string; topics: number; demo: boolean };
 }
 
 export interface TimeConsultation {
@@ -458,6 +476,8 @@ export interface CourseLesson {
   room: string;
   /** сегодня */
   today: boolean;
+  /** что сделать к занятию */
+  prep: string | null;
 }
 
 export interface StaffRef {
@@ -569,6 +589,35 @@ export interface PastCoursePage {
   diploma: { title: string; note: string };
   /** остальные дисциплины того же семестра — боковой список */
   nav: { id: string; title: string; color: string }[];
+  /** номер семестра обучения — ссылка назад на страницу семестра */
+  semesterN: number;
+  annotation: string | null;
+  topics: string[];
+  materials: PastMaterialView[];
+  works: PastWorkView[];
+  exam: { title: string; questions: string[]; note: string } | null;
+  /** отзыв преподавателя по итогам */
+  review: string | null;
+}
+
+/** Материал пройденного курса. n — номер для скачивания (/study/past/<id>/files/<n>), у видео скачивания нет. */
+export interface PastMaterialView {
+  n: number;
+  title: string;
+  kind: "slides" | "pdf" | "video" | "doc" | "data";
+  meta: string;
+  size: string | null;
+  group: string;
+  download: boolean;
+}
+
+export interface PastWorkView {
+  title: string;
+  kind: string;
+  score: string | null;
+  date: string;
+  feedback: string | null;
+  file: string | null;
 }
 
 /** «Диплом»: что уже в приложении к диплому, что идёт, что впереди. */
@@ -598,4 +647,167 @@ export interface DiplomaData {
   stats: { inDiploma: number; total: number; average: string | null; excellentShare: number | null };
   /** диплом с отличием: ≥ 75% «отлично» и нет «удовлетворительно» */
   honors: { ok: boolean; text: string } | null;
+}
+
+// ---- Хранимый JSON пройденного курса (PastCourse.content), заполняется сидом ----
+export interface PastMaterial {
+  title: string;
+  kind: "slides" | "pdf" | "video" | "doc" | "data";
+  /** «24 слайда», «18 стр.», «1 ч 20 мин» */
+  meta: string;
+  /** размер в байтах (у видео — нет) */
+  size?: number;
+  /** раздел: «Лекции», «Семинары», «К экзамену» */
+  group: string;
+  /** пункты плана — уходят в PDF */
+  plan?: string[];
+}
+export interface PastWork {
+  title: string;
+  kind: string;
+  score: number | null;
+  date: string; // YYYY-MM-DD
+  feedback?: string;
+  file?: string;
+}
+export interface PastContent {
+  annotation: string;
+  topics: string[];
+  materials: PastMaterial[];
+  works: PastWork[];
+  exam?: { title: string; ticket: number; questions: string[]; note: string };
+  review: string;
+}
+
+// ---- Рейтинг ----
+export interface RatingPeriod {
+  /** накопленный (все сессии до этой) или только этот семестр */
+  kind: "cumulative" | "semester";
+  semester: number;
+  title: string;
+  gpa: string;
+  rank: number;
+  /** «топ-N%» */
+  top: number;
+  median: string;
+  /** распределение однокурсников по среднему баллу, mine — твой столбец */
+  bins: { label: string; from: number; count: number; mine: boolean }[];
+  /** балл, с которого начинается топ-N% */
+  cutoffs: { top: number; gpa: number }[];
+  mine: number;
+}
+
+export interface RatingData {
+  program: string;
+  course: number;
+  size: number;
+  periods: RatingPeriod[];
+  perks: { title: string; top: number; note: string; ok: boolean; status: string }[];
+}
+
+// ---- Объявления ----
+export interface MobilityPage {
+  /** требования, сверенные с данными студента: id из MOBILITY.requirements */
+  checks: Record<string, { ok: boolean; note: string }>;
+  eligible: boolean;
+  /** приём заявок ещё идёт */
+  open: boolean;
+  /** «16 дней» до конца приёма */
+  left: string;
+  /** своя активная заявка */
+  application: { number: string; priorities: string[] } | null;
+}
+
+// ---- Клубы ----
+export type ClubCategory = "sport" | "mind" | "tech" | "creative" | "career" | "community";
+export interface ClubView {
+  id: string;
+  slug: string;
+  title: string;
+  category: ClubCategory;
+  color: string;
+  short: string;
+  description: string;
+  schedule: string;
+  place: string;
+  members: number;
+  joinMode: "open" | "apply";
+  tags: string[];
+  highlights: string[];
+  leader: { name: string; role: string; initials: string; gradient: string; telegram: string; email: string };
+  /** моё участие: состою, заявка у руководителя или нет */
+  mine: "member" | "pending" | null;
+}
+
+// ---- Библиотека ----
+export interface BookCard {
+  id: string;
+  slug: string;
+  title: string;
+  author: string;
+  year: number;
+  publisher: string;
+  color: string;
+  pages: number;
+  shelf: string;
+  /** есть печатные экземпляры */
+  print: boolean;
+  /** есть электронная версия */
+  ebook: boolean;
+  copies: number;
+  available: number;
+}
+
+export interface LoanView {
+  id: string;
+  book: BookCard;
+  kind: "semester" | "short" | "hold";
+  kindLabel: string;
+  inventory: string;
+  /** «Завтра до 10:00», «До 30 июня» */
+  due: string;
+  /** срок сегодня или завтра */
+  hot: boolean;
+  /** сколько срока прошло, % */
+  elapsed: number;
+  canRenew: boolean;
+  renewNote: string;
+  renewals: number;
+  taken: string;
+  returned: string | null;
+  late: boolean;
+}
+
+export interface LibraryData {
+  onHand: LoanView[];
+  holds: LoanView[];
+  reading: { book: BookCard; page: number; percent: number; last: string }[];
+  /** книги к текущим курсам */
+  courses: { title: string; color: string; books: (BookCard & { mine: "loan" | "hold" | null; reading: boolean })[] }[];
+  history: LoanView[];
+  stats: { onHand: number; pages: number; year: number; onTime: string | null };
+}
+
+export interface ReaderData {
+  book: BookCard;
+  page: number;
+  pages: number;
+  chapter: string;
+  chapterStart: boolean;
+  paragraphs: string[];
+  toc: { title: string; page: number }[];
+}
+
+// ---- Печать ----
+export interface PrintData {
+  held: { id: string; name: string; pages: number; copies: number; color: boolean; duplex: boolean; sheets: number; expires: string }[];
+  history: { id: string; name: string; pages: number; color: boolean; where: string; when: string }[];
+  scans: { id: string; name: string; pages: number; size: string; where: string; when: string }[];
+  quota: { bw: { used: number; total: number }; color: { used: number; total: number }; month: string };
+  /** листов сэкономлено двусторонней печатью в этом месяце */
+  saved: number;
+  /** принтер рядом со следующей парой */
+  nearId: string | null;
+  nearReason: string | null;
+  printers: (import("@/lib/printers").Printer & { name: string })[];
 }

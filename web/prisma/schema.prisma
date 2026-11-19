@@ -55,6 +55,11 @@ model User {
   pastCourses         PastCourse[]
   assignmentWorks     AssignmentWork[]
   plannedCourses      PlannedCourse[]
+  clubs               ClubMember[]
+  loans               Loan[]
+  readings            Reading[]
+  printJobs           PrintJob[]
+  scans               Scan[]
 }
 
 model Session {
@@ -132,6 +137,7 @@ model GradeComponent {
   room       String?
   order      Int             @default(0)
   aggregate  Boolean         @default(false) // балл — среднее по заданиям этого элемента («Домашние задания 20%»)
+  prepare    String? // JSON для контрольных и экзаменов: формат, темы, демоверсия (types.ts, ComponentPrepare)
   course     Course          @relation(fields: [courseId], references: [id], onDelete: Cascade)
   works      StudentWork[]
   events     ScheduleEvent[]
@@ -170,6 +176,7 @@ model ScheduleEvent {
   roomChangedFrom String?
   topic           String?
   groupName       String? // «МБ-24-1», у лекции — поток «МБ-24»
+  prep            String? // что сделать к занятию: прочитать, решить, подумать (не сдаётся и не оценивается)
   course          Course?         @relation(fields: [courseId], references: [id], onDelete: Cascade)
   component       GradeComponent? @relation(fields: [componentId], references: [id], onDelete: SetNull)
 
@@ -297,6 +304,7 @@ model PastCourse {
   teacherAvatar String          @default("sand")
   closedAt      DateTime // дата экзамена или зачёта
   discipline    String? // строка в приложении к диплому, если дисциплина шла несколько семестров
+  content       String? // JSON: темы, материалы, мои работы, отзыв преподавателя (types.ts, PastContent)
   order         Int             @default(0)
   user          User            @relation(fields: [userId], references: [id], onDelete: Cascade)
   components    PastComponent[]
@@ -412,6 +420,7 @@ model RequestFile {
   id        String        @id @default(cuid())
   requestId String
   name      String // исходное имя, до 120 символов, только для показа
+  label     String? // что это за документ: «Мотивационное письмо»; null — тот, что ждал офис (needDoc)
   size      Int
   mime      String // application/pdf | image/jpeg | image/png — по сигнатуре файла
   storedAs  String // случайное имя на диске
@@ -453,4 +462,126 @@ model Document {
   request       OfficeRequest? @relation(fields: [requestId], references: [id], onDelete: SetNull)
 
   @@index([userId, issuedAt])
+}
+
+// ---- Внеучебная жизнь: клубы. Вымышленные клубы и руководители ----
+
+model Club {
+  id             String       @id @default(cuid())
+  slug           String       @unique
+  title          String
+  category       String // sport | mind | tech | creative | career | community
+  color          String // ключ цвета курса для обложки
+  short          String // одна строка в списке
+  description    String // абзацы через пустую строку
+  schedule       String // «Вт и Чт, 19:00»
+  place          String // «Спортзал корпуса Б»
+  membersCount   Int // сколько участников без текущего пользователя
+  joinMode       String // open — вступить сразу | apply — заявка руководителю
+  tags           String       @default("[]") // JSON string[]
+  highlights     String       @default("[]") // JSON string[] — чем гордятся
+  leaderName     String
+  leaderRole     String // «Президент клуба, 3 курс»
+  leaderAvatar   String       @default("sand")
+  leaderTelegram String
+  leaderEmail    String
+  order          Int          @default(0)
+  members        ClubMember[]
+}
+
+model ClubMember {
+  id        String   @id @default(cuid())
+  clubId    String
+  userId    String
+  status    String // member | pending
+  createdAt DateTime
+  club      Club     @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([clubId, userId])
+}
+
+// ---- Библиотека. Вход по Орбита ID (студенческий), читательского билета нет ----
+
+model Book {
+  id        String    @id @default(cuid())
+  slug      String    @unique
+  title     String
+  author    String
+  year      Int
+  publisher String
+  pages     Int
+  color     String // ключ цвета обложки
+  format    String // print | ebook | both
+  shelf     String // «Экономика», «Право» — раздел каталога
+  course    String? // к какому курсу (slug), если это учебник курса
+  copies    Int       @default(0) // печатных экземпляров
+  available Int       @default(0) // свободно сейчас
+  excerpt   String? // текст для читалки: абзацы через пустую строку
+  loans     Loan[]
+  readings  Reading[]
+}
+
+// Книга на руках. semester — учебник на учебный год, short — на две недели
+model Loan {
+  id          String    @id @default(cuid())
+  userId      String
+  bookId      String
+  kind        String // semester | short
+  inventory   String // инвентарный номер экземпляра
+  takenAt     DateTime
+  dueAt       DateTime
+  returnedAt  DateTime?
+  renewals    Int       @default(0)
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  book        Book      @relation(fields: [bookId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+// Электронная книга, которую студент читает: где остановился
+model Reading {
+  id      String   @id @default(cuid())
+  userId  String
+  bookId  String
+  page    Int
+  lastAt  DateTime
+  user    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  book    Book     @relation(fields: [bookId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, bookId])
+}
+
+// ---- Печать: безопасная очередь. Файл ждёт, пока студент не подойдёт к любому принтеру с Орбита ID ----
+
+model PrintJob {
+  id        String    @id @default(cuid())
+  userId    String
+  fileName  String
+  pages     Int // страниц в файле
+  copies    Int       @default(1)
+  color     Boolean   @default(false)
+  duplex    Boolean   @default(true)
+  status    String // held | printed | cancelled | expired
+  printerId String? // где напечатано (src/lib/printers.ts)
+  createdAt DateTime
+  printedAt DateTime?
+  expiresAt DateTime
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+}
+
+// Скан с принтера: приходит в Орбиту владельцу Орбита ID, который сканировал
+model Scan {
+  id        String   @id @default(cuid())
+  userId    String
+  fileName  String
+  pages     Int
+  size      Int
+  printerId String
+  createdAt DateTime
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
 }

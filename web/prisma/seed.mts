@@ -2,6 +2,9 @@ import { PrismaClient } from "@prisma/client";
 import { hashPassword, PEPPER_VERSION } from "../src/server/auth/password";
 import { BELLS } from "../src/lib/bells";
 import { randomBytes } from "node:crypto";
+import { pastContent } from "./seed-past";
+import { LESSON_PREP, PREPARE } from "./seed-prepare";
+import { BOOKS, CLUBS, CLUB_MEMBERS, LOANS, PRINT_JOBS, READINGS, SCANS } from "./seed-campus";
 import { AUTO_PASS, DISCIPLINE_BY_TITLE, LOAD, PLANNED, PROFILES, STAFF, SYLLABI, TASKS, TEACHERS } from "./seed-academic";
 
 const db = new PrismaClient();
@@ -263,7 +266,8 @@ const ALISA: Person = {
     { course: "intl-law-24", d: "2026-11-25", p: 4, place: "Онлайн", online: true, cap: 25, others: 11, qs: 6 },
   ],
   notes: [
-    { kind: "library", category: "library", level: "action", title: "Верните «Экономикс» в библиотеку", body: "Или продлите ещё на две недели", action: "Продлить", actionKind: "resolve", due: "2026-11-20T10:00", link: "/", at: "2026-11-19T09:00" },
+    { kind: "announcement", category: "announcement", level: "important", title: "Семестр за рубежом: открыт приём заявок", body: "До **5 декабря**, 24 места в 6 университетах", link: "/news/mobility-spring-2027", at: "2026-11-19T09:15" },
+    { kind: "library", category: "library", level: "action", title: "Верните «Экономикс» в библиотеку", body: "Или продлите ещё на две недели", action: "Продлить", actionKind: "resolve", due: "2026-11-20T10:00", ref: "book:economix", link: "/", at: "2026-11-19T09:00" },
     { kind: "office", category: "office", level: "action", title: "Загрузите скан загранпаспорта", body: "Для справки для визы", action: "Загрузить", actionKind: "link", due: "2026-11-21T18:00", link: "/office?request=R-2481", ref: "R-2481", at: "2026-11-18T12:30" },
     { kind: "grade", category: "study", level: "important", title: "8 из 10 за контрольную по микроэкономике", body: "«Хорошо с графиками»", actor: "Петрова Е. А.", avatar: "peach", link: "/study?tab=tasks", at: "2026-11-19T10:05" },
     { kind: "schedule", category: "schedule", level: "important", title: "Английский переехал в ауд. 4105", body: "Сегодня в 14:40, вместо **2214**", link: "/time", at: "2026-11-19T08:30" },
@@ -351,7 +355,8 @@ const MAXIM: Person = {
     { course: "ir-theory-22", d: "2026-11-24", p: 4, place: "Ауд. 5101", cap: 15, others: 5, qs: 2 },
   ],
   notes: [
-    { kind: "library", category: "library", level: "action", title: "Верните «Мировую политику» в библиотеку", body: "Или продлите ещё на две недели", action: "Продлить", actionKind: "resolve", due: "2026-11-26T18:00", link: "/", at: "2026-11-19T09:00" },
+    { kind: "announcement", category: "announcement", level: "important", title: "Семестр за рубежом: открыт приём заявок", body: "До **5 декабря**, 24 места в 6 университетах", link: "/news/mobility-spring-2027", at: "2026-11-19T09:15" },
+    { kind: "library", category: "library", level: "action", title: "Верните «Мировую политику» в библиотеку", body: "Или продлите ещё на две недели", action: "Продлить", actionKind: "resolve", due: "2026-11-26T18:00", ref: "book:world-politics", link: "/", at: "2026-11-19T09:00" },
     { kind: "grade", category: "study", level: "important", title: "8,4 из 10 за записку по внешней политике", body: "«Сильная аргументация»", actor: "Зайцева Л. К.", avatar: "peach", link: "/study?tab=tasks", at: "2026-11-19T09:12" },
     { kind: "schedule", category: "schedule", level: "important", title: "Конфликтология переехала", body: "В четверг в **ауд. 5102** вместо 5008", link: "/time", at: "2026-11-18T18:40" },
     { kind: "announcement", category: "announcement", level: "info", title: "Открыта запись на элективы", body: "Запись идёт до 30 ноября", at: "2026-11-17T11:00", read: true },
@@ -472,6 +477,7 @@ for (const person of [ALISA, MAXIM, NIKA]) {
         data: {
           courseId: course.id, title: k.t, shortTitle: k.short, subtitle: k.sub, kind: k.kind, weight: k.w, dueAt: k.due ? at(k.due) : null, room: k.room, order: i,
           description: DESCRIPTIONS[`${c.slug}|${k.t}`], aggregate: !!k.agg,
+          prepare: PREPARE[`${c.slug}|${k.t}`] ? JSON.stringify(PREPARE[`${c.slug}|${k.t}`]) : null,
         },
       });
       compIds.set(`${c.slug}|${k.t}`, comp.id);
@@ -532,6 +538,7 @@ for (const person of [ALISA, MAXIM, NIKA]) {
         componentId: e.comp ? compIds.get(`${e.course}|${e.comp}`) : null,
         kind: e.kind, title: e.title, pair: e.p, startsAt: at(`${e.d}T${from}`), endsAt: at(`${e.d}T${to}`), room: e.room,
         teacherName: eventTeacher(e.course, e.kind), roomChangedFrom: e.from, topic: e.topic,
+        prep: LESSON_PREP.find(([slug, when]) => slug === e.course && when === `${e.d}T${from}`)?.[2],
         // лекция — у потока, остальное — у группы
         groupName: e.kind === "lecture" ? `Поток ${group.replace(/-\d+$/, "")}` : group,
       },
@@ -726,11 +733,13 @@ for (const [login, { admission, semesters }] of Object.entries(ARCHIVE)) {
       const total = comps.reduce((s, [, w], i) => s + scores[i] * w, 0) / 100;
       const md = assessment === "exam" ? (autumn ? AUTUMN_EXAMS : SPRING_EXAMS)[exam++] : autumn ? `12-${16 + credit++}` : `05-${26 + credit++}`;
       const closedYear = autumn ? (md.startsWith("01") ? year + 1 : year) : year + 1;
+      const semesterStart = at(autumn ? `${year}-09-01` : `${year + 1}-02-09`);
+      const content = pastContent(title, comps, scores, at(`${closedYear}-${md}`), semesterStart, assessment);
       await db.pastCourse.create({
         data: {
           userId: uid, semester, title, color, assessment, credits, order,
           grade: assessment === "exam" ? Math.round(total) : null, passed: total >= 4,
-          teacherName: teacher, teacherAvatar: avatar, closedAt: at(`${closedYear}-${md}`), discipline: DISCIPLINE_BY_TITLE[title],
+          teacherName: teacher, teacherAvatar: avatar, closedAt: at(`${closedYear}-${md}`), discipline: DISCIPLINE_BY_TITLE[title], content: JSON.stringify(content),
           components: { create: comps.map(([t, w], i) => ({ title: t, weight: w, score: scores[i], order: i })) },
         },
       });
@@ -813,4 +822,45 @@ for (const d of SEED_DOCS) {
 }
 
 console.log(`Seeded ${users.length} users, ${await db.course.count()} courses, ${await db.gradeComponent.count()} components, ${await db.scheduleEvent.count()} events, ${await db.consultation.count()} consultations, ${await db.consultationSignup.count()} signups`);
+// ---------- Клубы ----------
+await db.club.deleteMany(); // участие — каскадом
+for (const [order, c] of CLUBS.entries()) {
+  await db.club.create({
+    data: {
+      slug: c.slug, title: c.title, category: c.category, color: c.color, short: c.short, description: c.description, schedule: c.schedule, place: c.place,
+      membersCount: c.members, joinMode: c.join, tags: JSON.stringify(c.tags), highlights: JSON.stringify(c.highlights),
+      leaderName: c.leader.name, leaderRole: c.leader.role, leaderAvatar: c.leader.avatar, leaderTelegram: c.leader.tg, leaderEmail: c.leader.email, order,
+    },
+  });
+}
+for (const [login, slug, status] of CLUB_MEMBERS) {
+  const club = await db.club.findUniqueOrThrow({ where: { slug } });
+  await db.clubMember.create({ data: { clubId: club.id, userId: await userId(login), status, createdAt: at("2026-10-01") } });
+}
+
+// ---------- Библиотека ----------
+await db.book.deleteMany(); // выдачи и чтение — каскадом
+for (const b of BOOKS) await db.book.create({ data: b });
+for (const [login, slug, kind, taken, due, returned, renewals, inventory] of LOANS) {
+  const book = await db.book.findUniqueOrThrow({ where: { slug } });
+  await db.loan.create({ data: { userId: await userId(login), bookId: book.id, kind, inventory, takenAt: at(taken), dueAt: at(due), returnedAt: returned ? at(returned) : null, renewals } });
+}
+for (const [login, slug, page, when] of READINGS) {
+  const book = await db.book.findUniqueOrThrow({ where: { slug } });
+  await db.reading.create({ data: { userId: await userId(login), bookId: book.id, page, lastAt: at(when) } });
+}
+
+// ---------- Печать ----------
+await db.printJob.deleteMany();
+await db.scan.deleteMany();
+for (const [login, fileName, pages, copies, color, duplex, status, printerId, when] of PRINT_JOBS) {
+  const createdAt = at(when);
+  await db.printJob.create({
+    data: { userId: await userId(login), fileName, pages, copies, color, duplex, status, printerId, createdAt, printedAt: status === "printed" ? new Date(createdAt.getTime() + 20 * 60_000) : null, expiresAt: new Date(createdAt.getTime() + 24 * 3_600_000) },
+  });
+}
+for (const [login, fileName, pages, size, printerId, when] of SCANS) {
+  await db.scan.create({ data: { userId: await userId(login), fileName, pages, size, printerId, createdAt: at(when) } });
+}
+
 await db.$disconnect();

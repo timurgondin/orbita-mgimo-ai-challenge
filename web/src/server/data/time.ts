@@ -38,10 +38,12 @@ export async function getTimeData(): Promise<TimeData | null> {
     db.scheduleEvent.findMany({
       where: { courseId: { in: enrolled }, startsAt: { gte: from, lt: to }, pair: { not: null } },
       include: {
-        course: { select: { title: true, color: true, teacherAvatar: true } },
+        course: { select: { title: true, color: true, teacherAvatar: true, slug: true } },
         component: {
           select: {
+            id: true,
             weight: true,
+            prepare: true,
             course: { select: { components: { select: { weight: true, works: { where: { userId: user.id }, select: { status: true, score: true } } } } } },
           },
         },
@@ -69,6 +71,15 @@ export async function getTimeData(): Promise<TimeData | null> {
         isTest && e.component
           ? {
               weight: e.component.weight,
+              componentId: e.component.id,
+              topics: (() => {
+                try {
+                  return e.component.prepare ? ((JSON.parse(e.component.prepare) as { topics?: string[] }).topics?.length ?? 0) : 0;
+                } catch {
+                  return 0;
+                }
+              })(),
+              demo: !!e.component.prepare?.includes('"demo"'),
               score: (() => {
                 const s = currentScore(e.component.course.components.map((c) => ({ weight: c.weight, work: c.works[0] })));
                 return s != null ? fmt1(s) : null;
@@ -94,6 +105,8 @@ export async function getTimeData(): Promise<TimeData | null> {
         teacherInitials: teacherInitials(e.teacherName),
         teacherGradient: avatarGradientByKey(teachers.get(e.teacherName)?.avatar ?? e.course!.teacherAvatar),
         teacherSlug: teachers.get(e.teacherName)?.slug ?? null,
+        courseSlug: e.course!.slug,
+        prep: e.prep ?? null,
         test,
       };
     }),

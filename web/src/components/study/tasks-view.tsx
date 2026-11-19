@@ -52,7 +52,7 @@ export function OpenRow({ t, onOpen, showCourse = true }: { t: TaskDetail; onOpe
           <span className="block text-sm text-text-3">сдано</span>
         )}
         <span className="block text-[13px] whitespace-nowrap text-text-3 tabular-nums">
-          {t.kind === "prep" ? "к" : "до"} {t.dueTime}
+          до {t.dueTime}
         </span>
       </span>
     </button>
@@ -188,21 +188,19 @@ function DoneView({ checked, onOpen }: { checked: TaskDetail[]; onOpen: (t: Task
   );
 }
 
-/** Задания: текущие (ближайшие, на проверке, подготовка, позже) и отдельно — все проверенные. ?task=<id> открывает окно сразу. */
+/** Задания: текущие (ближайшие, на проверке, позже) и отдельно — все проверенные. ?task=<id> открывает окно сразу. */
 export function TasksView({
   upcoming,
   waiting,
-  prep,
   later,
   checked,
 }: {
   upcoming: TaskDetail[];
   waiting: TaskDetail[];
-  prep: TaskDetail[];
   later: TaskDetail[];
   checked: TaskDetail[];
 }) {
-  const all = [...upcoming, ...waiting, ...prep, ...later, ...checked];
+  const all = [...upcoming, ...waiting, ...later, ...checked];
   const { openTask, modal } = useTaskModal(all);
   const params = useSearchParams();
   const done = params.get("view") === "done";
@@ -211,11 +209,11 @@ export function TasksView({
   const wanted = params.get("task");
   useEffect(() => {
     if (!wanted) return;
-    const t = [...upcoming, ...waiting, ...prep, ...later, ...checked].find((x) => x.id === wanted);
+    const t = [...upcoming, ...waiting, ...later, ...checked].find((x) => x.id === wanted);
     // через кадр: страница успевает отрисоваться, окно открывается с обычной анимацией
     if (t) requestAnimationFrame(() => openTask(t));
     window.history.replaceState(null, "", "/study?tab=tasks");
-  }, [wanted, upcoming, waiting, prep, later, checked, openTask]);
+  }, [wanted, upcoming, waiting, later, checked, openTask]);
 
   return (
     <>
@@ -235,7 +233,6 @@ export function TasksView({
         <>
           <TaskGroup title="Ближайшие" items={upcoming} onOpen={openTask} />
           <TaskGroup title="На проверке" items={waiting} onOpen={openTask} />
-          <TaskGroup title="Подготовка к занятиям" items={prep} onOpen={openTask} />
           <TaskGroup title="Позже" items={later} onOpen={openTask} />
           {checked.length > 0 && (
             <section aria-label="Недавно проверено" className="mt-12">

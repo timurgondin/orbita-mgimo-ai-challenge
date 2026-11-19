@@ -232,7 +232,7 @@ export function TaskContent({ t, toast, showCourse = true }: { t: TaskDetail; to
       )}
 
       <div className="mt-5">
-        {t.dueLong && <InfoRow icon={<IconBox><CalendarClock size={16} strokeWidth={1.6} /></IconBox>} title={t.dueLong} sub={t.kind === "prep" ? "Занятие" : "Срок сдачи"} />}
+        {t.dueLong && <InfoRow icon={<IconBox><CalendarClock size={16} strokeWidth={1.6} /></IconBox>} title={t.dueLong} sub="Срок сдачи" />}
         <InfoRow
           icon={<IconBox><Target size={16} strokeWidth={1.6} /></IconBox>}
           title={t.counts ?? "Не сдаётся и не оценивается"}

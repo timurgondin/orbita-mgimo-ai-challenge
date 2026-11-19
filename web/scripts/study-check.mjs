@@ -94,9 +94,9 @@ try {
   await dialog(page).waitFor({ state: "hidden" });
   // вкладки курса: задания и документы
   await page.getByRole("tab", { name: "Задания" }).click();
-  await page.waitForSelector("text=Подготовка к занятиям");
+  await page.waitForSelector("text=На проверке");
   const ct = await text(page);
-  check("course tasks: problem sets, prep, no tests", ct.includes("Problem set 7") && ct.includes("Подготовка к семинару: олигополия") && (await page.locator('[data-task]:has-text("Контрольная")').count()) === 0 && ct.includes("На проверке"));
+  check("course tasks: problem sets, no prep, no tests", ct.includes("Problem set 7") && !ct.includes("Подготовка к") && (await page.locator('[data-task]:has-text("Контрольная")').count()) === 0);
   await page.getByRole("tab", { name: "Документы" }).click();
   await page.click('[data-doc="program"]');
   await page.waitForSelector('[data-course-doc="program"]');
@@ -151,7 +151,7 @@ try {
   await page.waitForSelector("[data-task]");
   const tt = await text(page);
   check("tasks: groups incl. «На проверке»", tt.includes("Ближайшие") && tt.includes("На проверке") && tt.includes("Позже") && tt.includes("Доклад") && tt.includes("Проверенные"));
-  check("tasks: no «Впереди» tags, no «без оценки», no tests", !tt.includes("Впереди") && !tt.includes("без оценки") && !tt.includes("Контрольная №2") && tt.includes("Подготовка к занятиям"));
+  check("tasks: no «Впереди» tags, no «без оценки», no tests", !tt.includes("Впереди") && !tt.includes("без оценки") && !tt.includes("Контрольная №2") && !tt.includes("Подготовка к занятиям"));
   check("tasks: recent checked + link to all", tt.includes("Недавно проверено") && tt.includes("Все проверенные работы"));
   await page.click("[data-view-done]");
   await page.waitForSelector("[data-done-summary]");
@@ -174,6 +174,26 @@ try {
 
   await page.keyboard.press("Escape");
   await dialog(page).waitFor({ state: "hidden" });
+
+  // ---- Подготовка к контролю: темы и демоверсия в окне элемента (?comp=), «к занятию» — в ближайших занятиях
+  const k2 = await db.gradeComponent.findFirstOrThrow({ where: { title: "Контрольная №2", course: { slug: "econometrics-24" } } });
+  await open(page, `/study/econometrics-24?comp=${k2.id}`);
+  await page.waitForSelector("dialog[open] [data-prepare]");
+  const kd = (await dialog(page).textContent()) ?? "";
+  check("test modal: topics and what to bring", kd.includes("Мультиколлинеарность") && kd.includes("шпаргалка A4"));
+  await page.click("dialog[open] [data-demo-open]");
+  await page.waitForSelector("dialog[open] [data-demo]");
+  check("demo sheet: 4 tasks, 10 points", (await page.locator("dialog[open] [data-demo] li").count()) === 4 && ((await page.textContent("dialog[open] [data-demo]")) ?? "").includes("10 баллов"));
+  await page.keyboard.press("Escape");
+  await dialog(page).waitFor({ state: "hidden" });
+  await open(page, "/study/micro-24");
+  await page.waitForSelector("[data-lesson-prep]");
+  check("course page: «К занятию» in upcoming lessons", ((await page.textContent("[data-lesson-prep]")) ?? "").includes("Курно"));
+  await open(page, "/study/micro-24?comp=not-an-id");
+  await page.waitForTimeout(600);
+  check("course page: unknown ?comp= opens nothing", (await page.locator("dialog[open]").count()) === 0);
+  await open(page, "/study?tab=tasks");
+  await page.waitForSelector("[data-task]");
   // ---- Сдача работы: прикрепить (черновик) → отправить → отозвать (снова черновик) → убрать файл
   await page.keyboard.press("Escape");
   await dialog(page).waitFor({ state: "hidden" });
@@ -217,9 +237,7 @@ try {
   const lab5 = await db.assignment.findFirstOrThrow({ where: { title: "Лабораторная №5" } });
   const empty = await forge(actx, "submitWork", [lab5.id]);
   check("submit without a file rejected", empty.body.includes("Сначала прикрепи файл") && (await workOf("Лабораторная №5")).status === "upcoming");
-  const prepTask = await db.assignment.findFirstOrThrow({ where: { title: "Подготовка к семинару: олигополия" } });
-  const np = await forge(actx, "attachFile", [prepTask.id, { name: "a.pdf", size: 100 }]);
-  check("attach to prep (no upload) rejected", np.body.includes("не сдаётся файлом"));
+  check("no prep assignments: preparation lives in lessons", (await db.assignment.count({ where: { title: { startsWith: "Подготовка" } } })) === 0 && (await db.scheduleEvent.count({ where: { prep: { not: null } } })) >= 5);
 
   const ps6 = await db.assignment.findFirstOrThrow({ where: { title: "Problem set 6" } });
   await open(page, `/study?tab=tasks&task=${ps6.id}`);

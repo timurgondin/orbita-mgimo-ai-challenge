@@ -2,7 +2,7 @@ import "server-only";
 import { db } from "@/server/db/client";
 import { avatarGradientByKey, fmt1, fmtWork, getStudent, teacherInitials } from "./shared";
 import { plural } from "@/lib/phrases";
-import type { ArchiveData, ArchiveSemester, Assessment, PastCoursePage } from "./types";
+import type { ArchiveData, ArchiveSemester, Assessment, PastContent, PastCoursePage } from "./types";
 
 /** Кредитов за всю программу бакалавриата. */
 const PROGRAM_CREDITS = 240;
@@ -126,5 +126,43 @@ export async function getPastCourse(id: string): Promise<PastCoursePage | null> 
         }
       : { title: r.title, note: `В диплом идёт эта оценка: ${grade === "Зачёт" ? "зачтено" : `${grade}, ${word}`}` },
     nav: same,
+    semesterN: r.semester,
+    ...pastContentView(r.content),
   };
+}
+
+const sizeLabel = (b?: number) => (b == null ? null : b >= 1_000_000 ? `${fmt1(Math.round(b / 100_000) / 10)} МБ` : `${Math.max(1, Math.round(b / 1000))} КБ`);
+const fmtDay = (iso: string) => new Date(`${iso}T12:00:00+03:00`).toLocaleDateString("ru-RU", { day: "numeric", month: "long", timeZone: "Europe/Moscow" });
+
+/** Разбор JSON-наполнения курса; битое или пустое — пустые разделы, страница не падает. */
+function pastContentView(raw: string | null) {
+  let c: Partial<PastContent> = {};
+  try {
+    c = raw ? (JSON.parse(raw) as PastContent) : {};
+  } catch {}
+  return {
+    annotation: c.annotation ?? null,
+    topics: c.topics ?? [],
+    materials: (c.materials ?? []).map((m, n) => ({ n, title: m.title, kind: m.kind, meta: m.meta, size: sizeLabel(m.size), group: m.group, download: m.kind !== "video" })),
+    works: (c.works ?? []).map((w) => ({ title: w.title, kind: w.kind, score: w.score != null ? fmtWork(w.score) : null, date: fmtDay(w.date), feedback: w.feedback ?? null, file: w.file ?? null })),
+    exam: c.exam ? { title: c.exam.title, questions: c.exam.questions, note: c.exam.note } : null,
+    review: c.review ?? null,
+  };
+}
+
+/** Материал своего пройденного курса для PDF: курс, преподаватель, семестр и пункты плана. Чужой — null. */
+export async function getPastMaterial(id: string, n: number) {
+  const user = await getStudent();
+  if (!user || typeof id !== "string" || id.length > 40 || !Number.isInteger(n) || n < 0 || n > 200) return null;
+  const r = await db.pastCourse.findFirst({ where: { id, userId: user.id } });
+  if (!r?.content) return null;
+  let c: PastContent;
+  try {
+    c = JSON.parse(r.content) as PastContent;
+  } catch {
+    return null;
+  }
+  const m = c.materials?.[n];
+  if (!m || m.kind === "video") return null;
+  return { course: r.title, teacher: r.teacherName, semester: semesterTitle(r.semester), material: m };
 }

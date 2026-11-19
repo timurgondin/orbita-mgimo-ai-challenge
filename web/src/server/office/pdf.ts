@@ -21,9 +21,9 @@ const MUTED = rgb(0.45, 0.45, 0.47);
 const RULE = rgb(0.867, 0.867, 0.867);
 
 let fontBytes: Promise<Buffer> | undefined;
-const loadFont = () => (fontBytes ??= readFile(path.join(process.cwd(), "assets", "fonts", "Onest.ttf")));
+export const loadFont = () => (fontBytes ??= readFile(path.join(process.cwd(), "assets", "fonts", "Onest.ttf")));
 
-function wrap(text: string, font: PDFFont, size: number, width: number): string[] {
+export function wrap(text: string, font: PDFFont, size: number, width: number): string[] {
   const lines: string[] = [];
   let line = "";
   for (const word of text.split(/\s+/)) {

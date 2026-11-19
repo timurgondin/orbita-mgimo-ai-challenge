@@ -14,18 +14,25 @@ export type Toast = (text: string, tone?: "ok" | "error") => void;
 
 const weekday = (iso: string) => cap(DOWL[(new Date(`${iso}T12:00:00+03:00`).getUTCDay() + 6) % 7]);
 
-function Row({ icon, title, sub, action, link }: { icon: React.ReactNode; title: React.ReactNode; sub?: React.ReactNode; action?: React.ReactNode; link?: boolean }) {
-  const Tag = link ? "a" : "div";
-  return (
-    <Tag className={cn("flex items-center gap-3.5 border-t-[.5px] border-line py-3 first:border-t-0", link && "cursor-pointer")} {...(link ? { href: "#", onClick: (e: React.MouseEvent) => e.preventDefault() } : {})}>
+function Row({ icon, title, sub, action, href }: { icon: React.ReactNode; title: React.ReactNode; sub?: React.ReactNode; action?: React.ReactNode; href?: string }) {
+  const inner = (
+    <>
       {icon}
       <span className="min-w-0 flex-1">
         <b className="block font-medium">{title}</b>
         {sub && <small className="text-[13px] text-text-3">{sub}</small>}
       </span>
       {action}
-      {link && <ChevronRight size={16} strokeWidth={1.6} className="text-text-3" />}
-    </Tag>
+      {href && <ChevronRight size={16} strokeWidth={1.6} className="text-text-3" />}
+    </>
+  );
+  const cls = "flex items-center gap-3.5 border-t-[.5px] border-line py-3 first:border-t-0";
+  return href ? (
+    <Link href={href} className={cn(cls, "-mx-2 rounded-xl px-2 transition-colors duration-150 hover:bg-hover")}>
+      {inner}
+    </Link>
+  ) : (
+    <div className={cls}>{inner}</div>
   );
 }
 
@@ -52,6 +59,15 @@ export function LessonContent({ lesson: l }: { lesson: TimeLesson }) {
       <div className="mt-1.5 text-[15px] text-text-2">
         {weekday(l.date)}, {dayMonth(l.date)}, с {s} до {e}
       </div>
+      {l.prep && (
+        <div data-lesson-prep className="mt-4 flex gap-3 rounded-[14px] bg-s3 px-3.5 py-3">
+          <FolderOpen size={17} strokeWidth={1.6} className="mt-0.5 shrink-0 text-text-2" />
+          <span className="min-w-0">
+            <b className="block text-sm font-medium">К занятию</b>
+            <span className="text-sm text-text-2">{l.prep}</span>
+          </span>
+        </div>
+      )}
       {l.roomFrom && (
         <div className="mt-4 flex items-center gap-2.5 rounded-[14px] bg-[color-mix(in_srgb,var(--urgent)_12%,transparent)] px-3.5 py-3 text-sm font-medium text-urgent">
           <ArrowRightLeft size={16} strokeWidth={1.6} />
@@ -68,12 +84,18 @@ export function LessonContent({ lesson: l }: { lesson: TimeLesson }) {
         />
         {l.test && (
           <>
-            <Row link icon={<IconBox><Target size={16} strokeWidth={1.6} /></IconBox>} title={`${l.test.weight}% итоговой оценки`} sub={l.test.score ? `Сейчас ${l.test.score}` : undefined} />
-            <Row link icon={<IconBox><FileSearch size={16} strokeWidth={1.6} /></IconBox>} title="Демо-вариант" sub="4 задачи в PDF" />
+            <Row icon={<IconBox><Target size={16} strokeWidth={1.6} /></IconBox>} title={`${l.test.weight}% итоговой оценки`} sub={l.test.score ? `Текущий балл по курсу ${l.test.score}` : undefined} />
+            {l.test.topics > 0 && (
+              <Row
+                href={`/study/${l.courseSlug}?comp=${l.test.componentId}`}
+                icon={<IconBox><FileSearch size={16} strokeWidth={1.6} /></IconBox>}
+                title={l.test.demo ? "Темы и демоверсия" : "Темы"}
+                sub={`${l.test.topics} ${l.test.topics === 1 ? "тема" : l.test.topics < 5 ? "темы" : "тем"}`}
+              />
+            )}
           </>
         )}
-        <Row link icon={<IconBox><FolderOpen size={16} strokeWidth={1.6} /></IconBox>} title="Материалы к занятию" sub="3 файла" />
-        <Row link icon={<IconBox><BookOpen size={16} strokeWidth={1.6} /></IconBox>} title={l.courseTitle} sub="Страница курса" />
+        <Row href={`/study/${l.courseSlug}`} icon={<IconBox><BookOpen size={16} strokeWidth={1.6} /></IconBox>} title={l.courseTitle} sub="Страница курса" />
       </div>
     </>
   );
