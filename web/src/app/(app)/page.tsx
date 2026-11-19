@@ -4,6 +4,7 @@ import { NowCard } from "@/components/today/now-card";
 import { QuickTiles } from "@/components/today/quick-tiles";
 import { SoonList } from "@/components/today/soon-list";
 import {
+  addDays,
   DEMO_DATE,
   DEMO_MINUTES,
   formatLongDate,
@@ -47,7 +48,7 @@ export default async function TodayPage() {
       <UrgentStrip />
       <div className="mt-8 grid grid-cols-[minmax(0,1fr)] items-stretch gap-12 min-[900px]:grid-cols-[minmax(0,1.25fr)_minmax(0,1fr)]">
         {current && <NowCard lesson={current} nowMinutes={DEMO_MINUTES} />}
-        <LaterToday lessons={later} tomorrow={tomorrow} />
+        <LaterToday lessons={later} tomorrow={tomorrow} tomorrowLabel={`Завтра, ${formatLongDate(addDays(DEMO_DATE, 1)).split(",")[0].toLowerCase()}`} />
       </div>
 
       <QuickTiles card={card} teachers={teachers} />

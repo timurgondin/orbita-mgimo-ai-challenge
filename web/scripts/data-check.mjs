@@ -51,7 +51,8 @@ try {
   let { ctx, page } = await login("a.vorontsova");
   const aToday = await text(page);
   check("Alisa Today: greeting + Микроэкономика now", aToday.includes("Алиса") && aToday.includes("Микроэкономика") && aToday.includes("3108"));
-  check("Alisa Today: tomorrow line", aToday.includes("Завтра первая пара в 09:30"));
+  const tomorrowRow = (await page.textContent('[data-lesson-row="tomorrow"]')) ?? "";
+  check("Alisa Today: tomorrow row", tomorrowRow.includes("09:30") && tomorrowRow.includes("Микроэкономика") && aToday.includes("Завтра, пятница"));
   check("Alisa Today: now card live «ещё 41 мин», later list has English (4105) and her consultation", aToday.includes("ещё 41 мин") && aToday.includes("4105") && /Консультация в каб\.\s518/.test(aToday) && aToday.includes("Эконометрика") && aToday.includes("Вы записаны"));
   await page.goto(BASE + "/study");
   await page.waitForSelector("#tab-courses");
@@ -68,7 +69,7 @@ try {
   await page.click("#tab-perf");
   await page.waitForSelector("text=По дисциплинам");
   const perf = await text(page);
-  check("perf view: avg 8,1, place 12 из 184, 26 / 30", perf.includes("8,1") && perf.includes("место на курсе из 184") && /26\s*\/\s*30/.test(perf));
+  check("perf view: avg 8,1, place из 184, 26 / 30", perf.includes("8,1") && perf.includes("место на курсе из 184") && /26\s*\/\s*30/.test(perf));
   await page.goBack();
   await page.waitForSelector("text=Ближайшие");
   check("back button returns to previous tab", page.url().endsWith("tab=tasks"));
