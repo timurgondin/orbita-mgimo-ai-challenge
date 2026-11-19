@@ -10,6 +10,8 @@ export interface RequestType {
   category: RequestCategory;
   /** показывать плиткой на странице; остальное — в окне «Ещё» */
   popular?: boolean;
+  /** подаётся не из каталога, а со своей страницы (конкурс мобильности — /news/<slug>) */
+  hidden?: boolean;
   icon: string; // имя иконки lucide, сопоставляется на клиенте
   color: string; // токен цвета: amber | violet | teal | rose | sky | green | lilac | text-3
   kind: RequestKind;
@@ -62,7 +64,12 @@ export const REQUEST_TYPES: readonly RequestType[] = [
   { id: "installments", category: "Стипендия и оплата", title: "Рассрочка оплаты", icon: "banknote", color: "teal", kind: "app", format: "Заявление", eta: "7 дней", days: 7, steps: APP_STEPS, subjectLabel: "График", subjects: ["Помесячно", "Поквартально"], defaults: { subject: "Помесячно" } },
   { id: "pe-free", category: "Жизнь в университете", title: "Освобождение от физкультуры", icon: "heart-pulse", color: "rose", kind: "app", format: "Заявление", eta: "5 дней", days: 5, steps: APP_STEPS, subjectLabel: "Срок", subjects: ["Семестр", "Учебный год"], defaults: { subject: "Семестр" } },
   { id: "pass", category: "Жизнь в университете", title: "Пропуск для гостя", icon: "ticket", color: "sky", kind: "app", format: "Заявление", eta: "1 день", days: 1, steps: APP_STEPS, subjectLabel: "Корпус", subjects: ["Главный корпус", "Корпус 3", "Библиотека"], defaults: { subject: "Главный корпус" } },
+  // ---- Не в каталоге: подаётся со страницы объявления
+  { id: "mobility", category: "Учёба", hidden: true, title: "Семестр за рубежом", icon: "plane", color: "sky", kind: "app", format: "Заявка на конкурс", eta: "до 25 декабря", days: 36, steps: ["Подана", "Документы", "Собеседование", "Решение"], subjectLabel: "Первый приоритет", subjects: [], defaults: {} },
 ];
+
+/** Каталог «Офиса» без заявок, которые подаются со своих страниц. */
+export const CATALOG = REQUEST_TYPES.filter((t) => !t.hidden);
 
 export const CATEGORIES: readonly RequestCategory[] = ["Справки", "Учёба", "Документы", "Стипендия и оплата", "Жизнь в университете"];
 

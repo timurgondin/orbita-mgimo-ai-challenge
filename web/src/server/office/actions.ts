@@ -1,14 +1,12 @@
 "use server";
 
-import { randomBytes } from "node:crypto";
-import { mkdir, writeFile } from "node:fs/promises";
-import { join } from "node:path";
 import { revalidatePath } from "next/cache";
 import { Prisma } from "@prisma/client";
 import { DEMO_NOW } from "@/lib/demo-clock";
 import { ACTIVE_STATUSES, MAX_MESSAGE, getType, validateParams } from "@/lib/office-catalog";
 import { requireUser } from "@/server/auth/session";
 import { db } from "@/server/db/client";
+import { MAX_UPLOAD, storeUpload } from "./uploads";
 
 export type OfficeResult = { ok: true; message: string; number?: string } | { ok: false; error: string };
 
@@ -43,7 +41,7 @@ export async function createRequest(typeId: string, params: unknown): Promise<Of
   return run(async () => {
     const user = await student();
     const type = getType(typeId);
-    if (!type) throw new Refusal("Такой заявки нет");
+    if (!type || type.hidden) throw new Refusal("Такой заявки нет");
     const v = validateParams(type, params);
     if (!v.ok) throw new Refusal(v.error);
 
@@ -124,16 +122,6 @@ export async function replyToRequest(id: string, body: string): Promise<OfficeRe
 }
 
 // ---------- Загрузка документа, который ждёт офис ----------
-// 8 МБ: тело запроса проходит через proxy (лимит 10 МБ) и bodySizeLimit server actions
-const MAX_UPLOAD = 8 * 1024 * 1024;
-const UPLOAD_DIR = join(process.cwd(), "storage", "uploads");
-// Тип — по сигнатуре содержимого, а не по имени или MIME из браузера
-const SIGNATURES = [
-  { mime: "application/pdf", ext: "pdf", ok: (b: Buffer) => b.subarray(0, 5).toString("latin1") === "%PDF-" },
-  { mime: "image/jpeg", ext: "jpg", ok: (b: Buffer) => b[0] === 0xff && b[1] === 0xd8 && b[2] === 0xff },
-  { mime: "image/png", ext: "png", ok: (b: Buffer) => b.subarray(0, 8).equals(Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a])) },
-];
-
 /** Студент загружает документ к своей заявке, если офис его ждёт. Связанное уведомление «нужно действие» решается. */
 export async function uploadRequestFile(id: string, form: FormData): Promise<OfficeResult> {
   const r = await run(async () => {
@@ -148,16 +136,11 @@ export async function uploadRequestFile(id: string, form: FormData): Promise<Off
     if (!(file instanceof File)) throw new Refusal("Выберите файл");
     if (file.size === 0) throw new Refusal("Файл пустой");
     if (file.size > MAX_UPLOAD) throw new Refusal("Файл больше 8 МБ");
-    const buf = Buffer.from(await file.arrayBuffer());
-    const sig = SIGNATURES.find((s) => s.ok(buf));
-    if (!sig) throw new Refusal("Нужен PDF, JPG или PNG");
-    const storedAs = `${randomBytes(16).toString("hex")}.${sig.ext}`;
-    await mkdir(UPLOAD_DIR, { recursive: true });
-    await writeFile(join(UPLOAD_DIR, storedAs), buf, { mode: 0o600 });
-    // имя только для показа: без управляющих символов, не длиннее 120
-    const name = file.name.replace(/[\u0000-\u001f\u007f]/g, "").trim().slice(-120) || `document.${sig.ext}`;
+    const stored = await storeUpload(file);
+    if (!stored) throw new Refusal("Нужен PDF, JPG или PNG");
+    const { name, size, mime, storedAs } = stored;
     await db.$transaction([
-      db.requestFile.create({ data: { requestId: req.id, name, size: buf.length, mime: sig.mime, storedAs, createdAt: DEMO_NOW } }),
+      db.requestFile.create({ data: { requestId: req.id, name, size, mime, storedAs, createdAt: DEMO_NOW } }),
       db.officeRequest.update({ where: { id: req.id }, data: { docReceivedAt: DEMO_NOW } }),
       db.notification.updateMany({
         where: { userId: user.id, refId: req.number, level: "action", resolvedAt: null },

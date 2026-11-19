@@ -71,7 +71,7 @@ try {
   const drawer = (await page.textContent("dialog[open][aria-label='Уведомления']")) ?? "";
   check("center: «Нужно действие», «Новые» (unread at open) and «Ранее»", drawer.includes("Нужно действие") && drawer.includes("Новые") && drawer.includes("Ранее"));
   check("center shows types: Оценка, Расписание, Безопасность", drawer.includes("Оценка") && drawer.includes("Расписание") && drawer.includes("Безопасность"));
-  check("unread rows marked, read rows not", (await page.locator("dialog[open] [data-unread]").count()) === 4 && (await page.locator("dialog[open] [data-note]:not([data-unread])").count()) >= 3);
+  check("unread rows marked, read rows not", (await page.locator("dialog[open] [data-unread]").count()) === 5 && (await page.locator("dialog[open] [data-note]:not([data-unread])").count()) >= 3);
   const afterSeen = await notes("a.vorontsova");
   check("opening marks all as read", afterSeen.every((n) => n.readAt));
   check("read ≠ resolved: actions still pending", afterSeen.filter((n) => n.level === "action" && !n.resolvedAt).length === 2);
@@ -85,7 +85,7 @@ try {
 
   // «Продлить» прямо в шторке
   await page.click("dialog[open] [data-action-card] button:has-text('Продлить')");
-  await page.waitForSelector("text=Книга продлена на две недели");
+  await page.waitForSelector("text=Продлено до 4 декабря");
   await page.waitForTimeout(800);
   const book = (await notes("a.vorontsova")).find((n) => n.category === "library");
   check("resolve: book extended, title updated", !!book.resolvedAt && book.title === "«Экономикс» продлена" && book.body === "Вернуть до 4 декабря", `${book.title} / ${book.body}`);

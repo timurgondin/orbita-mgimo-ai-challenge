@@ -98,8 +98,38 @@ try {
   check("perf: past semesters listed newest first", (await page.locator("[data-past-semester]").first().textContent())?.includes("2 семестр"));
   check("perf: diploma link", (await page.locator("[data-diploma-link]").count()) === 1);
   await page.click("[data-past-semester]");
+  await page.waitForURL((u) => u.pathname === "/study/semester/2");
+  check("perf: past semester opens that semester", (await page.textContent("h1")) === "1 курс, 2 семестр");
+
+  // «Курсы» → карточка семестра открывает именно его, «Весь архив» — отдельной кнопкой
+  await page.goto(BASE + "/study");
+  await page.click('[data-past-semester-card="1"]');
+  await page.waitForURL((u) => u.pathname === "/study/semester/1");
+  const sem1 = (await page.textContent("main")) ?? "";
+  check("courses: semester card opens its semester", sem1.includes("1 курс, 1 семестр") && sem1.includes("Введение в экономику") && !sem1.includes("Статистика"));
+  await page.goto(BASE + "/study");
+  await page.click("main [data-archive-link]");
   await page.waitForURL((u) => u.pathname === "/study/archive");
-  check("perf: past semester leads to archive", true);
+  check("courses: «Весь архив» leads to archive", true);
+  await page.goto(BASE + "/study/semester/9");
+  check("semester: absent semester — not found", ((await page.textContent("h1")) ?? "").includes("не найден"));
+
+  // пройденный курс: материалы (настоящий PDF), мои работы, отзыв; чужой PDF — 404
+  const stat = await db.pastCourse.findFirstOrThrow({ where: { title: "Статистика", user: { login: "a.vorontsova" } } });
+  await page.goto(BASE + `/study/past/${stat.id}?tab=materials`);
+  await page.waitForSelector("[data-material]");
+  check("past course: lectures and exam materials", (await page.locator("[data-material]").count()) >= 10 && ((await text(page)) ?? "").includes("Демоверсия экзамена"));
+  const pdf = await page.request.get(BASE + `/study/past/${stat.id}/files/0`);
+  check("past material: real PDF to owner", pdf.status() === 200 && (await pdf.body()).subarray(0, 5).toString() === "%PDF-");
+  await page.goto(BASE + `/study/past/${stat.id}?tab=works`);
+  await page.waitForSelector("[data-past-work]");
+  const wk = await text(page);
+  check("past course: my works, exam ticket, review", (await page.locator("[data-past-work]").count()) >= 7 && wk.includes("билет") && wk.includes("Отзыв преподавателя"));
+  const maximsPast = await db.pastCourse.findFirstOrThrow({ where: { user: { login: "m.orlov" } } });
+  const foreign = await page.request.get(BASE + `/study/past/${maximsPast.id}/files/0`);
+  check("foreign past material PDF: 404", foreign.status() === 404);
+  const badN = await page.request.get(BASE + `/study/past/${stat.id}/files/999`);
+  check("past material out of range: 404", badN.status() === 404);
 
   // профиль → архив
   await page.goto(BASE + "/profile");
@@ -127,9 +157,7 @@ try {
   check("teacher row opens the teacher page", true);
 
   await page.goto(BASE + "/");
-  await page.getByRole("button", { name: "Библиотека" }).click();
-  await page.waitForSelector("text=Библиотека скоро появится");
-  check("library tile answers with a toast", true);
+  check("Today tiles: rating, library, clubs, print", ["/study/rating", "/library", "/clubs", "/print"].every((h) => tiles.includes(h)));
 
   await page.click('a[aria-label^="Текущая пара"]');
   await page.waitForURL((u) => u.pathname === "/time");

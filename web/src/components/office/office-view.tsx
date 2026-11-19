@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Building2, ChevronRight, Download, FileBadge, Grid2x2Plus, MessageCircle, MapPin, Clock3 } from "lucide-react";
 import { Modal } from "@/components/time/modal";
 import { useToast } from "@/components/ui/toast";
-import { CATEGORIES, REQUEST_TYPES, OFFICE, getType, catalogLine } from "@/lib/office-catalog";
+import { CATALOG, CATEGORIES, OFFICE, getType, catalogLine } from "@/lib/office-catalog";
 import { cn } from "@/lib/utils";
 import type { OfficeData, OfficeDocView, OfficeRequestView } from "@/server/data/types";
 import { DocContent, pdfHref } from "./doc-modal";
@@ -38,7 +38,7 @@ export function OfficeView({ data }: { data: OfficeData }) {
   useEffect(() => {
     if (!wanted && !wantedNew) return;
     const r = wanted ? data.requests.find((x) => x.number === wanted) : undefined;
-    const t = wantedNew ? getType(wantedNew) : undefined;
+    const t = wantedNew ? CATALOG.find((x) => x.id === wantedNew) : undefined;
     // через кадр: страница успевает отрисоваться, окно открывается с обычной анимацией
     requestAnimationFrame(() => {
       if (r) openModal({ type: "req", id: r.id, snap: r });
@@ -74,7 +74,7 @@ export function OfficeView({ data }: { data: OfficeData }) {
       <section className="mt-11" aria-label="Заказать">
         <H2>Заказать</H2>
         <div className="grid grid-cols-4 gap-3 max-[900px]:grid-cols-2">
-          {REQUEST_TYPES.filter((t) => t.popular).map((t) => {
+          {CATALOG.filter((t) => t.popular).map((t) => {
             return (
               <button
                 key={t.id}
@@ -105,7 +105,7 @@ export function OfficeView({ data }: { data: OfficeData }) {
             </span>
             <span>
               <b className="block text-[15px] leading-tight font-semibold tracking-[-.01em]">Ещё</b>
-              <small className="mt-[3px] block text-[13px] text-text-3">{REQUEST_TYPES.length} видов заявок</small>
+              <small className="mt-[3px] block text-[13px] text-text-3">{CATALOG.length} видов заявок</small>
             </span>
           </button>
         </div>
@@ -192,7 +192,7 @@ export function OfficeView({ data }: { data: OfficeData }) {
               <section key={cat} aria-label={cat} className="mt-5">
                 <h3 className="mb-1 text-[13px] font-medium text-text-3">{cat}</h3>
                 <div className="rows [--row-inset:12px]">
-                  {REQUEST_TYPES.filter((t) => t.category === cat).map((t) => (
+                  {CATALOG.filter((t) => t.category === cat).map((t) => (
                     <button
                       key={t.id}
                       type="button"

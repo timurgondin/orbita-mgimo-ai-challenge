@@ -71,6 +71,13 @@
 | Монограмма (аватар с инициалами): глубокий градиент `AVATAR_GRADIENTS`, белые буквы, блик — класс `.mono` | `lib/user-view.ts`, `components/ui/teacher-avatar.tsx` |
 | Загрузка файла (выбрать или перетащить, ход отправки, «Получен») | `components/office/upload-box.tsx` |
 | Пустая страница-заглушка | `components/shell/page-placeholder.tsx` |
+| Лист бумаги с заданиями (демоверсия) | `components/study/course-page.tsx` (`DemoSheet`) |
+| Вкладки страницы через `?tab=` у вложенной страницы | `components/study/past-course.tsx` |
+| График в настоящих пикселях (ширина — `ResizeObserver`), столбцы с акцентом «ты», подсказка по наведению, таблица для скринридера | `components/study/rating-view.tsx` |
+| Обложка книги (цвет курса, точки, корешок) | `components/library/library-view.tsx` (`Cover`, класс `.book-cover`) |
+| Фильтр-чипы над сеткой карточек | `components/clubs/clubs-view.tsx` |
+| Форма с выбором по приоритету и файлами | `components/news/mobility-view.tsx` |
+| Учебный PDF (обложка + страницы) | `server/office/material-pdf.ts` |
 
 ## 5а. Метаданные в строках — без склеек через «·»
 

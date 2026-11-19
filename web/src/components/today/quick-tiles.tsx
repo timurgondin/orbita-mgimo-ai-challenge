@@ -4,26 +4,28 @@ import { useCallback, useState } from "react";
 import Link from "next/link";
 import { StudentCardButton } from "@/components/profile/student-card";
 import { Modal } from "@/components/time/modal";
-import { useToast } from "@/components/ui/toast";
 import type { StudentCardView, TeacherView } from "@/server/data/types";
 import { TileIcon, type TileIconName } from "./tile-icons";
 
 // Знаки Solar (bold duotone) в цвете раздела; цвета — токены курсов, статусов и акцента.
-// href — ссылка; card / teachers / soon — плитка открывает окно или отвечает тостом
+// href — ссылка; card / teachers — плитка открывает окно
 type Tile = { label: string; icon: TileIconName; color: string } & (
   | { href: string }
-  | { action: "card" | "teachers" | "soon" }
+  | { action: "card" | "teachers" }
 );
 const TILES: Tile[] = [
   { label: "Мои курсы", icon: "courses", color: "var(--c-econ)", href: "/study" },
   { label: "Оценки", icon: "grades", color: "var(--st-green)", href: "/study?tab=perf" },
+  { label: "Рейтинг", icon: "rating", color: "var(--c-hist)", href: "/study/rating" },
   { label: "Справки", icon: "documents", color: "var(--st-violet)", href: "/office" },
-  { label: "Студбилет", icon: "card", color: "var(--accent)", action: "card" },
+  { label: "Орбита ID", icon: "card", color: "var(--accent)", action: "card" },
   { label: "Преподаватели", icon: "teachers", color: "var(--c-world)", action: "teachers" },
-  { label: "Библиотека", icon: "library", color: "var(--c-micro)", action: "soon" },
+  { label: "Библиотека", icon: "library", color: "var(--c-micro)", href: "/library" },
+  { label: "Клубы", icon: "clubs", color: "var(--c-eng)", href: "/clubs" },
+  { label: "Печать", icon: "print", color: "var(--c-law)", href: "/print" },
 ];
 
-const TILE = "group flex flex-col items-center gap-3 text-[15px] font-medium tracking-[-.01em]";
+const TILE = "group flex min-w-0 flex-col items-center gap-2.5 text-center text-[14px] font-medium tracking-[-.01em] max-[1100px]:text-[13px] max-[900px]:text-[15px]";
 const FACE =
   "grid aspect-square w-full place-items-center rounded-3xl bg-s1 transition-colors duration-200 group-hover:bg-s2";
 const ICON =
@@ -66,10 +68,9 @@ export function QuickTiles({ card, teachers }: { card: StudentCardView | null; t
   // список рисуем с первого открытия: на «Сегодня» он не нужен, пока окно не открыли
   const [opened, setOpened] = useState(false);
   const close = useCallback(() => setOpen(false), []);
-  const { toast, node } = useToast();
 
   return (
-    <nav aria-label="Быстрый доступ" className="mt-14 grid grid-cols-6 gap-4 max-[900px]:grid-cols-3">
+    <nav aria-label="Быстрый доступ" className="mt-14 grid grid-cols-9 gap-3.5 max-[1100px]:gap-3 max-[900px]:grid-cols-3">
       {TILES.map((tile) => {
         const inner = (
           <>
@@ -103,7 +104,6 @@ export function QuickTiles({ card, teachers }: { card: StudentCardView | null; t
             type="button"
             className={TILE}
             onClick={() => {
-              if (tile.action === "soon") return toast("Библиотека скоро появится в Орбите");
               setOpened(true);
               setOpen(true);
             }}
@@ -120,7 +120,6 @@ export function QuickTiles({ card, teachers }: { card: StudentCardView | null; t
         </div>
         {!teachers.length && <p className="text-[15px] text-text-3">Курсов пока нет</p>}
       </Modal>
-      {node}
     </nav>
   );
 }

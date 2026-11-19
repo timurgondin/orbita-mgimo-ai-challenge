@@ -77,7 +77,7 @@ export async function getOfficeData(): Promise<OfficeData | null> {
         messages: r.messages.map((m) => ({ id: m.id, authorName: m.authorName, initials: initials(m.authorName), staff: m.authorRole === "staff", body: m.body })),
         canWithdraw: true,
         waiting,
-        files: r.files.map((f) => ({ id: f.id, label: r.needDoc ?? "Файл", name: f.name, size: fileSize(f.size), at: shortTime(f.createdAt) })),
+        files: r.files.map((f) => ({ id: f.id, label: f.label ?? r.needDoc ?? "Файл", name: f.name, size: fileSize(f.size), at: shortTime(f.createdAt) })),
       },
     ];
   });

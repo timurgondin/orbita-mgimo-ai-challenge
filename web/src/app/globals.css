@@ -755,3 +755,24 @@ dialog::backdrop {
 .orb[data-state="listening"] i:nth-child(1) { animation-duration: 3.6s; }
 .orb[data-state="listening"] i:nth-child(2) { animation-duration: 4.4s; }
 .orb[data-state="listening"] i:nth-child(3) { animation-duration: 4s; }
+
+/* Обложка книги в библиотеке: глубокий цвет курса, точечный узор, корешок */
+.book-cover {
+  background: linear-gradient(160deg, color-mix(in srgb, var(--cc) 78%, #000) 0%, color-mix(in srgb, var(--cc) 42%, #000) 100%);
+}
+.book-cover::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(circle, rgb(255 255 255 / 0.28) 0.9px, transparent 1.3px);
+  background-size: 7px 7px;
+  -webkit-mask-image: radial-gradient(90% 70% at 100% 100%, #000 0%, transparent 70%);
+  mask-image: radial-gradient(90% 70% at 100% 100%, #000 0%, transparent 70%);
+}
+.book-cover::after {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 5%;
+  background: rgb(0 0 0 / 0.22);
+}
