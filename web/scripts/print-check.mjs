@@ -74,7 +74,9 @@ try {
   const me = await uid("a.vorontsova");
   await open(page, "/print");
   await page.waitForSelector("[data-send]");
-  check("print: held job, quota, printers", (await page.locator("[data-held]").count()) === 1 && (await page.locator("[data-printer]").count()) === 8 && (await text(page)).includes("из 200 осталось"));
+  check("print: steps, held job, quota, 3 printers", (await page.locator("[data-steps] li").count()) === 3 && (await page.locator("[data-held]").count()) === 1 && (await page.locator("[data-printer]").count()) === 3 && (await text(page)).includes("ч/б страниц из 200"));
+  await page.click("[data-all-printers]");
+  check("all printers on demand", (await page.locator("[data-printer]").count()) === 8);
   check("printer near the next lesson first", ((await page.locator("[data-printer]").first().textContent()) ?? "").includes("Рядом со следующей парой"));
 
   await page.setInputFiles("[data-send-input]", { name: "slides.pdf", mimeType: "application/pdf", buffer: threePages });
@@ -103,6 +105,7 @@ try {
   check("unknown printer refuses", fake.body.includes("Принтер не найден"));
 
   await open(page, "/print");
+  await page.click("[data-all-printers]");
   await page.click('[data-printer="p-c1"]');
   await page.click("dialog[open] [data-release]");
   await page.waitForSelector("text=Печатается на принтере");
@@ -111,6 +114,7 @@ try {
   const noScan = await forge(ctx, "print", "scanToOrbita", ["p-c4"], "/print");
   check("printer without scanner refuses", noScan.body.includes("нет сканера"));
   await open(page, "/print");
+  await page.click("[data-all-printers]");
   await page.click('[data-printer="p-c1"]');
   await page.click("dialog[open] [data-scan-here]");
   await page.waitForSelector("text=Скан пришёл в Орбиту");

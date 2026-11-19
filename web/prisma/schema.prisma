@@ -24,6 +24,7 @@ model User {
   position            String?
   avatar              String               @default("sand") // ключ градиента аватара
   onboardingDone      Boolean              @default(false)
+  tiles               String? // JSON: закреплённые плитки «Сегодня» (id из src/lib/tiles.ts); null — по умолчанию
   createdAt           DateTime             @default(now())
   courseRank          Int? // место на курсе
   courseSize          Int? // студентов на курсе

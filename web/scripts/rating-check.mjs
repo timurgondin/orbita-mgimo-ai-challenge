@@ -58,12 +58,16 @@ try {
   const t = await text(page);
   const rank = Number(await page.textContent("[data-rank]"));
   check("rating: place shown, matches perf card", rank > 0 && rank < 184 && card.includes(`${rank} место из 184`), String(rank));
-  check("rating: privacy note, perks, how it is counted", t.includes("видишь только ты") && t.includes("Повышенная академическая стипендия") && t.includes("Как считается"));
+  check("rating: privacy note, perks, how it is counted", t.includes("Видно только тебе") && t.includes("Повышенная академическая стипендия") && (await page.locator("[data-how]").count()) === 1);
   // однокурсники анонимны: ни одной фамилии из группы
   const pool = await db.user.findMany({ where: { login: { startsWith: "seed.student" } }, select: { lastName: true } });
   check("rating: no classmates' names on the page", pool.every((p) => !t.includes(p.lastName)));
   check("rating: histogram has own bar and table view", (await page.locator("[data-histogram] table tr").count()) > 10 && t.includes("ты"));
   check("rating: history of places for 2 semesters", (await page.locator("[data-history] table tr").count()) === 2);
+  await page.click("[data-how]");
+  await page.waitForSelector("dialog[open] [data-how-modal]");
+  check("«Как считается» opens a modal with the formula", ((await page.textContent("dialog[open]")) ?? "").includes("Σ оценка × кредиты"));
+  await page.keyboard.press("Escape");
   await page.getByRole("tab", { name: "Последняя сессия" }).click();
   await page.waitForTimeout(400);
   check("rating: last session view switches", Number(await page.textContent("[data-rank]")) > 0);
@@ -78,7 +82,7 @@ try {
   await open(mp, "/study/rating");
   check("Maxim: own program and 6 points", (await text(mp)).includes("Мировая политика, 4 курс") && (await mp.locator("[data-history] table tr").count()) === 6);
   await open(mp, "/");
-  check("Today: rating tile", (await mp.locator('nav[aria-label="Быстрый доступ"] a[href="/study/rating"]').count()) === 1);
+  check("Today: rating in «Ещё»", (await mp.locator('nav[aria-label="Быстрый доступ"] dialog a[href="/study/rating"]').count()) === 1);
 
   // преподаватель: страницы рейтинга нет
   const { page: tp } = await login("e.petrova");

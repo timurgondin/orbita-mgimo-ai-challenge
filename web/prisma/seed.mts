@@ -36,7 +36,7 @@ for (const u of users) {
   const passwordHash = await hashPassword(PASSWORD);
   const prof = profiles[u.login] ?? {};
   const card = prof.cardNumber ? { cardToken: randomBytes(32).toString("base64url") } : { cardToken: null };
-  const data = { ...u, ...prof, ...card, passwordHash, pepperVersion: PEPPER_VERSION, ...(stats[u.login] ?? { courseRank: null, courseSize: null, creditsEarned: null }) };
+  const data = { ...u, ...prof, ...card, tiles: null, passwordHash, pepperVersion: PEPPER_VERSION, ...(stats[u.login] ?? { courseRank: null, courseSize: null, creditsEarned: null }) };
   await db.user.upsert({ where: { login: u.login }, create: data, update: data });
 }
 // Вымышленные однокурсники для счётчиков записи на консультации. Входа нет: пароль случайный и нигде не хранится.

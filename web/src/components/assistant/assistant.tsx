@@ -1,7 +1,8 @@
 "use client";
 
 import { createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
-import { ArrowUp, X } from "lucide-react";
+import { ArrowUp, RotateCcw, X } from "lucide-react";
+import { usePathname } from "next/navigation";
 import { useTheme } from "next-themes";
 import { ThinkingOrb } from "thinking-orbs";
 import { Orb } from "@/components/shell/orb";
@@ -47,6 +48,15 @@ export function AssistantProvider({ children }: { children: React.ReactNode }) {
 
   const open = useCallback(() => setOpen(true), []);
   const close = useCallback(() => setOpen(false), []);
+
+  // переход по ссылке из ответа («Открыть в Офисе», «Открыть в расписании») — окно закрывается, страница видна сразу
+  const pathname = usePathname();
+  const lastPath = useRef(pathname);
+  useEffect(() => {
+    if (lastPath.current === pathname) return;
+    lastPath.current = pathname;
+    setOpen(false);
+  }, [pathname]);
 
   // Ctrl K / ⌘ K — из любого раздела
   useEffect(() => {
@@ -102,6 +112,12 @@ export function AssistantProvider({ children }: { children: React.ReactNode }) {
 
   const empty = msgs.length === 0 && !thinking;
   const last = msgs.at(-1);
+  const reset = () => {
+    if (busy) return;
+    setMsgs([]);
+    setText("");
+    requestAnimationFrame(() => inputRef.current?.focus());
+  };
 
   return (
     <AssistantContext.Provider value={{ open }}>
@@ -115,6 +131,19 @@ export function AssistantProvider({ children }: { children: React.ReactNode }) {
           "mt-[max(16px,10dvh)] mb-0 h-fit max-h-[min(680px,calc(100dvh-max(16px,10dvh)-16px))] w-[min(620px,calc(100vw-24px))] flex-col overflow-hidden rounded-[28px] open:flex",
         )}
       >
+        {!empty && (
+          <button
+            type="button"
+            onClick={reset}
+            disabled={busy}
+            aria-label="Новый разговор"
+            title="Новый разговор"
+            data-assistant-reset
+            className="absolute top-3.5 left-3.5 z-[2] grid size-8 place-items-center rounded-full text-text-3 transition-colors hover:bg-hover hover:text-text disabled:opacity-40"
+          >
+            <RotateCcw size={15} strokeWidth={1.7} />
+          </button>
+        )}
         <button
           type="button"
           onClick={close}
@@ -132,7 +161,13 @@ export function AssistantProvider({ children }: { children: React.ReactNode }) {
           </div>
         ) : (
           // column-reverse держит прокрутку у нижнего края, пока ответ растёт
-          <div className="flex min-h-0 flex-1 flex-col-reverse overflow-y-auto overscroll-contain [mask-image:linear-gradient(to_bottom,transparent,#000_56px)]">
+          <div
+            // ссылка из ответа ведёт на ту же страницу, где мы уже стоим (адрес не меняется) — окно всё равно закрываем
+            onClickCapture={(e) => {
+              if ((e.target as HTMLElement).closest("a[href]")) close();
+            }}
+            className="flex min-h-0 flex-1 flex-col-reverse overflow-y-auto overscroll-contain [mask-image:linear-gradient(to_bottom,transparent,#000_56px)]"
+          >
             <div role="log" aria-live="polite" aria-label="Диалог" className="flex flex-col gap-5 px-5 pt-14 pb-4 sm:px-7">
               {msgs.map((m) =>
                 m.role === "user" ? (
@@ -140,7 +175,7 @@ export function AssistantProvider({ children }: { children: React.ReactNode }) {
                     {m.text}
                   </div>
                 ) : (
-                  <BotMessage key={m.id} msg={m} toast={toast} isLast={m === last} onPick={ask} />
+                  <BotMessage key={m.id} msg={m} toast={toast} isLast={m === last} onPick={ask} fallback={START_CHIPS.filter((c) => !msgs.some((x) => x.role === "user" && x.text === c))} />
                 ),
               )}
               {thinking && (
@@ -202,12 +237,16 @@ function BotMessage({
   toast,
   isLast,
   onPick,
+  fallback,
 }: {
   msg: Extract<Msg, { role: "bot" }>;
   toast: ReturnType<typeof useToast>["toast"];
   isLast: boolean;
   onPick: (q: string) => void;
+  /** если у ответа своих подсказок нет — общие, кроме уже заданных: разговор не упирается в тупик */
+  fallback: string[];
 }) {
+  const chips = msg.reply.chips?.length ? msg.reply.chips : fallback.slice(0, 4);
   const words = msg.reply.text.split(/(?<=\s)/);
   return (
     <div className="flex flex-col gap-3">
@@ -220,7 +259,7 @@ function BotMessage({
           <ReplyCard card={msg.reply.card} toast={toast} />
         </div>
       )}
-      {msg.done && isLast && msg.reply.chips?.length ? <Chips items={msg.reply.chips} onPick={onPick} className="assistant-in" /> : null}
+      {msg.done && isLast && chips.length ? <Chips items={chips} onPick={onPick} className="assistant-in" /> : null}
     </div>
   );
 }

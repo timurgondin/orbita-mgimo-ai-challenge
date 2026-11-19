@@ -70,7 +70,7 @@ function SendBox({ toast }: { toast: Toast }) {
   };
 
   return (
-    <section aria-label="Отправить на печать" data-send className="rounded-3xl bg-s1 p-5">
+    <div data-send className="min-w-0">
       {!file ? (
         <button
           type="button"
@@ -87,7 +87,7 @@ function SendBox({ toast }: { toast: Toast }) {
           }}
           className={cn(
             "flex w-full flex-col items-center justify-center gap-2 rounded-2xl border border-dashed px-4 py-9 text-center transition-colors duration-150",
-            drag ? "border-accent bg-[color-mix(in_srgb,var(--accent)_8%,transparent)]" : "border-line hover:bg-hover",
+            drag ? "border-accent bg-[color-mix(in_srgb,var(--accent)_8%,transparent)]" : "border-[color-mix(in_srgb,var(--text)_18%,transparent)] hover:bg-hover",
           )}
         >
           <Upload size={22} strokeWidth={1.6} className="text-text-2" />
@@ -142,19 +142,30 @@ function SendBox({ toast }: { toast: Toast }) {
         }}
         data-send-input
       />
-    </section>
+    </div>
   );
 }
+
+/** Как это работает: три шага прямо в карточке отправки — путь «файл → принтер → Орбита ID» виден до первого действия. */
+const STEPS = [
+  { n: 1, title: "Отправь файл", text: "Он ждёт тебя сутки" },
+  { n: 2, title: "Подойди к любому принтеру", text: "В любом корпусе" },
+  { n: 3, title: "Приложи Орбита ID", text: "Печать начнётся при тебе" },
+];
 
 export function PrintView({ d, card }: { d: PrintData; card: StudentCardView | null }) {
   const { toast, node } = useToast();
   const [idOpen, setIdOpen] = useState(false);
   const [printer, setPrinter] = useState<string | null>(null);
   const [pOpen, setPOpen] = useState(false);
+  const [allPrinters, setAllPrinters] = useState(false);
+  const [hist, setHist] = useState<"print" | "scan">("print");
   const closeId = useCallback(() => setIdOpen(false), []);
   const closeP = useCallback(() => setPOpen(false), []);
   const { pending, run } = useRun(toast);
   const cur = d.printers.find((p) => p.id === printer);
+  const printers = allPrinters ? d.printers : d.printers.filter((p) => p.status !== "offline").slice(0, 3);
+  const left = { bw: d.quota.bw.total - d.quota.bw.used, color: d.quota.color.total - d.quota.color.used };
 
   return (
     <>
@@ -168,130 +179,125 @@ export function PrintView({ d, card }: { d: PrintData; card: StudentCardView | n
         )}
       </div>
 
-      <div className="mt-9 grid grid-cols-[minmax(0,1fr)] gap-12 min-[1000px]:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)]">
-        <div className="min-w-0">
-          <SendBox toast={toast} />
+      <section aria-label="Отправить на печать" className="mt-9 grid grid-cols-[minmax(0,1fr)] gap-6 rounded-[28px] bg-s1 p-5 min-[900px]:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)] min-[900px]:gap-10 min-[900px]:p-6">
+        <SendBox toast={toast} />
+        <ol aria-label="Как это работает" className="flex flex-col justify-center gap-5" data-steps>
+          {STEPS.map((x) => (
+            <li key={x.n} className="flex items-center gap-4">
+              <span className={cn("grid size-9 shrink-0 place-items-center rounded-full text-sm font-semibold tabular-nums", x.n === (d.held.length ? 2 : 1) ? "bg-text text-bg" : "bg-s3 text-text-2")}>{x.n}</span>
+              <span className="min-w-0">
+                <b className="block font-medium">{x.title}</b>
+                <small className="text-[13px] text-text-3">{x.text}</small>
+              </span>
+            </li>
+          ))}
+        </ol>
+      </section>
 
-          <section aria-labelledby="queue" className="mt-10">
+      <div className="mt-12 grid grid-cols-[minmax(0,1fr)] gap-12 min-[1000px]:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)]">
+        <div className="flex min-w-0 flex-col gap-12">
+          <section aria-labelledby="queue">
             <h2 id="queue" className={H2}>
-              Ждут у принтера
+              Ждут печати
             </h2>
             {d.held.length ? (
-              <>
-                <div className="rows [--row-inset:0px]">
-                  {d.held.map((j) => (
-                    <div key={j.id} data-held={j.name} className="flex items-center gap-3.5 py-3">
-                      <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-s1 text-text-2">
-                        <PrinterIcon size={18} strokeWidth={1.6} />
-                      </span>
-                      <span className="min-w-0 flex-1">
-                        <b className="block truncate font-medium">{j.name}</b>
-                        <small className="block text-[13px] text-text-3">
-                          {pages(j.pages)}
-                          {j.copies > 1 && ` × ${j.copies}`}, {j.color ? "цвет" : "ч/б"}
-                          {j.duplex ? ", с двух сторон" : ""}
-                        </small>
-                        <small className="block text-[13px] text-text-3">{j.expires}</small>
-                      </span>
-                      <button type="button" disabled={pending} onClick={() => run(() => cancelPrint(j.id))} className={ACT}>
-                        Убрать
-                      </button>
-                    </div>
-                  ))}
-                </div>
-                <p className="mt-3 flex items-start gap-2.5 rounded-2xl bg-s1 px-4 py-3 text-sm text-text-2">
-                  <ScanLine size={17} strokeWidth={1.6} className="mt-px shrink-0" />
-                  Подойди к любому принтеру и приложи Орбита ID — печать начнётся только при тебе
-                </p>
-              </>
-            ) : (
-              <p className="text-[15px] text-text-3">Очередь пуста</p>
-            )}
-          </section>
-
-          {d.scans.length > 0 && (
-            <section aria-labelledby="scans" className="mt-10">
-              <h2 id="scans" className={H2}>
-                Сканы
-              </h2>
-              <div className="rows [--row-inset:14px]">
-                {d.scans.map((s) => (
-                  <a
-                    key={s.id}
-                    href={`/print/scans/${s.id}`}
-                    target="_blank"
-                    rel="noopener"
-                    data-scan
-                    className="-mx-3.5 flex items-center gap-3.5 rounded-2xl px-3.5 py-3 transition-colors duration-150 hover:bg-hover"
-                  >
+              <div className="rows [--row-inset:0px]">
+                {d.held.map((j) => (
+                  <div key={j.id} data-held={j.name} className="flex items-center gap-3.5 py-3">
                     <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-s1 text-text-2">
-                      <ScanLine size={18} strokeWidth={1.6} />
+                      <FileText size={18} strokeWidth={1.6} />
                     </span>
                     <span className="min-w-0 flex-1">
-                      <b className="block truncate font-medium">{s.name}</b>
-                      <small className="text-[13px] text-text-3">
-                        {pages(s.pages)}, {s.size}, {s.where}, {s.when}
+                      <b className="block truncate font-medium">{j.name}</b>
+                      <small className="block text-[13px] text-text-3">
+                        {pages(j.pages)}
+                        {j.copies > 1 && ` × ${j.copies}`}, {j.color ? "цвет" : "ч/б"}
+                        {j.duplex ? ", с двух сторон" : ""}
                       </small>
+                      <small className="block text-[13px] text-text-3">{j.expires}</small>
                     </span>
-                    <Download size={16} strokeWidth={1.6} className="shrink-0 text-text-3" />
-                  </a>
-                ))}
-              </div>
-            </section>
-          )}
-
-          {d.history.length > 0 && (
-            <section aria-labelledby="printed" className="mt-10">
-              <h2 id="printed" className={H2}>
-                Напечатано
-              </h2>
-              <div className="rows [--row-inset:0px]">
-                {d.history.map((h) => (
-                  <div key={h.id} className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-4 py-3">
-                    <span className="min-w-0">
-                      <b className="block truncate font-medium">{h.name}</b>
-                      <small className="text-[13px] text-text-3">
-                        {h.where}, {h.when}
-                      </small>
-                    </span>
-                    <span className="text-[13px] whitespace-nowrap text-text-3">
-                      {pages(h.pages)}
-                      {h.color ? ", цвет" : ""}
-                    </span>
+                    <button type="button" disabled={pending} onClick={() => run(() => cancelPrint(j.id))} className={ACT}>
+                      Убрать
+                    </button>
                   </div>
                 ))}
               </div>
+            ) : (
+              <p className="text-[15px] text-text-3">Пусто</p>
+            )}
+          </section>
+
+          {(d.history.length > 0 || d.scans.length > 0) && (
+            <section aria-labelledby="history">
+              <div className="mb-3 flex items-center justify-between gap-4">
+                <h2 id="history" className="text-lg font-semibold tracking-[-.02em]">
+                  История
+                </h2>
+                <Segmented label="История" value={hist} onChange={setHist} items={[{ id: "print", label: "Печать" }, { id: "scan", label: `Сканы ${d.scans.length || ""}`.trim() }]} />
+              </div>
+              {hist === "scan" ? (
+                d.scans.length ? (
+                  <div className="rows [--row-inset:14px]">
+                    {d.scans.map((s) => (
+                      <a key={s.id} href={`/print/scans/${s.id}`} target="_blank" rel="noopener" data-scan className="-mx-3.5 flex items-center gap-3.5 rounded-2xl px-3.5 py-3 transition-colors duration-150 hover:bg-hover">
+                        <span className="min-w-0 flex-1">
+                          <b className="block truncate font-medium">{s.name}</b>
+                          <small className="text-[13px] text-text-3">
+                            {pages(s.pages)}, {s.when}
+                          </small>
+                        </span>
+                        <Download size={16} strokeWidth={1.6} className="shrink-0 text-text-3" />
+                      </a>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-[15px] text-text-3">Сканов нет</p>
+                )
+              ) : (
+                <div className="rows [--row-inset:0px]">
+                  {d.history.slice(0, 4).map((h) => (
+                    <div key={h.id} className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-4 py-3">
+                      <span className="min-w-0">
+                        <b className="block truncate font-medium">{h.name}</b>
+                        <small className="text-[13px] text-text-3">{h.when}</small>
+                      </span>
+                      <span className="text-[13px] whitespace-nowrap text-text-3">
+                        {pages(h.pages)}
+                        {h.color ? ", цвет" : ""}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              )}
             </section>
           )}
         </div>
 
-        <div className="flex min-w-0 flex-col gap-10">
-          <section aria-labelledby="quota">
+        <div className="flex min-w-0 flex-col gap-12">
+          <section aria-labelledby="quota" data-quota>
             <h2 id="quota" className={H2}>
-              Квота на {d.quota.month}
+              Бесплатно до конца месяца
             </h2>
-            {(
-              [
-                ["Чёрно-белые", d.quota.bw, "var(--text-2)"],
-                ["Цветные", d.quota.color, "var(--accent)"],
-              ] as const
-            ).map(([label, q, fill]) => (
-              <div key={label} className="mb-4" data-quota={label}>
-                <div className="mb-1.5 flex items-baseline justify-between text-sm">
-                  <span className="text-text-2">{label}</span>
-                  <span className="text-text-3 tabular-nums">
-                    <b className="font-semibold text-text">{q.total - q.used}</b> из {q.total} осталось
+            <div className="grid grid-cols-2 gap-4">
+              {(
+                [
+                  ["ч/б страниц", left.bw, d.quota.bw.total, "var(--text-2)"],
+                  ["цветных", left.color, d.quota.color.total, "var(--accent)"],
+                ] as const
+              ).map(([label, l, total, fill]) => (
+                <div key={label}>
+                  <b className="block text-[32px] leading-none font-medium tracking-[-.03em] tabular-nums">{l}</b>
+                  <span className="text-sm text-text-3">
+                    {label} из {total}
                   </span>
+                  <ProgressBar value={Math.round((l / total) * 100)} label={`Осталось ${label}`} fill={fill} className="mt-2.5 h-1" />
                 </div>
-                <ProgressBar value={Math.round(((q.total - q.used) / q.total) * 100)} label={`${label}: осталось`} fill={fill} className="h-1.5" />
-              </div>
-            ))}
-            {d.saved > 0 && (
-              <p className="flex items-center gap-2 text-sm text-text-3">
-                <Leaf size={15} strokeWidth={1.7} style={{ color: "var(--st-green)" }} />
-                Двусторонняя печать сэкономила {d.saved} {plural(d.saved, "лист", "листа", "листов")}
-              </p>
-            )}
+              ))}
+            </div>
+            <p className="mt-4 flex items-center gap-2 text-[13px] text-text-3">
+              <Leaf size={14} strokeWidth={1.7} style={{ color: "var(--st-green)" }} />
+              {d.saved > 0 ? `${d.saved} ${plural(d.saved, "лист", "листа", "листов")} сэкономила печать с двух сторон` : "Печать с двух сторон экономит бумагу"}
+            </p>
           </section>
 
           <section aria-labelledby="printers">
@@ -299,7 +305,7 @@ export function PrintView({ d, card }: { d: PrintData; card: StudentCardView | n
               Принтеры
             </h2>
             <div className="rows [--row-inset:14px]">
-              {d.printers.map((p) => (
+              {printers.map((p) => (
                 <button
                   key={p.id}
                   type="button"
@@ -312,14 +318,7 @@ export function PrintView({ d, card }: { d: PrintData; card: StudentCardView | n
                 >
                   <span className="min-w-0">
                     <b className="block truncate font-medium">{p.name}</b>
-                    <small className="block truncate text-[13px] text-text-3">{p.id === d.nearId && d.nearReason ? d.nearReason : p.place}</small>
-                    <span className="mt-1 flex flex-wrap gap-1.5">
-                      {[p.color && "Цвет", p.a3 && "A3", p.scan && "Скан"].filter(Boolean).map((f) => (
-                        <span key={f as string} className="rounded-md bg-s1 px-1.5 py-px text-[11.5px] text-text-2">
-                          {f}
-                        </span>
-                      ))}
-                    </span>
+                    <small className="block truncate text-[13px] text-text-3">{p.id === d.nearId ? "Рядом со следующей парой" : p.place}</small>
                   </span>
                   <span className="flex items-center gap-1.5 text-[13px] whitespace-nowrap text-text-2">
                     <i className="size-2 rounded-full" style={{ background: STATUS[p.status].color }} />
@@ -329,6 +328,11 @@ export function PrintView({ d, card }: { d: PrintData; card: StudentCardView | n
                 </button>
               ))}
             </div>
+            {!allPrinters && (
+              <button type="button" onClick={() => setAllPrinters(true)} data-all-printers className="mt-2 text-sm text-text-2 hover:text-text">
+                Все принтеры, {d.printers.length} ›
+              </button>
+            )}
           </section>
         </div>
       </div>

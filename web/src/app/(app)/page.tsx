@@ -2,6 +2,7 @@ import { LaterToday } from "@/components/today/later-today";
 import { NewsList } from "@/components/today/news-list";
 import { NowCard } from "@/components/today/now-card";
 import { QuickTiles } from "@/components/today/quick-tiles";
+import { parsePinned } from "@/lib/tiles";
 import { SoonList } from "@/components/today/soon-list";
 import {
   addDays,
@@ -51,7 +52,7 @@ export default async function TodayPage() {
         <LaterToday lessons={later} tomorrow={tomorrow} tomorrowLabel={`Завтра, ${formatLongDate(addDays(DEMO_DATE, 1)).split(",")[0].toLowerCase()}`} />
       </div>
 
-      <QuickTiles card={card} teachers={teachers} />
+      <QuickTiles card={card} teachers={teachers} pinned={parsePinned(user.tiles)} />
 
       <div className="mt-14 grid grid-cols-[minmax(0,1fr)] gap-12 min-[900px]:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
         <SoonList items={soon} />

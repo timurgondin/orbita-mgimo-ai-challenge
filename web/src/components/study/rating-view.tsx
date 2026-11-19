@@ -1,8 +1,9 @@
 "use client";
 
-import { useLayoutEffect, useRef, useState } from "react";
+import { useCallback, useLayoutEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { Check, ChevronLeft, Lock, TrendingUp } from "lucide-react";
+import { Check, ChevronLeft, Info, Lock, TrendingUp } from "lucide-react";
+import { Modal } from "@/components/time/modal";
 import { Segmented } from "@/components/ui/segmented";
 import { plural } from "@/lib/phrases";
 import { cn } from "@/lib/utils";
@@ -177,6 +178,8 @@ function History({ points, size }: { points: RatingPeriod[]; size: number }) {
 
 export function RatingView({ d }: { d: RatingData }) {
   const [mode, setMode] = useState<"cumulative" | "semester">("cumulative");
+  const [howOpen, setHowOpen] = useState(false);
+  const closeHow = useCallback(() => setHowOpen(false), []);
   const cum = d.periods.filter((p) => p.kind === "cumulative");
   const p = d.periods.filter((x) => x.kind === mode).at(-1);
   const prev = mode === "cumulative" ? cum.at(-2) : undefined;
@@ -192,6 +195,21 @@ export function RatingView({ d }: { d: RatingData }) {
           <h1 className="text-[34px] leading-[1.15] font-medium tracking-[-.03em] max-sm:text-[28px]">Рейтинг</h1>
           <div className="mt-1 text-[15px] text-text-2">
             {d.program}, {d.course} курс, {d.size} {plural(d.size, "студент", "студента", "студентов")}
+          </div>
+          <div className="mt-3 flex flex-wrap items-center gap-2">
+            <span className="inline-flex h-8 items-center gap-1.5 rounded-full bg-s1 px-3 text-[13px] text-text-2" data-private>
+              <Lock size={13} strokeWidth={1.8} />
+              Видно только тебе
+            </span>
+            <button
+              type="button"
+              onClick={() => setHowOpen(true)}
+              data-how
+              className="inline-flex h-8 items-center gap-1.5 rounded-full bg-s1 px-3 text-[13px] text-text-2 transition-colors hover:bg-s2 hover:text-text"
+            >
+              <Info size={13} strokeWidth={1.8} />
+              Как считается
+            </button>
           </div>
         </div>
         {p && (
@@ -227,10 +245,6 @@ export function RatingView({ d }: { d: RatingData }) {
               <span className="text-sm text-text-3">твой средний, медиана курса {p.median}</span>
             </div>
           </section>
-          <p className="mt-6 inline-flex items-center gap-2 rounded-full bg-s1 px-3.5 py-1.5 text-[13px] text-text-2">
-            <Lock size={13} strokeWidth={1.8} />
-            Твоё место видишь только ты, списка с фамилиями нет
-          </p>
 
           <section aria-labelledby="dist" className="mt-12">
             <h2 id="dist" className={H2}>
@@ -269,21 +283,37 @@ export function RatingView({ d }: { d: RatingData }) {
                   <History points={cum} size={d.size} />
                 </section>
               )}
-              <section aria-labelledby="how">
-                <h2 id="how" className={cn(H2, "mb-2")}>
-                  Как считается
-                </h2>
-                <ul className="flex flex-col gap-2 text-[15px] text-text-2">
-                  <li>Средний балл по экзаменам с весом кредитов, зачёты не входят</li>
-                  <li>Накопленный — за все сессии, обновляется после каждой</li>
-                  <li>При равном балле выше тот, у кого больше кредитов</li>
-                  <li>Сравнение — со своей программой и курсом</li>
-                </ul>
-              </section>
+              {cum.length <= 1 && (
+                <button type="button" onClick={() => setHowOpen(true)} className="self-start text-sm text-text-2 hover:text-text">
+                  Как считается рейтинг ›
+                </button>
+              )}
             </div>
           </div>
         </div>
       )}
+
+      <Modal open={howOpen} onClose={closeHow} accent="var(--accent)" cover={false} title="Как считается рейтинг" width={520}>
+        <div data-how-modal>
+          <h2 className="text-[22px] font-semibold tracking-[-.025em]">Как считается рейтинг</h2>
+          <div className="mt-5 rounded-2xl bg-s3 px-4 py-3.5 text-center text-[15px]">
+            <span className="text-text-2">Средний балл</span> = <span className="text-text-2">Σ оценка × кредиты</span> / <span className="text-text-2">Σ кредитов</span>
+          </div>
+          <ul className="mt-5 flex flex-col gap-3 text-[15px]">
+            {[
+              ["Только экзамены", "Зачёты в средний не входят. Предмет на 6 кредитов весит вдвое больше, чем на 3"],
+              ["Накопленный и за сессию", "Накопленный — за всё обучение, пересчитывается после каждой сессии. «Последняя сессия» — только её оценки"],
+              ["С кем сравнение", "Со своей программой и курсом. При равном балле выше тот, у кого больше кредитов"],
+              ["Кто видит", "Своё место видишь только ты. Однокурсников на графике нет — только сколько человек с каким баллом"],
+            ].map(([t, x]) => (
+              <li key={t}>
+                <b className="block font-medium">{t}</b>
+                <span className="text-sm text-text-2">{x}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </Modal>
     </>
   );
 }

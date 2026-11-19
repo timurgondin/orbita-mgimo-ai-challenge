@@ -127,6 +127,24 @@ try {
     else check("sign-up shown", true);
   }
 
+  // после ответа без своих подсказок разговор не упирается в тупик; ссылка из ответа закрывает окно
+  await askUi(page, "Закажи справку в военкомат");
+  await page.click(`${DLG} button:has-text("Подтвердить")`);
+  await page.waitForSelector(`${DLG} :text("Открыть в Офисе")`);
+  await page.waitForTimeout(600);
+  const chipTexts = await page.locator(`${DLG} [role=log] > div:last-child button`).allTextContents();
+  check("after a done action there are follow-up chips", chipTexts.some((t) => /пара|балл|неделе|справку|консультацию/.test(t)), chipTexts.join(" / "));
+  await page.click(`${DLG} a:has-text("Открыть в Офисе")`);
+  await page.waitForURL((u) => u.pathname === "/office");
+  await page.waitForTimeout(500);
+  check("«Открыть в Офисе» closes the assistant", (await page.locator(DLG).count()) === 0);
+  await page.keyboard.press("Control+k");
+  await page.waitForSelector(DLG);
+  await page.click(`${DLG} [data-assistant-reset]`);
+  await page.waitForSelector(`${DLG} :text("Чем помочь?")`);
+  check("«Новый разговор» clears the chat", true);
+  await page.keyboard.press("Escape");
+
   // ---- подделки
   const alisaApi = await ask(ctx, "мой средний балл");
   const { ctx: mctx } = await login("m.orlov");

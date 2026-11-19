@@ -669,23 +669,15 @@ dialog::backdrop {
   }
 }
 
-/* Шапка (components/shell/scroll-header.tsx): стиль «прилипла» — по scroll-state, запасной — [data-stuck] */
-/* scroll-padding-top под шапку не ставим: в Chromium фокус на кнопках самой шапки (колокольчик, аватар)
-   тогда прокручивает страницу наверх. */
-.topbar {
-  container: topbar / scroll-state;
-}
+/* Шапка (components/shell/scroll-header.tsx): вид «прилипла» — [data-stuck] по IntersectionObserver.
+   scroll-padding-top под шапку не ставим: в Chromium фокус на кнопках самой шапки (колокольчик, аватар)
+   тогда прокручивает страницу наверх. Своя композиционная подложка (translateZ) — чтобы размытие в Safari
+   не перерисовывалось вместе с анимациями под шапкой и не мигало. */
 .topbar-bar {
+  transform: translateZ(0);
   transition:
     background 0.25s,
     box-shadow 0.25s;
-}
-@container topbar scroll-state(stuck: top) {
-  .topbar-bar {
-    background: color-mix(in srgb, var(--bg) 80%, transparent);
-    box-shadow: 0 0.5px 0 var(--line);
-    backdrop-filter: blur(20px) saturate(1.5);
-  }
 }
 .topbar[data-stuck] .topbar-bar {
   background: color-mix(in srgb, var(--bg) 80%, transparent);

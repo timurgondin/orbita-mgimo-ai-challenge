@@ -19,7 +19,7 @@ await db.loginAttempt.deleteMany();
 await db.session.deleteMany();
 
 const manifest = JSON.parse(readFileSync(new URL("../.next/server/server-reference-manifest.json", import.meta.url), "utf8")).node;
-const actionId = (name) => Object.entries(manifest).find(([, v]) => v.exportedName === name && v.filename.includes("profile"))?.[0];
+const actionId = (name) => Object.entries(manifest).find(([, v]) => v.exportedName === name && (v.filename.includes("profile") || v.filename.includes("today")))?.[0];
 
 const server = spawn("node", ["node_modules/next/dist/bin/next", "start", "-p", String(PORT)], { env: { ...process.env, COOKIE_SECURE: "false" }, stdio: "ignore" });
 for (let i = 0; i < 60; i++) {
@@ -109,11 +109,18 @@ try {
   check("empty value clears the contact", f7.body.includes('"ok":true') && (await user("a.vorontsova")).phone === null);
   check("Maxim untouched by Alisa's edits", JSON.stringify(await user("m.orlov")) === JSON.stringify(maxim));
 
-  // «Сегодня»: плитка «Студбилет» открывает то же окно
+  // «Сегодня»: плитка «Орбита ID» открывает то же окно
   await page.goto(BASE + "/");
-  await page.click("nav[aria-label='Быстрый доступ'] [data-open-card]");
+  await page.waitForLoadState("networkidle");
+  await page.click("nav[aria-label='Быстрый доступ'] > [data-tile='card']");
   await page.waitForSelector("dialog[open][aria-label='Студенческий билет'] svg");
   check("Today tile opens student card", ((await page.textContent("dialog[open][aria-label='Студенческий билет']")) ?? "").includes("250412"));
+
+  // закреплённые плитки: только белый список, от 1 до 5
+  const t6 = await forge(ctx, "setPinnedTiles", [["grades", "card", "teachers", "library", "print", "clubs"]]);
+  const tBad = await forge(ctx, "setPinnedTiles", [["grades", "../admin"]]);
+  const tEmpty = await forge(ctx, "setPinnedTiles", [[]]);
+  check("forged tiles rejected (6, unknown, empty)", t6.body.includes("от 1 до 5") && tBad.body.includes("Некорректный выбор") && tEmpty.body.includes("от 1 до 5") && (await db.user.findUniqueOrThrow({ where: { login: "a.vorontsova" } })).tiles === null);
 
   // публичная проверка билета
   const v = await (await fetch(BASE + "/verify/" + alisa.cardToken)).text();

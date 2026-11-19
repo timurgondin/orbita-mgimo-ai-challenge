@@ -144,10 +144,10 @@ try {
   await page.waitForSelector('nav[aria-label="Быстрый доступ"]');
   const dead = await page.locator('main a[href="#"]').count();
   check("Today: no dead links", dead === 0, `${dead} left`);
-  const tiles = await page.locator('nav[aria-label="Быстрый доступ"] a').evaluateAll((as) => as.map((a) => a.getAttribute("href")));
-  check("Today tiles: courses, grades, documents", ["/study", "/study?tab=perf", "/office"].every((h) => tiles.includes(h)));
+  const main = await page.locator('nav[aria-label="Быстрый доступ"] > [data-tile]').evaluateAll((as) => as.map((a) => a.getAttribute("data-tile")));
+  check("Today: 5 pinned tiles + «Ещё»", main.join() === "grades,card,teachers,library,print,more", main.join());
 
-  await page.getByRole("button", { name: "Преподаватели" }).click();
+  await page.click('nav[aria-label="Быстрый доступ"] > [data-tile="teachers"]');
   const tDlg = page.locator("dialog[open][aria-label='Преподаватели']");
   await tDlg.waitFor();
   const td = (await tDlg.textContent()) ?? "";
@@ -156,8 +156,25 @@ try {
   await page.waitForURL((u) => u.pathname === "/people/sokolov-dv");
   check("teacher row opens the teacher page", true);
 
+  // «Ещё»: все сервисы; «Настроить» — закрепить другие плитки (сохраняется на сервере)
   await page.goto(BASE + "/");
-  check("Today tiles: rating, library, clubs, print", ["/study/rating", "/library", "/clubs", "/print"].every((h) => tiles.includes(h)));
+  await page.waitForLoadState("networkidle");
+  await page.click('[data-tile="more"]');
+  await page.waitForSelector("dialog[open][aria-label='Все сервисы']");
+  const all = await page.locator("dialog[open] [data-tile]").evaluateAll((as) => as.map((a) => a.getAttribute("href") ?? a.getAttribute("data-tile")));
+  check("«Ещё»: all 9 services incl. rating, clubs", all.length === 9 && ["/study/rating", "/clubs", "/library", "/print", "/office"].every((h) => all.includes(h)));
+  await page.click("dialog[open] [data-pin-edit]");
+  await page.click('dialog[open] [data-pin="print"]');
+  await page.click('dialog[open] [data-pin="clubs"]');
+  await page.click("dialog[open] [data-pin-save]");
+  await page.waitForSelector("text=Главная обновлена");
+  await page.keyboard.press("Escape");
+  await page.waitForTimeout(800);
+  const after = await page.locator('nav[aria-label="Быстрый доступ"] > [data-tile]').evaluateAll((as) => as.map((a) => a.getAttribute("data-tile")));
+  const saved = (await db.user.findUniqueOrThrow({ where: { login: "a.vorontsova" } })).tiles;
+  check("pinned tiles saved and shown", after.join() === "grades,card,teachers,library,clubs,more" && saved === JSON.stringify(["grades", "card", "teachers", "library", "clubs"]), after.join());
+  const maxim = (await db.user.findUniqueOrThrow({ where: { login: "m.orlov" } })).tiles;
+  check("other students' tiles untouched", maxim === null);
 
   await page.click('a[aria-label^="Текущая пара"]');
   await page.waitForURL((u) => u.pathname === "/time");
