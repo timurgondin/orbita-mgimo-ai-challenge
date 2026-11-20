@@ -375,17 +375,9 @@ button {
 }
 
 /* Офис: трекер этапов и галочка успеха */
-@keyframes step-prog {
-  from {
-    width: 30%;
-  }
-  to {
-    width: 65%;
-  }
-}
+/* Текущий этап — статично наполовину, без качания (как «ждём от тебя», только белым) */
 .step-cur {
   width: 50%;
-  animation: step-prog 2.4s var(--ease) infinite alternate;
 }
 @keyframes ck-pop {
   from {
@@ -411,9 +403,6 @@ button {
   animation: ck-draw 0.5s 0.25s var(--ease) forwards;
 }
 @media (prefers-reduced-motion: reduce) {
-  .step-cur {
-    animation: none;
-  }
   .ck-pop {
     animation: none;
   }
