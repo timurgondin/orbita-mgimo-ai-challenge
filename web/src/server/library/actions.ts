@@ -1,10 +1,12 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { DEMO_NOW } from "@/lib/demo-clock";
+import { randomInt } from "node:crypto";
+import { DEMO_NOW, addDays, dayStart, formatDayMonth, mskDate } from "@/lib/demo-clock";
+import { MAX_ORDERS, pointById } from "@/lib/library-points";
 import { requireUser } from "@/server/auth/session";
 import { db } from "@/server/db/client";
-import { MAX_HOLDS } from "@/server/data/library";
+import { RENEW_DAYS, etaPhrase, readyAtFor } from "@/server/data/library";
 import { renewLoanFor } from "./renew";
 
 export type LibraryResult = { ok: true; message: string } | { ok: false; error: string };
@@ -26,40 +28,70 @@ export async function renewLoan(id: unknown): Promise<LibraryResult> {
   return { ok: true, message: r.message };
 }
 
-/** Забронировать печатный экземпляр: забрать на абонементе за 3 дня по Орбита ID. Свободный экземпляр списывается в транзакции. */
-export async function holdBook(bookId: unknown): Promise<LibraryResult> {
+/** Заказать печатный экземпляр в постамат или на станцию выдачи. Свободный экземпляр списывается в транзакции, забирают по Орбита ID. */
+export async function orderBook(bookId: unknown, pointId: unknown): Promise<LibraryResult> {
   const user = await student();
+  const point = pointById(pointId);
   if (!user || !idOk(bookId)) return { ok: false, error: "Книга не найдена" };
+  if (!point) return { ok: false, error: "Выберите, где забрать" };
+  const readyAt = readyAtFor(point);
   try {
-    const due = new Date(DEMO_NOW.getTime() + 3 * 86_400_000);
-    due.setUTCHours(15, 0, 0, 0); // 18:00 МСК
     await db.$transaction(async (tx) => {
       const book = await tx.book.findUnique({ where: { id: bookId } });
       if (!book || book.format === "ebook") throw new Error("Книга не найдена");
-      const mine = await tx.loan.findFirst({ where: { userId: user.id, bookId, returnedAt: null } });
-      if (mine) throw new Error(mine.kind === "hold" ? "Уже забронирована" : "Книга уже у вас");
-      const holds = await tx.loan.count({ where: { userId: user.id, kind: "hold", returnedAt: null } });
-      if (holds >= MAX_HOLDS) throw new Error(`Не больше ${MAX_HOLDS} броней`);
+      if (await tx.loan.findFirst({ where: { userId: user.id, bookId, returnedAt: null } })) throw new Error("Книга уже у вас");
+      if (await tx.bookOrder.findFirst({ where: { userId: user.id, bookId, closedAt: null } })) throw new Error("Уже заказана");
+      if ((await tx.bookOrder.count({ where: { userId: user.id, closedAt: null } })) >= MAX_ORDERS) throw new Error(`Не больше ${MAX_ORDERS} заказов сразу`);
       const r = await tx.book.updateMany({ where: { id: bookId, available: { gt: 0 } }, data: { available: { decrement: 1 } } });
       if (!r.count) throw new Error("Свободных экземпляров нет");
-      await tx.loan.create({ data: { userId: user.id, bookId, kind: "hold", inventory: "Абонемент, корпус А", takenAt: DEMO_NOW, dueAt: due } });
+      await tx.bookOrder.create({ data: { userId: user.id, bookId, point: point.id, status: "packing", createdAt: DEMO_NOW, readyAt } });
     });
   } catch (e) {
     return { ok: false, error: e instanceof Error ? e.message : "Не получилось" };
   }
   revalidatePath("/library");
-  return { ok: true, message: "Забронировано: заберите на абонементе с Орбита ID" };
+  return { ok: true, message: `Заказано, привезём ${etaPhrase(readyAt)}` };
 }
 
-/** Отменить свою бронь — экземпляр снова свободен. */
-export async function cancelHold(id: unknown): Promise<LibraryResult> {
+/** Отменить свой заказ — экземпляр снова свободен. */
+export async function cancelOrder(id: unknown): Promise<LibraryResult> {
   const user = await student();
-  if (!user || !idOk(id)) return { ok: false, error: "Бронь не найдена" };
-  const loan = await db.loan.findFirst({ where: { id, userId: user.id, kind: "hold", returnedAt: null } });
-  if (!loan) return { ok: false, error: "Бронь не найдена" };
-  await db.$transaction([db.loan.delete({ where: { id: loan.id } }), db.book.update({ where: { id: loan.bookId }, data: { available: { increment: 1 } } })]);
+  if (!user || !idOk(id)) return { ok: false, error: "Заказ не найден" };
+  const order = await db.bookOrder.findFirst({ where: { id, userId: user.id, closedAt: null } });
+  if (!order) return { ok: false, error: "Заказ не найден" };
+  await db.$transaction([
+    db.bookOrder.update({ where: { id: order.id }, data: { status: "cancelled", closedAt: DEMO_NOW } }),
+    db.book.update({ where: { id: order.bookId }, data: { available: { increment: 1 } } }),
+  ]);
   revalidatePath("/library");
-  return { ok: true, message: "Бронь отменена" };
+  return { ok: true, message: "Заказ отменён" };
+}
+
+/**
+ * Забрать заказ: у постамата ячейка открывается по Орбита ID (здесь — кнопкой в окне, как в приложениях постаматов).
+ * Заказ закрывается, книга появляется «на руках» на две недели.
+ */
+export async function pickupOrder(id: unknown): Promise<LibraryResult> {
+  const user = await student();
+  if (!user || !idOk(id)) return { ok: false, error: "Заказ не найден" };
+  const dueAt = new Date(dayStart(addDays(mskDate(DEMO_NOW), RENEW_DAYS)).getTime() + 18 * 3_600_000);
+  let cell: string | null = null;
+  try {
+    await db.$transaction(async (tx) => {
+      const order = await tx.bookOrder.findFirst({ where: { id, userId: user.id, closedAt: null } });
+      if (!order) throw new Error("Заказ не найден");
+      if (order.status !== "ready") throw new Error("Книга ещё в пути");
+      const r = await tx.bookOrder.updateMany({ where: { id: order.id, closedAt: null }, data: { status: "picked", closedAt: DEMO_NOW } });
+      if (!r.count) throw new Error("Заказ уже получен");
+      cell = order.cell;
+      const inventory = `УБ-${String(100000 + randomInt(900000))}`;
+      await tx.loan.create({ data: { userId: user.id, bookId: order.bookId, kind: "short", inventory, takenAt: DEMO_NOW, dueAt } });
+    });
+  } catch (e) {
+    return { ok: false, error: e instanceof Error ? e.message : "Не получилось" };
+  }
+  revalidatePath("/library");
+  return { ok: true, message: `${cell ? `Ячейка ${cell} открыта` : "Книга выдана"}, вернуть до ${formatDayMonth(dueAt)}` };
 }
 
 /** Запомнить страницу в электронной книге. */

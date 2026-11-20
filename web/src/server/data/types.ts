@@ -758,10 +758,21 @@ export interface BookCard {
   available: number;
 }
 
+/** Книга в каталоге: что с ней у меня и когда освободится, если все на руках */
+export interface CatalogBook extends BookCard {
+  about: string | null;
+  /** к какому моему курсу (название и цвет), если учебник курса */
+  course: { title: string; color: string } | null;
+  mine: "loan" | "order" | null;
+  reading: boolean;
+  /** «Вернут 26 ноября» — ближайший срок возврата, когда свободных нет */
+  back: string | null;
+}
+
 export interface LoanView {
   id: string;
   book: BookCard;
-  kind: "semester" | "short" | "hold";
+  kind: "semester" | "short";
   kindLabel: string;
   inventory: string;
   /** «Завтра до 10:00», «До 30 июня» */
@@ -773,19 +784,54 @@ export interface LoanView {
   canRenew: boolean;
   renewNote: string;
   renewals: number;
-  taken: string;
-  returned: string | null;
-  late: boolean;
+}
+
+/** Заказ из каталога — трекер «как у посылки» */
+export interface OrderView {
+  id: string;
+  book: BookCard;
+  status: "packing" | "transit" | "ready";
+  steps: { label: string; when: string; state: "fin" | "cur" | "todo" }[];
+  point: { id: string; kind: "locker" | "station"; name: string; place: string; hours: string };
+  /** «Привезём завтра к 12:00» / «Ячейка 14, заберите до 22 ноября» */
+  line: string;
+  cell: string | null;
+  canCancel: boolean;
+}
+
+export interface HistoryItem {
+  id: string;
+  book: BookCard;
+  /** «5 – 17 октября» */
+  span: string;
+  /** «12 дней» */
+  kept: string;
+  /** «на 10 дней позже» или null — вовремя */
+  late: string | null;
+}
+
+export interface PointOption {
+  id: string;
+  kind: "locker" | "station";
+  name: string;
+  place: string;
+  hours: string;
+  /** «Завтра к 12:00» */
+  eta: string;
 }
 
 export interface LibraryData {
+  orders: OrderView[];
   onHand: LoanView[];
-  holds: LoanView[];
   reading: { book: BookCard; page: number; percent: number; last: string }[];
-  /** книги к текущим курсам */
-  courses: { title: string; color: string; books: (BookCard & { mine: "loan" | "hold" | null; reading: boolean })[] }[];
-  history: LoanView[];
-  stats: { onHand: number; pages: number; year: number; onTime: string | null };
+  /** книги к текущим курсам — первой полкой каталога */
+  courseBooks: CatalogBook[];
+  catalog: CatalogBook[];
+  shelves: string[];
+  points: PointOption[];
+  /** история по семестрам: «Осень 2026», «Весна 2026» */
+  history: { title: string; items: HistoryItem[] }[];
+  stats: { year: number; pages: number; onTime: string | null; days: number | null };
 }
 
 export interface ReaderData {

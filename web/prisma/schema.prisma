@@ -59,6 +59,7 @@ model User {
   clubs               ClubMember[]
   loans               Loan[]
   readings            Reading[]
+  bookOrders          BookOrder[]
   printJobs           PrintJob[]
   scans               Scan[]
 }
@@ -519,11 +520,13 @@ model Book {
   copies    Int       @default(0) // печатных экземпляров
   available Int       @default(0) // свободно сейчас
   excerpt   String? // текст для читалки: абзацы через пустую строку
+  about     String? // о чём книга — пара предложений для карточки каталога
   loans     Loan[]
   readings  Reading[]
+  orders    BookOrder[]
 }
 
-// Книга на руках. semester — учебник на учебный год, short — на две недели
+// Книга на руках. semester — учебник на учебный год, short — на две недели (заказанные из каталога — тоже short)
 model Loan {
   id          String    @id @default(cuid())
   userId      String
@@ -536,6 +539,25 @@ model Loan {
   renewals    Int       @default(0)
   user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   book        Book      @relation(fields: [bookId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+// Заказ книги из каталога: везут из книгохранилища в постамат или на станцию выдачи, забирают по Орбита ID.
+// status — этап (src/lib/library-points.ts): packing | transit | ready, затем picked или cancelled
+model BookOrder {
+  id        String    @id @default(cuid())
+  userId    String
+  bookId    String
+  point     String // пункт выдачи (PICKUP_POINTS)
+  status    String
+  createdAt DateTime
+  readyAt   DateTime // когда будет (или стала) готова к выдаче
+  pickupBy  DateTime? // забрать до — когда уже в ячейке
+  cell      String? // номер ячейки постамата
+  closedAt  DateTime? // забрали или отменили
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  book      Book      @relation(fields: [bookId], references: [id], onDelete: Cascade)
 
   @@index([userId])
 }

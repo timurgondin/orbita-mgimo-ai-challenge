@@ -1,5 +1,5 @@
 // Запуск: npm run build && PORT=3101 node scripts/library-check.mjs  (сам поднимает next start)
-// «Библиотека»: продление (правила, уведомление), бронь, читалка, чужие выдачи.
+// «Библиотека»: продление (правила, уведомление), заказ в постамат и на станцию, выдача по Орбита ID, каталог, читалка, чужие выдачи и заказы.
 import { execSync, spawn } from "node:child_process";
 import { readFileSync } from "node:fs";
 import { chromium } from "playwright";
@@ -83,23 +83,65 @@ try {
   const third = await forge(ctx, "library", "renewLoan", [eco.id], "/library");
   check("max two renewals", third.body.includes("дважды"));
 
-  // бронь печатного экземпляра
-  const vienna = await db.book.findUniqueOrThrow({ where: { slug: "vienna" } });
+  // заказы: трекер, постамат по Орбита ID
   await open(page, "/library");
-  await page.click('[data-course-book="vienna"] [data-hold]');
-  await page.waitForSelector("text=Забронировано");
-  check("hold: a copy taken from available", (await db.book.findUniqueOrThrow({ where: { slug: "vienna" } })).available === vienna.available - 1);
-  const holdAgain = await forge(ctx, "library", "holdBook", [vienna.id], "/library");
-  check("double hold rejected", holdAgain.body.includes("Уже забронирована"));
+  check("two orders: one ready in a locker, one in transit", (await page.locator("[data-order-card]").count()) === 2 && (await page.locator('[data-order-card="game-theory"][data-status="ready"] [data-pickup]').count()) === 1 && (await page.locator('[data-order-card="negotiations"] [data-pickup]').count()) === 0);
+  check("history grouped by semester with «take again»", (await page.locator("[data-history]").count()) === 4 && (await text(page)).includes("Весна 2026") && (await page.locator("[data-again]").count()) === 4);
+  const transit = await db.bookOrder.findFirstOrThrow({ where: { userId: me, status: "transit" } });
+  const early = await forge(ctx, "library", "pickupOrder", [transit.id], "/library");
+  check("can't pick up an order in transit", early.body.includes("ещё в пути"));
+  await page.click('[data-order-card="game-theory"] [data-pickup]');
+  await page.waitForSelector("dialog[open] [data-pickup-modal] svg");
+  check("locker window: cell number and Orbita ID QR", ((await page.textContent("dialog[open] [data-pickup-modal]")) ?? "").includes("Ячейка 14"));
+  await page.click("dialog[open] [data-open-cell]");
+  await page.waitForSelector("dialog[open] >> text=Ячейка 14 открыта");
+  const picked = await db.bookOrder.findFirstOrThrow({ where: { userId: me, book: { slug: "game-theory" } } });
+  const gameLoan = await db.loan.findFirst({ where: { userId: me, book: { slug: "game-theory" }, returnedAt: null } });
+  check("pickup: order closed, book on hand for two weeks", picked.status === "picked" && !!picked.closedAt && gameLoan?.kind === "short" && gameLoan.dueAt.toISOString().startsWith("2026-12-03"));
+  const again = await forge(ctx, "library", "pickupOrder", [picked.id], "/library");
+  check("second pickup rejected", again.body.includes("Заказ не найден"));
+  await page.keyboard.press("Escape");
+
+  // каталог: полка к курсам, поиск, разделы, заказ на станцию выдачи
+  await open(page, "/library?tab=catalog");
+  await page.waitForSelector("[data-catalog]");
+  const total = await db.book.count();
+  check("catalog: whole fund + course shelf", (await page.locator("[data-catalog] [data-book]").count()) === total && (await page.locator("[data-course-shelf] [data-book]").count()) > 0);
+  await page.fill("[data-catalog-search]", "переговоры");
+  await page.waitForTimeout(300);
+  check("search by title", (await page.locator("[data-catalog] [data-book]").count()) === 1);
+  await page.fill("[data-catalog-search]", "гончаров");
+  await page.waitForTimeout(300);
+  check("search by author", (await page.locator("[data-catalog] [data-book]").count()) === 3);
+  await page.fill("[data-catalog-search]", "");
+  await page.click('[data-shelf="Право"]');
+  check("shelf chip filters", (await page.locator("[data-catalog] [data-book]").count()) === (await db.book.count({ where: { shelf: "Право" } })));
+  const vienna = await db.book.findUniqueOrThrow({ where: { slug: "vienna" } });
+  await page.click('[data-catalog] [data-book="vienna"]');
+  await page.waitForSelector('dialog[open] [data-book-modal="vienna"]');
+  check("book window: about and pickup points", ((await page.textContent("dialog[open]")) ?? "").includes("Постатейный комментарий") && (await page.locator("dialog[open] [data-point]").count()) === 4);
+  await page.click('dialog[open] label:has([data-point="station"])');
+  await page.click("dialog[open] [data-order]");
+  await page.waitForSelector("text=Заказано, привезём сегодня к 15:00");
+  const vOrder = await db.bookOrder.findFirstOrThrow({ where: { userId: me, bookId: vienna.id, closedAt: null } });
+  check("order: station, packing, copy taken", vOrder.point === "station" && vOrder.status === "packing" && (await db.book.findUniqueOrThrow({ where: { id: vienna.id } })).available === vienna.available - 1);
+  await page.waitForTimeout(600);
+  check("catalog shows «Заказана»", ((await page.textContent('[data-catalog] [data-book="vienna"]')) ?? "").includes("Заказана"));
+  const dbl = await forge(ctx, "library", "orderBook", [vienna.id, "locker-a"], "/library");
+  check("double order rejected", dbl.body.includes("Уже заказана"));
   const protocol = await db.book.findUniqueOrThrow({ where: { slug: "protocol" } });
-  const none = await forge(ctx, "library", "holdBook", [protocol.id], "/library");
-  check("hold with no free copies rejected", none.body.includes("Свободных экземпляров нет"));
+  const none = await forge(ctx, "library", "orderBook", [protocol.id, "locker-a"], "/library");
+  check("order with no free copies rejected", none.body.includes("Свободных экземпляров нет"));
   const ebookOnly = await db.book.findUniqueOrThrow({ where: { slug: "micro-problems" } });
-  const eb = await forge(ctx, "library", "holdBook", [ebookOnly.id], "/library");
-  check("e-book can't be held", eb.body.includes("Книга не найдена"));
-  const hold = await db.loan.findFirstOrThrow({ where: { userId: me, kind: "hold" } });
-  const cancel = await forge(ctx, "library", "cancelHold", [hold.id], "/library");
-  check("cancel hold returns the copy", cancel.body.includes("Бронь отменена") && (await db.book.findUniqueOrThrow({ where: { slug: "vienna" } })).available === vienna.available);
+  const eb = await forge(ctx, "library", "orderBook", [ebookOnly.id, "locker-a"], "/library");
+  check("e-book can't be ordered", eb.body.includes("Книга не найдена"));
+  const ecoBook = await db.book.findUniqueOrThrow({ where: { slug: "economix" } });
+  const own = await forge(ctx, "library", "orderBook", [ecoBook.id, "locker-a"], "/library");
+  check("book on hand can't be ordered", own.body.includes("уже у вас"));
+  const badPoint = await forge(ctx, "library", "orderBook", [protocol.id, "../admin"], "/library");
+  check("unknown pickup point rejected", badPoint.body.includes("Выберите, где забрать"));
+  const cancel = await forge(ctx, "library", "cancelOrder", [vOrder.id], "/library");
+  check("cancel order returns the copy", cancel.body.includes("Заказ отменён") && (await db.book.findUniqueOrThrow({ where: { slug: "vienna" } })).available === vienna.available);
 
   // читалка
   await open(page, "/library/read/micro-problems");
@@ -118,6 +160,9 @@ try {
   const { ctx: mctx, page: mp } = await login("m.orlov");
   const wp = await forge(mctx, "library", "renewLoan", [maxLoan.id], "/library");
   check("queue on the book: no renewal", wp.body.includes("очередь"));
+  const foreignCancel = await forge(mctx, "library", "cancelOrder", [transit.id], "/library");
+  const foreignPickup = await forge(mctx, "library", "pickupOrder", [transit.id], "/library");
+  check("Maxim can't cancel or pick up Alisa's order", foreignCancel.body.includes("Заказ не найден") && foreignPickup.body.includes("Заказ не найден"));
   await open(mp, "/library");
   check("Maxim sees only his books", (await mp.locator("[data-loan]").count()) === 2 && !(await text(mp)).includes("Экономикс"));
 } catch (e) {

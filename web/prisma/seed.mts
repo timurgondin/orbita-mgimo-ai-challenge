@@ -4,7 +4,7 @@ import { BELLS } from "../src/lib/bells";
 import { randomBytes } from "node:crypto";
 import { pastContent } from "./seed-past";
 import { LESSON_PREP, PREPARE } from "./seed-prepare";
-import { BOOKS, CLUBS, CLUB_MEMBERS, LOANS, PRINT_JOBS, READINGS, SCANS } from "./seed-campus";
+import { BOOKS, CLUBS, CLUB_MEMBERS, LOANS, ORDERS, PRINT_JOBS, READINGS, SCANS } from "./seed-campus";
 import { AUTO_PASS, DISCIPLINE_BY_TITLE, LOAD, PLANNED, PROFILES, STAFF, SYLLABI, TASKS, TEACHERS } from "./seed-academic";
 
 const db = new PrismaClient();
@@ -839,11 +839,15 @@ for (const [login, slug, status] of CLUB_MEMBERS) {
 }
 
 // ---------- Библиотека ----------
-await db.book.deleteMany(); // выдачи и чтение — каскадом
+await db.book.deleteMany(); // выдачи, заказы и чтение — каскадом
 for (const b of BOOKS) await db.book.create({ data: b });
 for (const [login, slug, kind, taken, due, returned, renewals, inventory] of LOANS) {
   const book = await db.book.findUniqueOrThrow({ where: { slug } });
   await db.loan.create({ data: { userId: await userId(login), bookId: book.id, kind, inventory, takenAt: at(taken), dueAt: at(due), returnedAt: returned ? at(returned) : null, renewals } });
+}
+for (const [login, slug, point, status, created, ready, pickupBy, cell] of ORDERS) {
+  const book = await db.book.findUniqueOrThrow({ where: { slug } });
+  await db.bookOrder.create({ data: { userId: await userId(login), bookId: book.id, point, status, createdAt: at(created), readyAt: at(ready), pickupBy: pickupBy ? at(pickupBy) : null, cell } });
 }
 for (const [login, slug, page, when] of READINGS) {
   const book = await db.book.findUniqueOrThrow({ where: { slug } });

@@ -74,7 +74,10 @@
 | Лист бумаги с заданиями (демоверсия) | `components/study/course-page.tsx` (`DemoSheet`) |
 | Вкладки страницы через `?tab=` у вложенной страницы | `components/study/past-course.tsx` |
 | График в настоящих пикселях (ширина — `ResizeObserver`), столбцы с акцентом «ты», подсказка по наведению, таблица для скринридера | `components/study/rating-view.tsx` |
-| Обложка книги (цвет курса, точки, корешок) | `components/library/library-view.tsx` (`Cover`, класс `.book-cover`) |
+| Обложка книги (цвет курса, точки, корешок) | `components/library/cover.tsx` (`Cover`, класс `.book-cover`; размер текста — `--fs`, отступ от него) |
+| Трекер заказа «как у посылки», окно постамата (ячейка + QR Орбита ID) | `components/library/library-view.tsx` (`OrderCard`, `PickupModal`) |
+| Каталог: поиск, чипы, сетка карточек с одной строкой состояния; окно с выбором пункта (радио-строки) | `components/library/catalog.tsx` |
+| Перетаскивание плиток (pointer events, FLIP, стрелки с клавиатуры) | `components/today/quick-tiles.tsx` |
 | Фильтр-чипы над сеткой карточек | `components/clubs/clubs-view.tsx` |
 | Форма с выбором по приоритету и файлами | `components/news/mobility-view.tsx` |
 | Учебный PDF (обложка + страницы) | `server/office/material-pdf.ts` |
