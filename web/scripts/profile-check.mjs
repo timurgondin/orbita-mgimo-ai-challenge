@@ -116,11 +116,15 @@ try {
   await page.waitForSelector("dialog[open][aria-label='Студенческий билет'] svg");
   check("Today tile opens student card", ((await page.textContent("dialog[open][aria-label='Студенческий билет']")) ?? "").includes("250412"));
 
-  // закреплённые плитки: только белый список, от 1 до 5
-  const t6 = await forge(ctx, "setPinnedTiles", [["grades", "card", "teachers", "library", "print", "clubs"]]);
-  const tBad = await forge(ctx, "setPinnedTiles", [["grades", "../admin"]]);
-  const tEmpty = await forge(ctx, "setPinnedTiles", [[]]);
-  check("forged tiles rejected (6, unknown, empty)", t6.body.includes("от 1 до 5") && tBad.body.includes("Некорректный выбор") && tEmpty.body.includes("от 1 до 5") && (await db.user.findUniqueOrThrow({ where: { login: "a.vorontsova" } })).tiles === null);
+  // порядок плиток: только перестановка всех сервисов из белого списка
+  const tShort = await forge(ctx, "setTileOrder", [["grades", "card", "teachers", "library", "print"]]);
+  const tBad = await forge(ctx, "setTileOrder", [["grades", "card", "teachers", "library", "print", "courses", "rating", "documents", "../admin"]]);
+  const tDup = await forge(ctx, "setTileOrder", [["grades", "grades", "teachers", "library", "print", "courses", "rating", "documents", "clubs"]]);
+  const tEmpty = await forge(ctx, "setTileOrder", [[]]);
+  check(
+    "forged tile order rejected (partial, unknown, duplicate, empty)",
+    [tShort, tBad, tDup, tEmpty].every((r) => r.body.includes("Некорректный порядок")) && (await db.user.findUniqueOrThrow({ where: { login: "a.vorontsova" } })).tiles === null,
+  );
 
   // публичная проверка билета
   const v = await (await fetch(BASE + "/verify/" + alisa.cardToken)).text();

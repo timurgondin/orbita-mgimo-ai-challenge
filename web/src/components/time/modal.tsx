@@ -12,6 +12,7 @@ export function Modal({
   cover = true,
   width = 480,
   title,
+  closeButton = true,
   children,
 }: {
   open: boolean;
@@ -22,6 +23,8 @@ export function Modal({
   /** Ширина панели, px */
   width?: number;
   title: string;
+  /** false — своя кнопка закрытия в шапке содержимого (чтобы стояла в одну линию с заголовком и действиями) */
+  closeButton?: boolean;
   children: React.ReactNode;
 }) {
   return (
@@ -32,14 +35,16 @@ export function Modal({
       style={{ "--cc": accent, "--mw": `${width}px` } as React.CSSProperties}
       className="max-h-[min(740px,calc(100dvh-48px))] w-[min(var(--mw),calc(100vw-32px))] flex-col overflow-hidden rounded-[28px] open:flex"
     >
-      <button
-        type="button"
-        onClick={onClose}
-        aria-label="Закрыть"
-        className="absolute top-3.5 right-3.5 z-[2] grid size-8 place-items-center rounded-full bg-black/25 text-text hover:bg-black/40"
-      >
-        <X size={16} strokeWidth={1.6} />
-      </button>
+      {closeButton && (
+        <button
+          type="button"
+          onClick={onClose}
+          aria-label="Закрыть"
+          className="absolute top-3.5 right-3.5 z-[2] grid size-8 place-items-center rounded-full bg-black/25 text-text hover:bg-black/40"
+        >
+          <X size={16} strokeWidth={1.6} />
+        </button>
+      )}
       {cover && <div className="modal-cover" />}
       <div className={cn("flex-1 overflow-auto px-6 pb-6", cover ? "pt-5" : "pt-6")}>{children}</div>
     </Dialog>

@@ -141,6 +141,8 @@ try {
 
   // ---- «Сегодня»: ни одной ссылки «#»
   await page.goto(BASE + "/");
+  // ждём конца стриминга: до вставки готовый кусок лежит в скрытом <div hidden>, и меню в DOM на миг два
+  await page.waitForLoadState("networkidle");
   await page.waitForSelector('nav[aria-label="Быстрый доступ"]');
   const dead = await page.locator('main a[href="#"]').count();
   check("Today: no dead links", dead === 0, `${dead} left`);
@@ -156,23 +158,40 @@ try {
   await page.waitForURL((u) => u.pathname === "/people/sokolov-dv");
   check("teacher row opens the teacher page", true);
 
-  // «Ещё»: все сервисы; «Настроить» — закрепить другие плитки (сохраняется на сервере)
+  // «Ещё»: все сервисы; «Настроить» — порядок плиток (перетаскивание, «+», стрелки), первые пять — на главной
   await page.goto(BASE + "/");
   await page.waitForLoadState("networkidle");
   await page.click('[data-tile="more"]');
   await page.waitForSelector("dialog[open][aria-label='Все сервисы']");
   const all = await page.locator("dialog[open] [data-tile]").evaluateAll((as) => as.map((a) => a.getAttribute("href") ?? a.getAttribute("data-tile")));
   check("«Ещё»: all 9 services incl. rating, clubs", all.length === 9 && ["/study/rating", "/clubs", "/library", "/print", "/office"].every((h) => all.includes(h)));
+  const closeBox = await page.locator("dialog[open] button[aria-label='Закрыть']").boundingBox();
+  const editBox = await page.locator("dialog[open] [data-pin-edit]").boundingBox();
+  check("«Ещё»: close button in line with «Настроить»", Math.abs(closeBox.y + closeBox.height / 2 - (editBox.y + editBox.height / 2)) < 1.5);
   await page.click("dialog[open] [data-pin-edit]");
-  await page.click('dialog[open] [data-pin="print"]');
-  await page.click('dialog[open] [data-pin="clubs"]');
+  const order = () => page.locator("dialog[open] [data-pin]").evaluateAll((as) => as.map((a) => a.getAttribute("data-pin")));
+  await page.click('dialog[open] [data-pin="clubs"]'); // «+»: на главную последней, «Печать» уходит в «Ещё»
+  check("«+» puts a tile 5th on the main screen", (await order()).slice(0, 6).join() === "grades,card,teachers,library,clubs,print", (await order()).join());
+  // перетаскивание: «Рейтинг» на первое место
+  const from = await page.locator('dialog[open] [data-pin="rating"]').boundingBox();
+  const to = await page.locator('dialog[open] [data-pin="grades"]').boundingBox();
+  await page.mouse.move(from.x + from.width / 2, from.y + from.height / 3);
+  await page.mouse.down();
+  for (let i = 1; i <= 15; i++) await page.mouse.move(from.x + from.width / 2 + ((to.x - from.x) * i) / 15, from.y + from.height / 3 + ((to.y - from.y) * i) / 15);
+  await page.waitForTimeout(350);
+  await page.mouse.up();
+  check("drag moves a tile to the first place", (await order())[0] === "rating", (await order()).join());
+  await page.focus('dialog[open] [data-pin="rating"]');
+  await page.keyboard.press("ArrowRight");
+  check("arrow keys move the focused tile", (await order()).slice(0, 2).join() === "grades,rating" && (await page.evaluate(() => document.activeElement?.getAttribute("data-pin"))) === "rating");
   await page.click("dialog[open] [data-pin-save]");
   await page.waitForSelector("text=Главная обновлена");
   await page.keyboard.press("Escape");
   await page.waitForTimeout(800);
   const after = await page.locator('nav[aria-label="Быстрый доступ"] > [data-tile]').evaluateAll((as) => as.map((a) => a.getAttribute("data-tile")));
   const saved = (await db.user.findUniqueOrThrow({ where: { login: "a.vorontsova" } })).tiles;
-  check("pinned tiles saved and shown", after.join() === "grades,card,teachers,library,clubs,more" && saved === JSON.stringify(["grades", "card", "teachers", "library", "clubs"]), after.join());
+  const want = ["grades", "rating", "card", "teachers", "library", "clubs", "print", "courses", "documents"];
+  check("tile order saved, first five shown", after.join() === "grades,rating,card,teachers,library,more" && saved === JSON.stringify(want), after.join() + " / " + saved);
   const maxim = (await db.user.findUniqueOrThrow({ where: { login: "m.orlov" } })).tiles;
   check("other students' tiles untouched", maxim === null);
 
