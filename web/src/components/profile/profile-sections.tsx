@@ -27,7 +27,7 @@ function Row({ k, children, action }: { k: string; children: React.ReactNode; ac
 
 function Person({ p }: { p: PersonRef }) {
   return (
-    <span className="flex items-center gap-2.5">
+    <span className="flex items-center gap-2.5 max-sm:mt-2 max-sm:mb-0.5">
       <span className="grid size-[26px] shrink-0 place-items-center rounded-full text-[10px] font-semibold mono" style={{ background: p.avatar }}>
         {p.initials}
       </span>

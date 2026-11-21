@@ -45,7 +45,7 @@ function Histogram({ p }: { p: RatingPeriod }) {
 
   return (
     <figure ref={ref} className="relative mt-4" data-histogram>
-      <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`} className="block overflow-visible" role="img" aria-label={`Распределение среднего балла на курсе, твой балл ${p.gpa}`}>
+      <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`} className="block max-w-full overflow-visible" role="img" aria-label={`Распределение среднего балла на курсе, твой балл ${p.gpa}`}>
         <line x1={0} x2={W} y1={H - bottom} y2={H - bottom} stroke="var(--line)" strokeWidth={1} />
         {p.cutoffs
           .filter((c) => c.top === 10 || c.top === 25)
@@ -132,7 +132,7 @@ function History({ points, size }: { points: RatingPeriod[]; size: number }) {
   const d = points.map((p, i) => `${i ? "L" : "M"}${x(i)},${y(p.rank)}`).join(" ");
   return (
     <figure ref={ref} className="relative mt-4" data-history>
-      <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`} className="block overflow-visible" role="img" aria-label="Место в рейтинге по семестрам">
+      <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`} className="block max-w-full overflow-visible" role="img" aria-label="Место в рейтинге по семестрам">
         <line x1={pad} x2={W - pad} y1={H - 30} y2={H - 30} stroke="var(--line)" strokeWidth={1} />
         <path d={d} fill="none" stroke="var(--accent)" strokeWidth={2} strokeLinejoin="round" strokeLinecap="round" />
         {points.map((p, i) => (

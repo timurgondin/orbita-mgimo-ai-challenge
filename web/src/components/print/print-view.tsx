@@ -172,8 +172,8 @@ export function PrintView({ d, card }: { d: PrintData; card: StudentCardView | n
       <div className="flex items-end justify-between gap-6 max-sm:flex-col max-sm:items-stretch max-sm:gap-4">
         <h1 className="text-[34px] leading-[1.15] font-medium tracking-[-.03em] max-sm:text-[28px]">Печать</h1>
         {card && (
-          <button type="button" onClick={() => setIdOpen(true)} data-orbita-id className="inline-flex h-10 items-center gap-2 rounded-xl bg-s1 px-4 text-sm font-medium transition-[background,transform] duration-150 hover:bg-s2 active:scale-[.97]">
-            <QrCode size={16} strokeWidth={1.7} />
+          <button type="button" onClick={() => setIdOpen(true)} data-orbita-id className="inline-flex h-10 items-center gap-2 rounded-xl bg-s1 px-4 text-sm font-medium transition-[background,transform] duration-150 hover:bg-s2 active:scale-[.97] max-sm:h-[52px] max-sm:justify-center max-sm:gap-2.5 max-sm:rounded-2xl max-sm:text-[15px]">
+            <QrCode className="size-4 max-sm:size-5" strokeWidth={1.7} />
             Орбита ID
           </button>
         )}

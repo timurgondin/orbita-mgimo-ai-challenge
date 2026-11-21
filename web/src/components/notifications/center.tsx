@@ -90,9 +90,9 @@ export function BellButton() {
       aria-haspopup="dialog"
       onClick={open}
       data-bell={data.actions || (data.dot ? "dot" : "")}
-      className="relative grid size-9 place-items-center rounded-full text-text-2 transition-[background,color] duration-150 hover:bg-hover hover:text-text"
+      className="relative grid size-9 place-items-center rounded-full text-text-2 transition-[background,color] max-sm:size-11 duration-150 hover:bg-hover hover:text-text"
     >
-      <Bell size={16} strokeWidth={1.6} />
+      <Bell className="size-4 max-sm:size-[21px]" strokeWidth={1.6} />
       {data.actions > 0 ? (
         <span className="absolute -top-px -right-px grid h-4 min-w-4 place-items-center rounded-full bg-accent px-1 text-[10.5px] leading-none font-semibold text-white tabular-nums shadow-[0_0_0_2px_var(--bg)]">
           {data.actions}
@@ -156,6 +156,7 @@ function CenterModal({ open, onClose, fresh }: { open: boolean; onClose: () => v
       open={open}
       onClose={onClose}
       label="Уведомления"
+      sheet="full"
       // --ring-bg — фон для обводки значка типа на аватаре
       className="h-[min(720px,calc(100dvh-48px))] w-[min(580px,calc(100vw-24px))] flex-col overflow-hidden rounded-[28px] [--ring-bg:var(--s2)] open:flex"
     >

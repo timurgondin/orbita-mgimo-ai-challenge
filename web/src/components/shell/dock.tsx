@@ -27,7 +27,7 @@ function isActive(pathname: string, href: string) {
   return href === "/" ? pathname === "/" : pathname === href || pathname.startsWith(`${href}/`);
 }
 
-export function Dock() {
+export function Dock({ bottom = false }: { bottom?: boolean }) {
   const pathname = usePathname();
   const dockRef = useRef<HTMLElement>(null);
   const indRef = useRef<HTMLSpanElement>(null);
@@ -67,12 +67,15 @@ export function Dock() {
         aria-current={active ? "page" : undefined}
         aria-label={label}
         className={cn(
-          "relative z-[1] flex h-[38px] items-center gap-[7px] rounded-full px-4 text-[13.5px] font-medium tracking-[-.01em] transition-colors duration-200 max-sm:px-3",
+          "relative z-[1] flex rounded-full font-medium transition-colors duration-200",
+          bottom
+            ? "h-[54px] min-w-0 flex-1 flex-col items-center justify-center gap-[3px] text-[10.5px] tracking-[-.005em]"
+            : "h-[38px] items-center gap-[7px] px-4 text-[13.5px] tracking-[-.01em]",
           active ? "text-text" : "text-text-3 hover:text-text-2",
         )}
       >
-        <Icon size={15} strokeWidth={1.6} />
-        <span className="max-sm:sr-only">{label}</span>
+        <Icon size={bottom ? 22 : 15} strokeWidth={bottom ? 1.5 : 1.6} />
+        <span className={bottom ? "leading-none" : undefined}>{label}</span>
       </Link>
     );
   };
@@ -81,7 +84,11 @@ export function Dock() {
     <nav
       ref={dockRef}
       aria-label="Основная навигация"
-      className="relative flex h-12 items-center rounded-full bg-dock-bg p-[5px] shadow-[0_0_0_.5px_var(--dock-ring),inset_0_.5px_0_var(--dock-hi),var(--shadow)] backdrop-blur-[28px] backdrop-saturate-[1.7]"
+      className={cn(
+        "relative flex items-center rounded-full bg-dock-bg p-[5px] shadow-[0_0_0_.5px_var(--dock-ring),inset_0_.5px_0_var(--dock-hi),var(--shadow)] backdrop-blur-[28px] backdrop-saturate-[1.7]",
+        // телефон: док внизу, под большой палец; над «подбородком» iPhone
+        bottom ? "dock-bottom fixed inset-x-3 z-30 h-16" : "h-12",
+      )}
     >
       <span
         ref={indRef}
@@ -95,10 +102,20 @@ export function Dock() {
         aria-haspopup="dialog"
         aria-label="Спросить Орбиту (Ctrl K)"
         title="Спросить Орбиту (Ctrl K)"
-        className="group relative z-[1] grid h-[38px] w-[68px] place-items-center rounded-full after:absolute after:top-[calc(100%+16px)] after:text-[11px] after:whitespace-nowrap after:text-text-3 after:opacity-0 after:transition-opacity after:duration-200 after:content-['Ctrl_K'] hover:after:opacity-100 focus-visible:after:opacity-100 max-sm:w-[60px]"
+        className={cn(
+          "group relative z-[1] grid place-items-center rounded-full",
+          bottom
+            ? "h-[54px] w-[64px] shrink-0"
+            : "h-[38px] w-[68px] after:absolute after:top-[calc(100%+16px)] after:text-[11px] after:whitespace-nowrap after:text-text-3 after:opacity-0 after:transition-opacity after:duration-200 after:content-['Ctrl_K'] hover:after:opacity-100 focus-visible:after:opacity-100",
+        )}
       >
-        <span className="absolute top-1/2 left-1/2 grid size-14 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full bg-bg shadow-[0_0_0_.5px_var(--dock-ring),var(--orb-ring-shadow)]">
-          <Orb size={44} className="group-hover:scale-[1.08]" />
+        <span
+          className={cn(
+            "absolute top-1/2 left-1/2 grid -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full bg-bg shadow-[0_0_0_.5px_var(--dock-ring),var(--orb-ring-shadow)]",
+            bottom ? "size-[58px]" : "size-14",
+          )}
+        >
+          <Orb size={bottom ? 46 : 44} className="group-hover:scale-[1.08]" />
         </span>
       </button>
       {RIGHT_TABS.map(renderTab)}

@@ -94,7 +94,7 @@ export function Segmented<T extends string>({
             onKeyDown={tabs ? (e) => onKey(e, i) : undefined}
             className={cn(
               "relative z-[1] transition-colors duration-200",
-              tabs ? "h-9 rounded-[10px] px-4 text-sm font-medium max-sm:flex-1 max-sm:px-2" : "grid h-[30px] w-[34px] place-items-center rounded-lg",
+              tabs ? "h-9 rounded-[10px] px-4 text-sm font-medium whitespace-nowrap max-sm:flex-1 max-sm:px-2" : "grid h-[30px] w-[34px] place-items-center rounded-lg",
               on ? "text-text" : "text-text-3 hover:text-text-2",
             )}
           >

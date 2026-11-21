@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Onest } from "next/font/google";
 import { ThemeProvider } from "next-themes";
 import "./globals.css";
@@ -14,6 +14,9 @@ export const metadata: Metadata = {
   description:
     "Концепт студенческого кабинета для конкурса MGIMO×AI Challenge. Все данные вымышлены.",
 };
+
+// viewport-fit=cover — страница под «чёлкой» и «подбородком» iPhone; отступы — env(safe-area-inset-*)
+export const viewport: Viewport = { viewportFit: "cover" };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (

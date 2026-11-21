@@ -37,7 +37,7 @@ export function useToast() {
     <div
       ref={ref}
       popover="manual"
-      className="toast pointer-events-none items-center gap-2 rounded-[14px] bg-text px-[18px] py-3 text-sm font-medium whitespace-nowrap text-bg open:flex max-sm:bottom-24"
+      className="toast pointer-events-none items-center gap-2 rounded-[14px] bg-text px-[18px] py-3 text-sm font-medium whitespace-nowrap text-bg open:flex max-sm:bottom-[calc(env(safe-area-inset-bottom)+96px)]"
     >
       {state?.tone === "error" ? <CircleAlert size={16} strokeWidth={1.8} /> : <CircleCheck size={16} strokeWidth={1.8} />}
       {state?.text}

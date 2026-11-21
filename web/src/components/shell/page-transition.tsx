@@ -26,8 +26,9 @@ export function PageEnter() {
     if (!root.classList.contains("page-out")) return;
     root.classList.remove("page-out");
     root.classList.add("page-in");
-    const t = window.setTimeout(() => root.classList.remove("page-in"), 900);
-    return () => window.clearTimeout(t);
+    // без отмены при размонтировании: иначе (двойной эффект в dev) класс остаётся, а filter на body
+    // превращает его в контейнер для position: fixed — нижний док уезжает вниз страницы
+    window.setTimeout(() => root.classList.remove("page-in"), 900);
   }, []);
   return null;
 }

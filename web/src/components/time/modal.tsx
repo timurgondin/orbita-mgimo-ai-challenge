@@ -45,8 +45,11 @@ export function Modal({
           <X size={16} strokeWidth={1.6} />
         </button>
       )}
-      {cover && <div className="modal-cover" />}
-      <div className={cn("flex-1 overflow-auto px-6 pb-6", cover ? "pt-5" : "pt-6")}>{children}</div>
+      {/* телефон: обложка уезжает вместе с содержимым (прокручивается вся шторка), на компьютере — стоит на месте */}
+      <div data-cover={cover || undefined} className="modal-scroll flex min-h-0 flex-1 flex-col max-sm:overflow-auto max-sm:overscroll-contain">
+        {cover && <div className="modal-cover" />}
+        <div className={cn("flex-1 overflow-auto bg-s2 px-6 pb-6 max-sm:flex-none max-sm:overflow-visible", cover ? "pt-5" : "pt-6")}>{children}</div>
+      </div>
     </Dialog>
   );
 }

@@ -32,20 +32,32 @@ export function Logo({ textOnMobile = false }: { textOnMobile?: boolean }) {
         />
         <circle cx="18.72" cy="5.28" r="2.3" fill="currentColor" />
       </svg>
-      <span className={`text-[17px] font-semibold tracking-[-.035em] ${textOnMobile ? "" : "max-sm:hidden"}`}>орбита</span>
+      <span
+        className={`text-[17px] font-semibold tracking-[-.035em] ${textOnMobile ? "" : "max-sm:hidden"}`}
+      >
+        орбита
+      </span>
     </Link>
   );
 }
 
 export function TopBar({ user }: { user: UserView }) {
   return (
-    <ScrollHeader>
-      <Logo />
-      <Dock />
-      <div className="flex items-center justify-end gap-1.5">
-        <BellButton />
-        <ProfileMenu user={user} />
+    <>
+      <ScrollHeader>
+        <Logo textOnMobile />
+        {/* одна навигация видна в каждый момент: на телефоне док внизу (вне шапки — у неё своё размытие, fixed внутри него не работает) */}
+        <div className="max-sm:hidden">
+          <Dock />
+        </div>
+        <div className="flex items-center justify-end gap-1.5">
+          <BellButton />
+          <ProfileMenu user={user} />
+        </div>
+      </ScrollHeader>
+      <div className="sm:hidden">
+        <Dock bottom />
       </div>
-    </ScrollHeader>
+    </>
   );
 }

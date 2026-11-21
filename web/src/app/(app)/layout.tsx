@@ -15,7 +15,7 @@ async function Shell({ children }: { children: React.ReactNode }) {
       <AssistantProvider>
         <PageEnter />
         <TopBar user={user} />
-        <main className="mx-auto max-w-[1180px] px-5 pt-11 pb-20 sm:px-10">{children}</main>
+        <main className="mx-auto max-w-[1180px] px-5 pt-6 pb-20 sm:px-10 sm:pt-11">{children}</main>
       </AssistantProvider>
     </NotificationCenter>
   );
@@ -27,7 +27,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       <Suspense fallback={null}>
         <Shell>{children}</Shell>
       </Suspense>
-      <footer className="px-5 pb-7 text-center text-xs text-text-3">
+      <footer className="px-5 pb-7 text-center text-xs text-text-3 max-sm:pb-[calc(env(safe-area-inset-bottom)+104px)]">
         Концепт для конкурса MGIMO×AI Challenge. Не официальный сервис, все данные вымышлены.
       </footer>
     </>

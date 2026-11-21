@@ -9,7 +9,7 @@ import { avatarGradient, fullName, initials, subtitle, type UserView } from "@/l
 import { cn } from "@/lib/utils";
 
 const ITEM =
-  "flex h-9 w-full items-center gap-2.5 rounded-[10px] px-2.5 text-left text-sm text-text-2 transition-colors hover:bg-hover hover:text-text";
+  "flex h-9 w-full items-center gap-2.5 rounded-[10px] px-2.5 text-left text-sm text-text-2 transition-colors hover:bg-hover hover:text-text max-sm:h-12 max-sm:gap-3.5 max-sm:rounded-[14px] max-sm:px-3.5 max-sm:text-base max-sm:text-text";
 
 /** Меню профиля — popover="auto": закрытие по Esc и клику мимо, возврат фокуса — у браузера. Позиция — якорь у аватара (.pmenu в globals.css). */
 export function ProfileMenu({ user }: { user: UserView }) {
@@ -25,7 +25,7 @@ export function ProfileMenu({ user }: { user: UserView }) {
         popoverTarget="profile-menu"
         style={{ background: avatarGradient(user) }}
         className={cn(
-          "mono ml-1 grid size-8 place-items-center rounded-full text-xs font-semibold transition-transform [anchor-name:--profile] hover:scale-105",
+          "mono ml-1 grid size-8 place-items-center rounded-full text-xs font-semibold max-sm:size-9 max-sm:text-[13px] transition-transform [anchor-name:--profile] hover:scale-105",
           user.avatar === "stone" && "text-text-2",
         )}
       >
@@ -37,18 +37,18 @@ export function ProfileMenu({ user }: { user: UserView }) {
         id="profile-menu"
         popover="auto"
         aria-label="Профиль"
-        className="pmenu w-[252px] rounded-2xl bg-s2 p-1.5 shadow-[0_0_0_.5px_var(--line),0_20px_50px_-12px_rgba(0,0,0,.55)]"
+        className="pmenu w-[252px] rounded-2xl bg-s2 p-1.5 max-sm:p-2.5 shadow-[0_0_0_.5px_var(--line),0_20px_50px_-12px_rgba(0,0,0,.55)]"
       >
-        <div className="mb-1.5 border-b border-line px-2.5 pt-2.5 pb-3">
-          <b className="block text-sm font-semibold">{fullName(user)}</b>
-          <small className="text-xs text-text-3">{subtitle(user)}</small>
+        <div className="mb-1.5 border-b border-line px-2.5 pt-2.5 pb-3 max-sm:px-3.5 max-sm:pt-3 max-sm:pb-4">
+          <b className="block text-sm font-semibold max-sm:text-[17px]">{fullName(user)}</b>
+          <small className="text-xs text-text-3 max-sm:text-sm">{subtitle(user)}</small>
         </div>
         <Link href="/profile" className={ITEM} onClick={hide}>
-          <UserRound size={16} strokeWidth={1.6} />
+          <UserRound className="size-4 max-sm:size-5" strokeWidth={1.6} />
           Профиль
         </Link>
         <button type="button" className={ITEM}>
-          <Settings size={16} strokeWidth={1.6} />
+          <Settings className="size-4 max-sm:size-5" strokeWidth={1.6} />
           Настройки
         </button>
         <button
@@ -58,7 +58,7 @@ export function ProfileMenu({ user }: { user: UserView }) {
           onClick={() => setTheme(resolvedTheme === "light" ? "dark" : "light")}
           className={ITEM}
         >
-          <SunMoon size={16} strokeWidth={1.6} />
+          <SunMoon className="size-4 max-sm:size-5" strokeWidth={1.6} />
           Тема
           <span className="ml-auto flex rounded-lg bg-s3 p-0.5" aria-hidden="true">
             <i className="grid h-[22px] w-[26px] place-items-center rounded-md dark:bg-bg dark:text-text">
@@ -70,12 +70,12 @@ export function ProfileMenu({ user }: { user: UserView }) {
           </span>
         </button>
         <Link href="/about" className={ITEM} onClick={hide}>
-          <Info size={16} strokeWidth={1.6} />
+          <Info className="size-4 max-sm:size-5" strokeWidth={1.6} />
           О проекте
         </Link>
         <form action={logoutAction}>
           <button type="submit" className={ITEM}>
-            <LogOut size={16} strokeWidth={1.6} />
+            <LogOut className="size-4 max-sm:size-5" strokeWidth={1.6} />
             Выйти
           </button>
         </form>

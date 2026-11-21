@@ -126,6 +126,8 @@ export function AssistantProvider({ children }: { children: React.ReactNode }) {
         open={isOpen}
         onClose={close}
         label="Орбита — помощник"
+        // телефон: пустой — по содержимому; с первым сообщением — во весь рост, разговор прокручивается внутри
+        sheet={empty ? undefined : "full"}
         className={cn(
           // как Spotlight: верх окна на месте, растёт вниз по мере диалога
           "mt-[max(16px,10dvh)] mb-0 h-fit max-h-[min(680px,calc(100dvh-max(16px,10dvh)-16px))] w-[min(620px,calc(100vw-24px))] flex-col overflow-hidden rounded-[28px] open:flex",

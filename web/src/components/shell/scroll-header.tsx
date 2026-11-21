@@ -25,7 +25,7 @@ export function ScrollHeader({ children }: { children: React.ReactNode }) {
     <>
       <span ref={mark} aria-hidden="true" className="pointer-events-none absolute top-0 left-0 h-2 w-px" />
       <header ref={ref} className="topbar sticky top-0 z-30">
-        <div className="topbar-bar grid h-[68px] grid-cols-[1fr_auto_1fr] items-center px-4 sm:px-7">{children}</div>
+        <div className="topbar-bar grid h-[68px] grid-cols-[1fr_auto_1fr] items-center px-4 max-sm:flex max-sm:justify-between max-sm:h-[calc(60px+env(safe-area-inset-top))] max-sm:pt-[env(safe-area-inset-top)] max-sm:pr-3 sm:px-7">{children}</div>
       </header>
     </>
   );
