@@ -137,11 +137,31 @@ try {
   await page.waitForSelector('[data-coffee-state="cancelled"]');
   check("skip: meeting cancelled", (await db.coffeeMatch.findUniqueOrThrow({ where: { id: match.id } })).status === "cancelled");
 
-  // пауза
-  await page.click("[data-coffee-settings]");
-  await page.click("dialog[open] [data-coffee-pause]");
-  await page.waitForSelector("[data-coffee-join]");
-  check("pause: profile inactive", (await db.coffeeProfile.findUniqueOrThrow({ where: { userId: alice } })).active === false);
+  // справка
+  await page.click("[data-coffee-help]");
+  await page.waitForSelector("dialog[open] [data-help-steps]");
+  await page.waitForTimeout(500);
+  await shot(page, "coffee-help");
+  check("help: steps incl. pause", (await page.locator("dialog[open] [data-help-steps] li").count()) === 5 && ((await page.locator("dialog[open]").textContent()) ?? "").includes("Пауза"));
+  await page.keyboard.press("Escape");
+  await page.waitForTimeout(400);
+
+  // пауза: переключатель «Участвую» в шапке
+  check("switch on while participating", (await page.getAttribute("[data-coffee-switch]", "aria-checked")) === "true");
+  await page.click("[data-coffee-switch]");
+  await page.waitForSelector("[data-coffee-paused]");
+  check("pause: profile inactive, switch off", (await db.coffeeProfile.findUniqueOrThrow({ where: { userId: alice } })).active === false && (await page.getAttribute("[data-coffee-switch]", "aria-checked")) === "false");
+  await page.waitForTimeout(500);
+  await shot(page, "coffee-paused");
+  const { ctx: nctx } = await login("n.lanskaya");
+  await forge(nctx, "coffee", "saveCoffee", [{ interests: ["Стартапы", "Кино", "Настолки", "Языки", "Бег"], format: "campus" }], "/coffee");
+  const nm = await db.coffeeMatch.findFirst({ where: { week: "2026-11-16", members: { some: { userId: await uid("n.lanskaya") } } }, include: { members: true } });
+  check("paused student isn't matched with others", !!nm && !nm.members.some((m) => m.userId === alice));
+  await page.click("[data-coffee-resume]");
+  await page.waitForSelector('[data-coffee-switch][aria-checked="true"]');
+  check("resume: active again", (await db.coffeeProfile.findUniqueOrThrow({ where: { userId: alice } })).active === true);
+  const again = await forge(ctx, "coffee", "resumeCoffee", [], "/coffee");
+  check("resume twice rejected", again.body.includes("уже участвуете"));
 
   const { ctx: tctx, page: tp } = await login("e.petrova");
   const t = await forge(tctx, "coffee", "saveCoffee", [{ interests: ["Кино", "Бег", "ИИ"], format: "campus" }], "/coffee");

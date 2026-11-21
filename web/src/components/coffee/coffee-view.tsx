@@ -2,45 +2,16 @@
 
 import { useCallback, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import {
-  Check,
-  Clock3,
-  MapPin,
-  Send,
-  SlidersHorizontal,
-  Video,
-} from "lucide-react";
+import { Check, CircleHelp, Clock3, MapPin, Pause, Send, Shuffle, SlidersHorizontal, Tags, Video } from "lucide-react";
 import { Modal } from "@/components/time/modal";
 import { Segmented } from "@/components/ui/segmented";
 import { useToast } from "@/components/ui/toast";
-import {
-  COFFEE_INTERESTS,
-  MAX_INTERESTS,
-  MIN_INTERESTS,
-  type CoffeeFormat,
-} from "@/lib/coffee";
-import {
-  formatDayMonth,
-  formatLongDate,
-  mskDate,
-  mskTime,
-} from "@/lib/demo-clock";
+import { COFFEE_INTERESTS, MAX_INTERESTS, MIN_INTERESTS, type CoffeeFormat } from "@/lib/coffee";
+import { formatDayMonth, formatLongDate, mskDate, mskTime } from "@/lib/demo-clock";
 import { plural } from "@/lib/phrases";
 import { cn } from "@/lib/utils";
-import {
-  answerCoffee,
-  markCoffeeMet,
-  pauseCoffee,
-  rescheduleCoffee,
-  saveCoffee,
-  type CoffeeResult,
-} from "@/server/coffee/actions";
-import type {
-  CoffeeCurrentView,
-  CoffeePastView,
-  CoffeePerson,
-  CoffeeView as Data,
-} from "@/server/data/types";
+import { answerCoffee, markCoffeeMet, pauseCoffee, rescheduleCoffee, resumeCoffee, saveCoffee, type CoffeeResult } from "@/server/coffee/actions";
+import type { CoffeeCurrentView, CoffeePastView, CoffeePerson, CoffeeView as Data } from "@/server/data/types";
 
 const BTN =
   "inline-flex h-11 items-center justify-center gap-2 rounded-xl px-5 text-[15px] font-medium transition-[transform,opacity,background] duration-150 active:scale-[.97] disabled:opacity-40";
@@ -51,9 +22,36 @@ const FORMATS: { id: CoffeeFormat; label: string }[] = [
 ];
 const ACCENT = "var(--c-hist)";
 
+const HELP = [
+  {
+    icon: Tags,
+    title: "Интересы",
+    text: "3–6 интересов и формат: на кампусе, онлайн или как удобно",
+  },
+  {
+    icon: Shuffle,
+    title: "Пара",
+    text: "Каждый понедельник — студент другого факультета с общими интересами. С одним человеком — один раз",
+  },
+  {
+    icon: Clock3,
+    title: "Время",
+    text: "30 минут после пары, когда вы оба свободны. Неудобно — выберите другое окно",
+  },
+  {
+    icon: Send,
+    title: "Контакт",
+    text: "Telegram пары откроется, когда вы оба нажмёте «Встречаемся»",
+  },
+  {
+    icon: Pause,
+    title: "Пауза",
+    text: "Пока выключено «Участвую», вас не подбирают в пары. Текущая встреча остаётся",
+  },
+] as const;
+
 const longDay = (iso: string) => formatLongDate(mskDate(new Date(iso)));
-const span = (a: string, b: string) =>
-  `с ${mskTime(new Date(a))} до ${mskTime(new Date(b))}`;
+const span = (a: string, b: string) => `с ${mskTime(new Date(a))} до ${mskTime(new Date(b))}`;
 
 function Avatar({ p, size = 40 }: { p: CoffeePerson; size?: number }) {
   return (
@@ -71,15 +69,7 @@ function Avatar({ p, size = 40 }: { p: CoffeePerson; size?: number }) {
   );
 }
 
-function Chip({
-  on,
-  children,
-  onClick,
-}: {
-  on: boolean;
-  children: React.ReactNode;
-  onClick?: () => void;
-}) {
+function Chip({ on, children, onClick }: { on: boolean; children: React.ReactNode; onClick?: () => void }) {
   const cls = cn(
     "inline-flex h-9 items-center gap-1.5 rounded-xl px-3.5 text-sm font-medium whitespace-nowrap transition-colors duration-150",
     on ? "bg-text text-bg" : "bg-s2 text-text-2",
@@ -110,14 +100,7 @@ function ProfileForm({
 }) {
   const [picked, setPicked] = useState<string[]>(initial.interests);
   const [format, setFormat] = useState<CoffeeFormat>(initial.format);
-  const toggle = (i: string) =>
-    setPicked((p) =>
-      p.includes(i)
-        ? p.filter((x) => x !== i)
-        : p.length >= MAX_INTERESTS
-          ? p
-          : [...p, i],
-    );
+  const toggle = (i: string) => setPicked((p) => (p.includes(i) ? p.filter((x) => x !== i) : p.length >= MAX_INTERESTS ? p : [...p, i]));
   const ok = picked.length >= MIN_INTERESTS && picked.length <= MAX_INTERESTS;
 
   return (
@@ -128,12 +111,7 @@ function ProfileForm({
           {picked.length} из {MAX_INTERESTS}
         </span>
       </div>
-      <div
-        className="mt-3 flex flex-wrap gap-1.5"
-        role="group"
-        aria-label="Интересы"
-        data-interests
-      >
+      <div className="mt-3 flex flex-wrap gap-1.5" role="group" aria-label="Интересы" data-interests>
         {COFFEE_INTERESTS.map((i) => (
           <Chip key={i} on={picked.includes(i)} onClick={() => toggle(i)}>
             {i}
@@ -141,12 +119,7 @@ function ProfileForm({
         ))}
       </div>
       <h3 className="mt-6 mb-3 text-[15px] font-semibold">Формат</h3>
-      <Segmented
-        items={FORMATS}
-        value={format}
-        onChange={setFormat}
-        label="Формат встречи"
-      />
+      <Segmented items={FORMATS} value={format} onChange={setFormat} label="Формат встречи" />
       <button
         type="button"
         disabled={!ok || pending}
@@ -177,46 +150,25 @@ function MatchCard({
   onCopy: (tg: string) => void;
 }) {
   const p = c.partner;
-  const interests = [
-    ...p.shared,
-    ...p.interests.filter((i) => !p.shared.includes(i)),
-  ];
+  const interests = [...p.shared, ...p.interests.filter((i) => !p.shared.includes(i))];
   const both = c.mine === "yes" && c.theirs === "yes";
 
   return (
-    <article
-      data-coffee-match
-      style={{ "--cc": ACCENT } as React.CSSProperties}
-      className={cn(
-        "overflow-hidden rounded-3xl bg-s1",
-        c.cancelled && "opacity-80",
-      )}
-    >
+    <article data-coffee-match style={{ "--cc": ACCENT } as React.CSSProperties} className={cn("overflow-hidden rounded-3xl bg-s1", c.cancelled && "opacity-80")}>
       <div className="course-cover !h-[92px]">
-        <span className="absolute top-4 left-6 text-xs font-medium text-[color-mix(in_srgb,var(--cc)_60%,var(--text))]">
-          Пара на неделю
-        </span>
+        <span className="absolute top-4 left-6 text-xs font-medium text-[color-mix(in_srgb,var(--cc)_60%,var(--text))]">Пара на неделю</span>
       </div>
       <div className="-mt-9 px-6 pb-6 max-sm:px-5">
         <span className="inline-block rounded-full ring-4 ring-s1">
           <Avatar p={p} size={68} />
         </span>
-        <div
-          className="mt-3 text-[26px] leading-[1.15] font-semibold tracking-[-.03em]"
-          data-partner
-        >
+        <div className="mt-3 text-[26px] leading-[1.15] font-semibold tracking-[-.03em]" data-partner>
           {p.name}
         </div>
         <div className="mt-1 text-[15px] text-text-2">{p.study}</div>
-        {p.faculty && (
-          <div className="mt-0.5 text-sm text-text-3">{p.faculty}</div>
-        )}
+        {p.faculty && <div className="mt-0.5 text-sm text-text-3">{p.faculty}</div>}
 
-        <div
-          className="mt-5 flex flex-wrap gap-1.5"
-          aria-label="Интересы"
-          data-partner-interests
-        >
+        <div className="mt-5 flex flex-wrap gap-1.5" aria-label="Интересы" data-partner-interests>
           {interests.map((i) =>
             p.shared.includes(i) ? (
               <span
@@ -228,10 +180,7 @@ function MatchCard({
                 {i}
               </span>
             ) : (
-              <span
-                key={i}
-                className="inline-flex h-8 items-center rounded-[10px] bg-s2 px-3 text-[13.5px] text-text-2"
-              >
+              <span key={i} className="inline-flex h-8 items-center rounded-[10px] bg-s2 px-3 text-[13.5px] text-text-2">
                 {i}
               </span>
             ),
@@ -240,64 +189,29 @@ function MatchCard({
 
         <div className="mt-5 flex flex-col gap-2 text-[15px]">
           <span className="inline-flex items-center gap-2.5" data-slot>
-            <Clock3
-              size={17}
-              strokeWidth={1.6}
-              className="shrink-0 text-text-3"
-            />
+            <Clock3 size={17} strokeWidth={1.6} className="shrink-0 text-text-3" />
             {longDay(c.startsAt)}, {span(c.startsAt, c.endsAt)}
           </span>
           <span className="inline-flex items-center gap-2.5">
-            {c.online ? (
-              <Video
-                size={17}
-                strokeWidth={1.6}
-                className="shrink-0 text-text-3"
-              />
-            ) : (
-              <MapPin
-                size={17}
-                strokeWidth={1.6}
-                className="shrink-0 text-text-3"
-              />
-            )}
+            {c.online ? <Video size={17} strokeWidth={1.6} className="shrink-0 text-text-3" /> : <MapPin size={17} strokeWidth={1.6} className="shrink-0 text-text-3" />}
             {c.place}
           </span>
         </div>
 
         <div className="mt-6 border-t border-line pt-5">
           {c.cancelled ? (
-            <p
-              className="text-[15px] text-text-2"
-              data-coffee-state="cancelled"
-            >
-              Неделя пропущена. Новая пара — в понедельник,{" "}
-              {formatDayMonth(new Date(`${nextRound}T12:00:00+03:00`))}
+            <p className="text-[15px] text-text-2" data-coffee-state="cancelled">
+              Неделя пропущена. Новая пара — в понедельник, {formatDayMonth(new Date(`${nextRound}T12:00:00+03:00`))}
             </p>
           ) : (
             <>
               <div
-                className={cn(
-                  "flex items-center gap-2 text-[15px]",
-                  (both || c.mine === "yes" || c.theirs === "yes") &&
-                    "mb-4 min-h-6",
-                )}
-                data-coffee-state={
-                  both
-                    ? "both"
-                    : c.mine === "yes"
-                      ? "waiting"
-                      : c.theirs === "yes"
-                        ? "ready"
-                        : "new"
-                }
+                className={cn("flex items-center gap-2 text-[15px]", (both || c.mine === "yes" || c.theirs === "yes") && "mb-4 min-h-6")}
+                data-coffee-state={both ? "both" : c.mine === "yes" ? "waiting" : c.theirs === "yes" ? "ready" : "new"}
               >
                 {both ? (
                   <>
-                    <span
-                      className="inline-flex flex-1 items-center gap-1.5 font-medium"
-                      style={{ color: "var(--st-green)" }}
-                    >
+                    <span className="inline-flex flex-1 items-center gap-1.5 font-medium" style={{ color: "var(--st-green)" }}>
                       <Check size={17} strokeWidth={2} />
                       Встреча назначена
                     </span>
@@ -315,19 +229,12 @@ function MatchCard({
                   </>
                 ) : c.mine === "yes" ? (
                   <span className="inline-flex items-center gap-2 text-text-2">
-                    <Clock3
-                      size={16}
-                      strokeWidth={1.8}
-                      className="text-text-3"
-                    />
+                    <Clock3 size={16} strokeWidth={1.8} className="text-text-3" />
                     Ждём ответа пары
                   </span>
                 ) : c.theirs === "yes" ? (
                   <span className="inline-flex items-center gap-2 text-text-2">
-                    <i
-                      className="size-2 rounded-full"
-                      style={{ background: "var(--st-green)" }}
-                    />
+                    <i className="size-2 rounded-full" style={{ background: "var(--st-green)" }} />
                     {p.firstName} за встречу
                   </span>
                 ) : null}
@@ -338,10 +245,7 @@ function MatchCard({
                     type="button"
                     disabled={pending}
                     onClick={() => run(() => answerCoffee(c.id, "yes"))}
-                    className={cn(
-                      BTN,
-                      "flex-1 bg-text text-bg max-sm:basis-full",
-                    )}
+                    className={cn(BTN, "flex-1 bg-text text-bg max-sm:basis-full")}
                     data-coffee-yes
                   >
                     Встречаемся
@@ -352,11 +256,7 @@ function MatchCard({
                     type="button"
                     disabled={pending}
                     onClick={onReschedule}
-                    className={cn(
-                      BTN,
-                      "bg-s2 hover:bg-s3 max-sm:flex-1",
-                      c.mine === "yes" && "flex-1",
-                    )}
+                    className={cn(BTN, "bg-s2 hover:bg-s3 max-sm:flex-1", c.mine === "yes" && "flex-1")}
                     data-coffee-move
                   >
                     Другое время
@@ -366,10 +266,7 @@ function MatchCard({
                   type="button"
                   disabled={pending}
                   onClick={() => run(() => answerCoffee(c.id, "skip"))}
-                  className={cn(
-                    BTN,
-                    "px-4 text-text-2 hover:bg-s2 hover:text-text max-sm:flex-1",
-                  )}
+                  className={cn(BTN, "px-4 text-text-2 hover:bg-s2 hover:text-text max-sm:flex-1")}
                   data-coffee-skip
                 >
                   {c.mine === "yes" ? "Не смогу" : "Пропустить"}
@@ -383,31 +280,16 @@ function MatchCard({
   );
 }
 
-function PastRow({
-  m,
-  run,
-  pending,
-}: {
-  m: CoffeePastView;
-  run: (fn: () => Promise<CoffeeResult>) => void;
-  pending: boolean;
-}) {
+function PastRow({ m, run, pending }: { m: CoffeePastView; run: (fn: () => Promise<CoffeeResult>) => void; pending: boolean }) {
   return (
-    <div
-      data-past={m.id}
-      className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3.5 py-3"
-    >
+    <div data-past={m.id} className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3.5 py-3">
       <Avatar p={m.partner} size={40} />
       <span className="min-w-0">
         <b className="block truncate font-medium">{m.partner.name}</b>
-        <small className="block truncate text-[13px] text-text-3">
-          {m.partner.study}
-        </small>
+        <small className="block truncate text-[13px] text-text-3">{m.partner.study}</small>
       </span>
       <span className="text-right">
-        <span className="block text-[13px] whitespace-nowrap text-text-2">
-          {formatDayMonth(new Date(m.date))}
-        </span>
+        <span className="block text-[13px] whitespace-nowrap text-text-2">{formatDayMonth(new Date(m.date))}</span>
         {m.cancelled ? (
           <small className="text-[13px] text-text-3">пропущена</small>
         ) : m.met === null ? (
@@ -433,9 +315,7 @@ function PastRow({
             </button>
           </span>
         ) : (
-          <small className="text-[13px] text-text-3">
-            {m.met ? "встретились" : "не встретились"}
-          </small>
+          <small className="text-[13px] text-text-3">{m.met ? "встретились" : "не встретились"}</small>
         )}
       </span>
     </div>
@@ -446,7 +326,7 @@ export function CoffeeView({ data }: { data: Data }) {
   const router = useRouter();
   const [pending, start] = useTransition();
   const { toast, node } = useToast();
-  const [modal, setModal] = useState<"settings" | "move" | null>(null);
+  const [modal, setModal] = useState<"settings" | "move" | "help" | null>(null);
   const [slot, setSlot] = useState<string | null>(null);
   const close = useCallback(() => setModal(null), []);
   const { profile, current, past } = data;
@@ -474,21 +354,53 @@ export function CoffeeView({ data }: { data: Data }) {
 
   return (
     <>
-      <div className="flex items-center justify-between gap-4">
-        <h1 className="text-[34px] leading-[1.15] font-medium tracking-[-.03em] max-sm:text-[28px]">
-          Random Coffee
-        </h1>
-        {active && (
+      <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-3">
+        <h1 className="text-[34px] leading-[1.15] font-medium tracking-[-.03em] max-sm:text-[28px]">Random Coffee</h1>
+        <div className="flex items-center gap-2">
           <button
             type="button"
-            onClick={() => setModal("settings")}
-            className="inline-flex h-10 items-center gap-2 rounded-xl bg-s1 px-4 text-sm font-medium text-text-2 hover:bg-s2 hover:text-text"
-            data-coffee-settings
+            onClick={() => setModal("help")}
+            aria-label="Как это работает"
+            className="inline-flex h-10 items-center gap-2 rounded-xl bg-s1 px-4 text-sm font-medium text-text-2 hover:bg-s2 hover:text-text max-sm:w-10 max-sm:justify-center max-sm:px-0"
+            data-coffee-help
           >
-            <SlidersHorizontal size={16} strokeWidth={1.7} />
-            Интересы
+            <CircleHelp size={16} strokeWidth={1.7} className="shrink-0" />
+            <span className="max-sm:hidden">Как это работает</span>
           </button>
-        )}
+          {active && (
+            <button
+              type="button"
+              onClick={() => setModal("settings")}
+              className="inline-flex h-10 items-center gap-2 rounded-xl bg-s1 px-4 text-sm font-medium text-text-2 hover:bg-s2 hover:text-text"
+              data-coffee-settings
+            >
+              <SlidersHorizontal size={16} strokeWidth={1.7} />
+              Интересы
+            </button>
+          )}
+          {profile && (
+            <label className="inline-flex h-10 cursor-pointer items-center gap-2.5 rounded-xl bg-s1 pr-2 pl-4 text-sm font-medium text-text-2 hover:bg-s2">
+              {active ? "Участвую" : "На паузе"}
+              <button
+                type="button"
+                role="switch"
+                aria-checked={active}
+                aria-label="Участвовать в Random Coffee"
+                disabled={pending}
+                onClick={() => run(() => (active ? pauseCoffee() : resumeCoffee()))}
+                className={cn("relative h-[26px] w-11 rounded-full transition-colors duration-200 disabled:opacity-60", active ? "bg-(--st-green)" : "bg-s3")}
+                data-coffee-switch
+              >
+                <span
+                  className={cn(
+                    "absolute top-[3px] left-[3px] size-5 rounded-full bg-white transition-transform duration-300 ease-spring",
+                    active && "translate-x-[18px]",
+                  )}
+                />
+              </button>
+            </label>
+          )}
+        </div>
       </div>
 
       <div className="mt-9 grid grid-cols-[1.25fr_1fr] items-start gap-10 max-[900px]:grid-cols-1">
@@ -507,35 +419,37 @@ export function CoffeeView({ data }: { data: Data }) {
             />
           )}
 
-          {!active && (
-            <section
-              data-coffee-join
-              style={{ "--cc": ACCENT } as React.CSSProperties}
-              className="overflow-hidden rounded-3xl bg-s1"
-            >
+          {profile && !active && (
+            <section data-coffee-paused style={{ "--cc": "var(--st-gray)" } as React.CSSProperties} className="overflow-hidden rounded-3xl bg-s1">
               <div className="course-cover !h-[120px] px-6 pt-6 max-sm:px-5">
-                <div className="relative max-w-[340px] text-[24px] leading-[1.2] font-semibold tracking-[-.03em]">
-                  Кофе с новым человеком каждую неделю
+                <div className="relative flex items-center gap-2.5 text-[24px] leading-[1.2] font-semibold tracking-[-.03em]">
+                  <Pause size={22} strokeWidth={2} />
+                  На паузе
                 </div>
               </div>
+              <div className="px-6 pt-5 pb-6 max-sm:px-5">
+                <p className="text-[15px] text-text-2">Вас не подбирают в пары</p>
+                <button type="button" disabled={pending} onClick={() => run(() => resumeCoffee())} className={cn(BTN, "mt-6 w-full bg-text text-bg")} data-coffee-resume>
+                  Вернуться
+                </button>
+              </div>
+            </section>
+          )}
+
+          {!profile && (
+            <section data-coffee-join style={{ "--cc": ACCENT } as React.CSSProperties} className="overflow-hidden rounded-3xl bg-s1">
+              <div className="course-cover !h-[120px] px-6 pt-6 max-sm:px-5">
+                <div className="relative max-w-[340px] text-[24px] leading-[1.2] font-semibold tracking-[-.03em]">Кофе с новым человеком каждую неделю</div>
+              </div>
               <div className="px-6 pt-6 pb-6 max-sm:px-5">
-                <ProfileForm
-                  initial={initial}
-                  submitLabel={profile ? "Вернуться" : "Участвовать"}
-                  pending={pending}
-                  onSubmit={(v) => run(() => saveCoffee(v))}
-                />
+                <ProfileForm initial={initial} submitLabel="Участвовать" pending={pending} onSubmit={(v) => run(() => saveCoffee(v))} />
               </div>
             </section>
           )}
 
           {active && !current && (
-            <p
-              className="rounded-3xl bg-s1 px-6 py-5 text-[15px] text-text-2"
-              data-coffee-state="wait"
-            >
-              Новая пара — в понедельник,{" "}
-              {formatDayMonth(new Date(`${data.nextRound}T12:00:00+03:00`))}
+            <p className="rounded-3xl bg-s1 px-6 py-5 text-[15px] text-text-2" data-coffee-state="wait">
+              Новая пара — в понедельник, {formatDayMonth(new Date(`${data.nextRound}T12:00:00+03:00`))}
             </p>
           )}
         </div>
@@ -543,9 +457,7 @@ export function CoffeeView({ data }: { data: Data }) {
         {(profile || past.length > 0) && (
           <section aria-label="Прошлые встречи">
             <div className="mb-1 flex items-baseline justify-between gap-3">
-              <h2 className="text-lg font-semibold tracking-[-.02em]">
-                Прошлые встречи
-              </h2>
+              <h2 className="text-lg font-semibold tracking-[-.02em]">Прошлые встречи</h2>
               {met > 0 && (
                 <span className="text-[13px] text-text-3">
                   {met} {plural(met, "встреча", "встречи", "встреч")}
@@ -565,50 +477,30 @@ export function CoffeeView({ data }: { data: Data }) {
         )}
       </div>
 
-      <Modal
-        open={modal === "settings"}
-        onClose={close}
-        accent={ACCENT}
-        title="Интересы"
-        width={520}
-      >
-        <div className="mb-5 text-[26px] leading-[1.15] font-semibold tracking-[-.03em]">
-          Интересы
-        </div>
-        {modal === "settings" && (
-          <ProfileForm
-            initial={initial}
-            submitLabel="Сохранить"
-            pending={pending}
-            onSubmit={(v) => run(() => saveCoffee(v), close)}
-            extra={
-              <button
-                type="button"
-                disabled={pending}
-                onClick={() => run(() => pauseCoffee(), close)}
-                className={cn(
-                  BTN,
-                  "mt-2 w-full text-text-2 hover:bg-s2 hover:text-text",
-                )}
-                data-coffee-pause
-              >
-                Поставить на паузу
-              </button>
-            }
-          />
-        )}
+      <Modal open={modal === "settings"} onClose={close} accent={ACCENT} title="Интересы" width={520}>
+        <div className="mb-5 text-[26px] leading-[1.15] font-semibold tracking-[-.03em]">Интересы</div>
+        {modal === "settings" && <ProfileForm initial={initial} submitLabel="Сохранить" pending={pending} onSubmit={(v) => run(() => saveCoffee(v), close)} />}
       </Modal>
 
-      <Modal
-        open={modal === "move"}
-        onClose={close}
-        accent={ACCENT}
-        title="Другое время"
-        width={480}
-      >
-        <div className="mb-5 text-[26px] leading-[1.15] font-semibold tracking-[-.03em]">
-          Другое время
-        </div>
+      <Modal open={modal === "help"} onClose={close} accent={ACCENT} title="Как это работает" width={500}>
+        <div className="mb-5 text-[26px] leading-[1.15] font-semibold tracking-[-.03em]">Как это работает</div>
+        <ol className="flex flex-col gap-4" data-help-steps>
+          {HELP.map(({ icon: Icon, title, text }) => (
+            <li key={title} className="flex gap-3.5">
+              <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-s3 text-(--cc)">
+                <Icon size={19} strokeWidth={1.7} />
+              </span>
+              <span className="min-w-0 pt-0.5">
+                <b className="block text-[15px] font-semibold">{title}</b>
+                <span className="mt-0.5 block text-sm text-text-2">{text}</span>
+              </span>
+            </li>
+          ))}
+        </ol>
+      </Modal>
+
+      <Modal open={modal === "move"} onClose={close} accent={ACCENT} title="Другое время" width={480}>
+        <div className="mb-5 text-[26px] leading-[1.15] font-semibold tracking-[-.03em]">Другое время</div>
         {current && (
           <>
             <fieldset className="flex flex-col gap-1.5" data-slots>
@@ -627,17 +519,10 @@ export function CoffeeView({ data }: { data: Data }) {
                     className="sr-only"
                     data-slot-option={s.startsAt}
                   />
-                  <Clock3
-                    size={19}
-                    strokeWidth={1.6}
-                    className="shrink-0 text-text-2"
-                  />
-                  <b className="flex-1 text-[15px] font-medium">
-                    {longDay(s.startsAt)}
-                  </b>
+                  <Clock3 size={19} strokeWidth={1.6} className="shrink-0 text-text-2" />
+                  <b className="flex-1 text-[15px] font-medium">{longDay(s.startsAt)}</b>
                   <span className="text-[14px] whitespace-nowrap text-text-2 tabular-nums">
-                    {mskTime(new Date(s.startsAt))}–
-                    {mskTime(new Date(s.endsAt))}
+                    {mskTime(new Date(s.startsAt))}–{mskTime(new Date(s.endsAt))}
                   </span>
                 </label>
               ))}
@@ -645,9 +530,7 @@ export function CoffeeView({ data }: { data: Data }) {
             <button
               type="button"
               disabled={pending || !slot}
-              onClick={() =>
-                slot && run(() => rescheduleCoffee(current.id, slot), close)
-              }
+              onClick={() => slot && run(() => rescheduleCoffee(current.id, slot), close)}
               className={cn(BTN, "mt-5 w-full bg-text text-bg")}
               data-move-send
             >
