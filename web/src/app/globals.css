@@ -913,3 +913,80 @@ html {
     animation: none;
   }
 }
+
+/* Конец онбординга → кабинет: кольцо-вспышка расходится, шапка съезжает сверху, содержимое собирается снизу вверх,
+   док выезжает из-под края. Класс arrive ставит PageEnter (page-transition.tsx) по метке arrive-pending из онбординга.
+   Без filter на body: он сделал бы body контейнером для position: fixed, и нижний док уехал бы. */
+@media (prefers-reduced-motion: no-preference) {
+  html.arrive body::after {
+    /* центр вспышки — там, где стоял знак онбординга (orbit-field: 30% высоты);
+       элемент шире экрана на 20vmax с каждой стороны, отсюда сдвиг */
+    --cy: calc(20vmax + 30vh);
+    content: "";
+    position: fixed;
+    inset: -20vmax;
+    z-index: 60;
+    pointer-events: none;
+    background: radial-gradient(
+      circle at 50% var(--cy),
+      transparent 18%,
+      color-mix(in srgb, var(--accent) 30%, transparent) 24%,
+      transparent 31%
+    );
+    transform-origin: 50% var(--cy);
+    animation: arrive-bloom 1.15s var(--ease) both;
+  }
+  html.arrive header.topbar {
+    animation: arrive-top 0.7s var(--ease) 0.15s both;
+  }
+  html.arrive header.topbar nav {
+    animation: arrive-pop 0.8s var(--spring) 0.45s both;
+  }
+  html.arrive .dock-bottom {
+    animation: arrive-dock 0.85s var(--spring) 0.55s both;
+  }
+  html.arrive main > * {
+    animation: arrive-rise 0.9s var(--ease) both;
+    animation-delay: 0.2s;
+  }
+  html.arrive main > :nth-child(2) { animation-delay: 0.28s; }
+  html.arrive main > :nth-child(3) { animation-delay: 0.36s; }
+  html.arrive main > :nth-child(4) { animation-delay: 0.44s; }
+  html.arrive main > :nth-child(5) { animation-delay: 0.52s; }
+  html.arrive main > :nth-child(n + 6) { animation-delay: 0.6s; }
+}
+@keyframes arrive-bloom {
+  from {
+    opacity: 1;
+    scale: 0.35;
+  }
+  to {
+    opacity: 0;
+    scale: 1.6;
+  }
+}
+@keyframes arrive-top {
+  from {
+    opacity: 0;
+    translate: 0 -24px;
+  }
+}
+@keyframes arrive-pop {
+  from {
+    opacity: 0;
+    scale: 0.82;
+  }
+}
+@keyframes arrive-dock {
+  from {
+    translate: 0 160%;
+  }
+}
+@keyframes arrive-rise {
+  from {
+    opacity: 0;
+    translate: 0 36px;
+    scale: 0.97;
+    filter: blur(10px);
+  }
+}

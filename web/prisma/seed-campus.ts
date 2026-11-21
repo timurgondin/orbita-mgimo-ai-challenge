@@ -171,6 +171,7 @@ export const BOOKS: BookDef[] = [
   { slug: "world-politics", title: "Мировая политика: учебник", author: "Ланской Р. Д.", year: 2021, publisher: "Аспект", pages: 540, color: "world", format: "print", shelf: "Международные отношения", course: "ir-theory-22", copies: 25, available: 0, about: "Акторы, институты и конфликты современного мира — базовый учебник для старших курсов." },
   { slug: "ir-theory", title: "Теория международных отношений: учебник", author: "Громов В. П.", year: 2022, publisher: UP, pages: 470, color: "econ", format: "both", shelf: "Международные отношения", course: "ir-theory-22", copies: 90, available: 11, about: "Реализм, либерализм, конструктивизм и их критики — с примерами из истории и новостей." },
   { slug: "marketing-basics", title: "Маркетинг: первые шаги", author: "Лебедева Т. Р.", year: 2025, publisher: UP, pages: 240, color: "micro", format: "both", shelf: "Маркетинг", course: "marketing-intro-26", copies: 160, available: 31, about: "Сегменты, позиционирование и исследования рынка — для первого курса, с заданиями к каждой теме." },
+  { slug: "economics-basics", title: "Основы экономики", author: "Дроздов А. М.", year: 2025, publisher: UP, pages: 368, color: "econ", format: "both", shelf: "Экономика", course: "economics-basics-26", copies: 200, available: 27, about: "Спрос и предложение, рынки, деньги и государство — простым языком и с задачами к каждой лекции первого курса." },
   { slug: "academic-writing", title: "Как писать академические тексты", author: "Центр академического письма", year: 2025, publisher: UP, pages: 128, color: "econ", format: "ebook", shelf: "Навыки", copies: 0, available: 0, about: "Структура эссе и курсовой, аргументация, цитирование и типичные ошибки — коротко и с примерами." },
   { slug: "data-python", title: "Python для анализа данных: практикум", author: "Цифровая кафедра", year: 2025, publisher: UP, pages: 310, color: "py", format: "ebook", shelf: "Анализ данных", copies: 0, available: 0, about: "Pandas, графики и первые модели: тетрадки с заданиями, которые можно запускать сразу." },
   { slug: "stats-intro", title: "Статистика: просто о сложном", author: "Соколов Д. В.", year: 2021, publisher: UP, pages: 350, color: "econ", format: "both", shelf: "Анализ данных", copies: 60, available: 17, about: "Выборки, распределения и проверка гипотез на понятных примерах — без страха перед формулами." },
@@ -215,6 +216,7 @@ export const LOANS: [string, string, "semester" | "short", string, string, strin
 export const ORDERS: [string, string, string, "packing" | "transit" | "ready", string, string, string | null, string | null][] = [
   ["a.vorontsova", "game-theory", "locker-a", "ready", "2026-11-18T13:20", "2026-11-19T09:40", "2026-11-22T21:00", "14"],
   ["a.vorontsova", "negotiations", "locker-b", "transit", "2026-11-19T10:15", "2026-11-20T12:00", null, null],
+  ["n.lanskaya", "economics-basics", "locker-a", "ready", "2026-11-17T10:00", "2026-11-18T09:30", "2026-11-25T21:00", "07"],
 ];
 
 /** Электронные книги, которые читают: [логин, книга, страница, когда]. */

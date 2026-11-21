@@ -9,6 +9,8 @@ export interface UserView {
   groupName: string | null;
   position: string | null;
   avatar: string;
+  /** когда загружено фото; null — монограмма */
+  photoAt?: Date | null;
 }
 
 export const AVATAR_GRADIENTS: Record<string, string> = {
@@ -20,6 +22,9 @@ export const AVATAR_GRADIENTS: Record<string, string> = {
   mint: "linear-gradient(160deg,#8FC2B2,#4E8574)",
   stone: "linear-gradient(140deg,#2A2A2E,#2A2A2E)",
 };
+
+/** Адрес своего фото (только владельцу, см. app/me/photo); версия — для кеша. */
+export const photoUrl = (u: { photoAt?: Date | string | null }) => (u.photoAt ? `/me/photo?v=${new Date(u.photoAt).getTime()}` : null);
 
 export const initials = (u: UserView) => `${u.firstName[0] ?? ""}${u.lastName[0] ?? ""}`.toUpperCase();
 export const fullName = (u: UserView) => `${u.firstName} ${u.lastName}`;

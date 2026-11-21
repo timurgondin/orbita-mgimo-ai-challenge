@@ -30,6 +30,10 @@ export interface StudentCardView {
   meta: string;
   number: string;
   validUntil: string;
+  /** своё фото или null (монограмма) */
+  photo: string | null;
+  initials: string;
+  avatar: string;
   /** SVG QR-кода (генерирует сервер библиотекой qrcode; ведёт на /verify/<токен>?c=<подписанный код на 10 с>) */
   qr: string;
   /** Сколько мс QR ещё действует до смены */

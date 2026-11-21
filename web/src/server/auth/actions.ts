@@ -3,9 +3,10 @@
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { db } from "@/server/db/client";
+import { DEMO_FRESHMAN, resetDemoFreshman } from "@/server/onboarding/reset";
 import { PEPPER_VERSION, needsRehash, hashPassword, verifyDummy, verifyPassword } from "./password";
 import { clearFailures, lockedMinutes, recordFailure } from "./rate-limit";
-import { createSession, destroySession, requireUser } from "./session";
+import { createSession, destroySession } from "./session";
 
 export interface LoginState {
   error?: string;
@@ -57,16 +58,14 @@ export async function loginAction(_prev: LoginState, formData: FormData): Promis
     });
   }
   await createSession(user.id, remember);
+  if (user.login === DEMO_FRESHMAN) {
+    await resetDemoFreshman(user.id);
+    return { to: "/welcome" };
+  }
   return { to: user.role === "student" && !user.onboardingDone ? "/welcome" : "/" };
 }
 
 export async function logoutAction(): Promise<void> {
   await destroySession();
   redirect("/login");
-}
-
-export async function completeOnboardingAction(): Promise<void> {
-  const user = await requireUser();
-  await db.user.update({ where: { id: user.id }, data: { onboardingDone: true } });
-  redirect("/");
 }

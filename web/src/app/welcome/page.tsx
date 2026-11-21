@@ -1,38 +1,49 @@
 import { Suspense } from "react";
 import type { Metadata } from "next";
+import { Source_Serif_4 } from "next/font/google";
+import { redirect } from "next/navigation";
+import { Onboarding } from "@/components/onboarding/onboarding";
 import { PageEnter } from "@/components/shell/page-transition";
-import { completeOnboardingAction } from "@/server/auth/actions";
 import { requireUser } from "@/server/auth/session";
+import { personalRows } from "@/server/data/first-steps";
+import { getStudentCard } from "@/server/data/profile";
 
 export const metadata: Metadata = { title: "Добро пожаловать — Орбита" };
 
+// Засечки — только для «больших моментов» онбординга (docs/design.md)
+const serif = Source_Serif_4({ subsets: ["latin", "cyrillic"], weight: ["400"], style: ["normal", "italic"], variable: "--font-serif" });
+
 async function Welcome() {
-  await requireUser();
+  const user = await requireUser();
+  // онбординг — только для студента. Прошедший может открыть его снова: на последнем экране онбординг
+  // уже отмечен пройденным (finishOnboarding), и обновление страницы после server action не должно уводить на «/»
+  if (user.role !== "student") redirect("/");
+  const card = await getStudentCard();
+  if (!card) redirect("/");
   return (
     <>
       <PageEnter />
-      <form
-        action={completeOnboardingAction}
-        className="mx-auto flex min-h-dvh max-w-[380px] flex-col items-start justify-center gap-6 px-5"
-      >
-        <h1 className="text-[34px] leading-[1.15] font-medium tracking-[-.03em] max-sm:text-[28px]">
-          Добро пожаловать
-        </h1>
-        <button
-          type="submit"
-          className="h-[50px] rounded-[14px] bg-text px-8 text-[15px] font-semibold tracking-[-.01em] text-bg transition-[transform,opacity] duration-150 ease-soft hover:opacity-90 active:scale-[.985]"
-        >
-          Продолжить
-        </button>
-      </form>
+      <Onboarding
+        data={{
+          firstName: user.firstName,
+          rows: personalRows(user),
+          program: user.program ?? "",
+          group: user.groupName ? `Группа ${user.groupName}` : "",
+          phone: user.phone,
+          telegram: user.telegram,
+          card,
+        }}
+      />
     </>
   );
 }
 
 export default function WelcomePage() {
   return (
-    <Suspense fallback={null}>
-      <Welcome />
-    </Suspense>
+    <div className={serif.variable}>
+      <Suspense fallback={null}>
+        <Welcome />
+      </Suspense>
+    </div>
   );
 }

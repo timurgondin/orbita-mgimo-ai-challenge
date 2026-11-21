@@ -3,7 +3,8 @@ import { IdCard } from "lucide-react";
 import { ProfileSections } from "@/components/profile/profile-sections";
 import { StudentCardButton } from "@/components/profile/student-card";
 import { DotField } from "@/components/today/dot-field";
-import { avatarGradient, fullName, initials, subtitle } from "@/lib/user-view";
+import { avatarGradient, fullName, initials, photoUrl, subtitle } from "@/lib/user-view";
+import { ProfilePhoto } from "@/components/profile/profile-photo";
 import { requireUser } from "@/server/auth/session";
 import { getProfile, getStudentCard } from "@/server/data/profile";
 
@@ -17,6 +18,9 @@ const FACULTY_DOTS: [RegExp, string][] = [
 ];
 const BANNER_MASK = "radial-gradient(90% 160% at 100% 0%, #000 10%, transparent 80%)";
 
+const AVATAR =
+  "grid size-28 shrink-0 place-items-center rounded-[34px] text-4xl font-semibold tracking-[-.02em] mono shadow-[0_0_0_5px_var(--bg),inset_0_1px_0_rgb(255_255_255/.3),inset_0_-2px_4px_rgb(0_0_0/.18)] max-sm:size-[88px] max-sm:rounded-[28px] max-sm:text-[28px] max-sm:shadow-[0_0_0_4px_var(--bg),inset_0_1px_0_rgb(255_255_255/.3),inset_0_-2px_4px_rgb(0_0_0/.18)]";
+
 export default async function ProfilePage() {
   const user = await requireUser();
   const [profile, card] = await Promise.all([getProfile(), getStudentCard()]);
@@ -29,13 +33,13 @@ export default async function ProfilePage() {
       </div>
 
       <div className="relative -mt-14 flex items-end justify-between gap-5 pr-1 pl-7 max-sm:-mt-11 max-sm:pr-0 max-sm:pl-[18px]">
-        <span
-          aria-hidden="true"
-          style={{ background: avatarGradient(user) }}
-          className={`grid size-28 shrink-0 place-items-center rounded-[34px] text-4xl font-semibold tracking-[-.02em] mono shadow-[0_0_0_5px_var(--bg),inset_0_1px_0_rgb(255_255_255/.3),inset_0_-2px_4px_rgb(0_0_0/.18)] max-sm:size-[88px] max-sm:rounded-[28px] max-sm:text-[28px] max-sm:shadow-[0_0_0_4px_var(--bg),inset_0_1px_0_rgb(255_255_255/.3),inset_0_-2px_4px_rgb(0_0_0/.18)] ${user.avatar === "stone" ? "text-text-2" : ""}`}
-        >
-          {initials(user)}
-        </span>
+        {user.role === "student" ? (
+          <ProfilePhoto photo={photoUrl(user)} initials={initials(user)} background={avatarGradient(user)} className={AVATAR} />
+        ) : (
+          <span aria-hidden="true" style={{ background: avatarGradient(user) }} className={AVATAR}>
+            {initials(user)}
+          </span>
+        )}
         {card && (
           <StudentCardButton
             card={card}

@@ -220,6 +220,7 @@ try {
 
   // ---- Ника, 1 курс: архив пуст
   const { page: np } = await login("n.lanskaya");
+  await db.user.update({ where: { login: "n.lanskaya" }, data: { onboardingDone: true } }); // онбординг — в onboarding-check; здесь — данные первокурсницы
   await np.goto(BASE + "/study/archive");
   await np.waitForSelector("text=Здесь появятся курсы после первой сессии");
   await np.goto(BASE + "/study/diploma");

@@ -168,7 +168,7 @@ try {
   await page.keyboard.press("Escape");
 
   // лимит: 10 в час
-  await db.officeRequest.deleteMany({ where: { number: { notIn: ["R-2481", "R-2477", "R-2479"] } } });
+  await db.officeRequest.deleteMany({ where: { number: { notIn: ["R-2481", "R-2477", "R-2479", "R-2490"] } } });
   let rejectedAt = 0;
   let last;
   for (let i = 1; i <= 11; i++) {
@@ -176,13 +176,14 @@ try {
     if (last.body.includes("Слишком много")) { rejectedAt = i; break; }
   }
   check("11th request within an hour rejected", rejectedAt === 11, `rejected at ${rejectedAt}`);
-  await db.officeRequest.deleteMany({ where: { number: { notIn: ["R-2481", "R-2477", "R-2479"] } } });
+  await db.officeRequest.deleteMany({ where: { number: { notIn: ["R-2481", "R-2477", "R-2479", "R-2490"] } } });
 
   // Ника: пусто
   const { page: np } = await login("n.lanskaya");
+  await db.user.update({ where: { login: "n.lanskaya" }, data: { onboardingDone: true } }); // онбординг — в onboarding-check; здесь — данные первокурсницы
   await np.goto(BASE + "/office");
-  await np.waitForSelector("text=Активных заявок нет");
-  check("Nika: calm empty states", (await text(np)).includes("Документов пока нет"));
+  await np.waitForSelector("text=Документы первокурсника");
+  check("Nika: only her freshman request, calm empty documents", (await text(np)).includes("Документов пока нет") && !(await text(np)).includes("R-2481"));
   // сотрудник
   const { page: tp } = await login("e.petrova");
   await tp.goto(BASE + "/office");

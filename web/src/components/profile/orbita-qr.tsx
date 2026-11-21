@@ -12,11 +12,14 @@ export function OrbitaQr({
   initial,
   active,
   className,
+  bare = false,
 }: {
   initial: { qr: string; ttl: number };
   /** Окно открыто — обновляем; закрыто — молчим */
   active: boolean;
   className?: string;
+  /** без полоски-таймера (QR на карточке) */
+  bare?: boolean;
 }) {
   const [cur, setCur] = useState({ ...initial, rev: 0 });
 
@@ -50,15 +53,17 @@ export function OrbitaQr({
       <div className={cn("rounded-[22px] bg-white [&_svg]:block", className)}>
         <div key={cur.rev} className="qr-in" dangerouslySetInnerHTML={{ __html: cur.qr }} />
       </div>
-      <span className="mt-3 block h-[3px] w-16 overflow-hidden rounded-full bg-s2" aria-hidden="true">
-        {cur.rev > 0 && (
-          <span
-            key={cur.rev}
-            className="qr-drain block h-full rounded-full bg-(--accent)"
-            style={{ animationDuration: `${cur.ttl}ms` }}
-          />
-        )}
-      </span>
+      {!bare && (
+        <span className="mt-3 block h-[3px] w-16 overflow-hidden rounded-full bg-s2" aria-hidden="true">
+          {cur.rev > 0 && (
+            <span
+              key={cur.rev}
+              className="qr-drain block h-full rounded-full bg-(--accent)"
+              style={{ animationDuration: `${cur.ttl}ms` }}
+            />
+          )}
+        </span>
+      )}
     </div>
   );
 }

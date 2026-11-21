@@ -1,5 +1,7 @@
 import { Suspense } from "react";
+import { redirect } from "next/navigation";
 import { AssistantProvider } from "@/components/assistant/assistant";
+import { ArriveBridge } from "@/components/onboarding/arrive-bridge";
 import { PageEnter } from "@/components/shell/page-transition";
 import { TopBar } from "@/components/shell/top-bar";
 import { requireUser } from "@/server/auth/session";
@@ -9,6 +11,7 @@ import { getNotificationCenter } from "@/server/data/notifications";
 // Сессия читается в запросе, поэтому всё содержимое — за Suspense (Cache Components).
 async function Shell({ children }: { children: React.ReactNode }) {
   const user = await requireUser();
+  if (user.role === "student" && !user.onboardingDone) redirect("/welcome");
   const center = await getNotificationCenter();
   return (
     <NotificationCenter data={center}>
@@ -24,7 +27,7 @@ async function Shell({ children }: { children: React.ReactNode }) {
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   return (
     <>
-      <Suspense fallback={null}>
+      <Suspense fallback={<ArriveBridge />}>
         <Shell>{children}</Shell>
       </Suspense>
       <footer className="px-5 pb-7 text-center text-xs text-text-3 max-sm:pb-[calc(env(safe-area-inset-bottom)+104px)]">

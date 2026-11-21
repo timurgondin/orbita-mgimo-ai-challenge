@@ -12,7 +12,13 @@ export function StudentCardModal({ card, open, onClose }: { card: StudentCardVie
     <Modal open={open} onClose={onClose} accent="var(--accent)" cover={false} width={380} title="Студенческий билет">
       <div className="flex flex-col items-center pt-6 pb-1 text-center" data-student-card>
         <OrbitaQr initial={card} active={open} className="p-3.5 [&_svg]:size-[208px] max-sm:[&_svg]:size-[184px]" />
-        <b className="mt-5 block text-[22px] font-semibold tracking-[-.03em]">{card.name}</b>
+        <span className="mt-5 flex items-center gap-2.5">
+          {card.photo && (
+            // eslint-disable-next-line @next/next/no-img-element -- своё фото из /me/photo
+            <img src={card.photo} alt="" className="size-9 rounded-full object-cover" data-card-photo />
+          )}
+          <b className="block text-[22px] font-semibold tracking-[-.03em]">{card.name}</b>
+        </span>
         <span className="mt-0.5 text-[15px] text-text-2">{card.meta}</span>
         <span className="mt-4 text-sm text-text-3 tabular-nums">Студенческий № {card.number}</span>
         <span className="mt-1.5 inline-flex items-center gap-1.5 text-[13.5px] text-(--st-green)">

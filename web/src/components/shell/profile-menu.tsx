@@ -5,7 +5,7 @@ import Link from "next/link";
 import { Info, LogOut, Moon, Settings, Sun, SunMoon, UserRound } from "lucide-react";
 import { useTheme } from "next-themes";
 import { logoutAction } from "@/server/auth/actions";
-import { avatarGradient, fullName, initials, subtitle, type UserView } from "@/lib/user-view";
+import { avatarGradient, fullName, initials, photoUrl, subtitle, type UserView } from "@/lib/user-view";
 import { cn } from "@/lib/utils";
 
 const ITEM =
@@ -16,6 +16,7 @@ export function ProfileMenu({ user }: { user: UserView }) {
   const menu = useRef<HTMLDivElement>(null);
   const { setTheme, resolvedTheme } = useTheme();
   const hide = () => menu.current?.hidePopover();
+  const photo = photoUrl(user);
 
   return (
     <>
@@ -25,11 +26,16 @@ export function ProfileMenu({ user }: { user: UserView }) {
         popoverTarget="profile-menu"
         style={{ background: avatarGradient(user) }}
         className={cn(
-          "mono ml-1 grid size-8 place-items-center rounded-full text-xs font-semibold max-sm:size-9 max-sm:text-[13px] transition-transform [anchor-name:--profile] hover:scale-105",
+          "mono ml-1 grid size-8 place-items-center overflow-hidden rounded-full text-xs font-semibold max-sm:size-9 max-sm:text-[13px] transition-transform [anchor-name:--profile] hover:scale-105",
           user.avatar === "stone" && "text-text-2",
         )}
       >
-        {initials(user)}
+        {photo ? (
+          // eslint-disable-next-line @next/next/no-img-element -- своё фото из /me/photo
+          <img src={photo} alt="" className="size-full rounded-full object-cover" />
+        ) : (
+          initials(user)
+        )}
       </button>
 
       <div

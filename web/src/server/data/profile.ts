@@ -1,4 +1,5 @@
 import "server-only";
+import { avatarGradient, initials, photoUrl } from "@/lib/user-view";
 import { requireUser } from "@/server/auth/session";
 import { cardQr } from "@/server/profile/card-code";
 import { getArchive } from "./archive";
@@ -55,6 +56,9 @@ export async function getStudentCard(): Promise<StudentCardView | null> {
     meta: u.groupName ? `${u.program}, группа ${u.groupName}` : (u.program ?? ""),
     number: u.cardNumber,
     validUntil: fmtDate(u.cardValidUntil),
+    photo: photoUrl(u),
+    initials: initials(u),
+    avatar: avatarGradient(u),
     ...(await cardQr(u.cardToken)),
   };
 }

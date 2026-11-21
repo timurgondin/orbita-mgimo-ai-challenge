@@ -108,9 +108,19 @@ try {
   await submit(page, "n.lanskaya", "orbita-demo");
   await page.waitForURL(BASE + "/welcome");
   check("student without onboarding -> /welcome", true);
-  await page.click("text=Продолжить");
+  // короткий проход онбординга (подробно — onboarding-check): задачи откладываем «Позже»
+  await page.getByRole("button", { name: "Начать" }).click();
+  await page.waitForSelector('[data-step="cohort"]');
+  await page.getByRole("button", { name: "Дальше" }).click();
+  await page.locator("[data-confirm]").click();
+  await page.waitForSelector('[data-step="contacts"]');
+  await page.getByRole("button", { name: "Позже" }).click();
+  await page.locator("[data-skip]").click();
+  await page.waitForSelector('[data-step="card"]');
+  await page.getByRole("button", { name: "Дальше" }).click();
+  await page.locator("[data-finish]").click();
   await page.waitForURL(BASE + "/");
-  check("welcome -> Продолжить -> / (onboardingDone saved)", (await db.user.findUnique({ where: { login: "n.lanskaya" } })).onboardingDone === true);
+  check("welcome -> onboarding -> / (onboardingDone saved)", (await db.user.findUnique({ where: { login: "n.lanskaya" } })).onboardingDone === true);
   await db.user.update({ where: { login: "n.lanskaya" }, data: { onboardingDone: false } });
   await ctx.close();
 

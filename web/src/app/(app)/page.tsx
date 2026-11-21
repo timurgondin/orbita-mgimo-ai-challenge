@@ -17,13 +17,15 @@ import { getStudentCard } from "@/server/data/profile";
 import { getTopNews } from "@/server/data/notifications";
 import { getScheduleForToday, getSoon, getTeachers } from "@/server/data/today";
 import { UrgentStrip } from "@/components/notifications/urgent-strip";
+import { FirstSteps } from "@/components/today/first-steps";
+import { getFirstSteps } from "@/server/data/first-steps";
 
 export default async function TodayPage() {
   const user = await requireUser();
   const student = user.role === "student";
-  const [schedule, soon, news, card, teachers] = student
-    ? await Promise.all([getScheduleForToday(), getSoon(), getTopNews(), getStudentCard(), getTeachers()])
-    : [null, [], [], null, []];
+  const [schedule, soon, news, card, teachers, firstSteps] = student
+    ? await Promise.all([getScheduleForToday(), getSoon(), getTopNews(), getStudentCard(), getTeachers(), getFirstSteps()])
+    : [null, [], [], null, [], null];
   const today = schedule?.today ?? [];
   const tomorrow = schedule?.tomorrow;
 
@@ -51,6 +53,8 @@ export default async function TodayPage() {
         {current && <NowCard lesson={current} nowMinutes={DEMO_MINUTES} />}
         <LaterToday lessons={later} tomorrow={tomorrow} tomorrowLabel={`Завтра, ${formatLongDate(addDays(DEMO_DATE, 1)).split(",")[0].toLowerCase()}`} />
       </div>
+
+      {firstSteps && card && <FirstSteps view={firstSteps} card={card} />}
 
       <QuickTiles card={card} teachers={teachers} order={parseOrder(user.tiles)} />
 

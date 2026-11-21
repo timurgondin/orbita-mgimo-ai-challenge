@@ -26,6 +26,8 @@ export interface RequestType {
   /** Заявление: выбор из списка */
   subjectLabel?: string;
   subjects?: readonly string[];
+  /** можно выбрать несколько пунктов сразу (subject — массив; в карточке — через запятую) */
+  multi?: boolean;
   defaults: { purpose?: string; lang?: string; format?: string; subject?: string };
 }
 
@@ -57,6 +59,7 @@ export const REQUEST_TYPES: readonly RequestType[] = [
   { id: "exchange", category: "Учёба", title: "Обучение по обмену", icon: "plane", color: "sky", kind: "app", format: "Заявление", eta: "14 дней", days: 14, steps: APP_STEPS, subjectLabel: "Семестр", subjects: ["Весна 2027", "Осень 2027"], defaults: { subject: "Весна 2027" } },
   { id: "card-dup", category: "Документы", title: "Дубликат студенческого", icon: "id-card", color: "violet", kind: "app", format: "Заявление", eta: "5 дней", days: 5, steps: APP_STEPS, subjectLabel: "Причина", subjects: ["Утерян", "Повреждён"], defaults: { subject: "Утерян" } },
   { id: "order-copy", category: "Документы", title: "Копия приказа о зачислении", icon: "file-text", color: "violet", kind: "app", format: "Заявление", eta: "3 дня", days: 3, steps: APP_STEPS, subjectLabel: "Формат", subjects: ["Электронная копия", "Заверенная бумажная копия"], defaults: { subject: "Электронная копия" } },
+  { id: "data-fix", category: "Документы", title: "Исправление личных данных", icon: "user-pen", color: "teal", kind: "app", format: "Заявление", eta: "2 дня", days: 2, steps: APP_STEPS, subjectLabel: "Что исправить", subjects: ["ФИО", "Факультет", "Программа", "Курс и группа", "Форма обучения", "Зачётная книжка"], multi: true, defaults: { subject: "ФИО" } },
   { id: "name-change", category: "Документы", title: "Смена фамилии в документах", icon: "user-pen", color: "teal", kind: "app", format: "Заявление", eta: "7 дней", days: 7, steps: APP_STEPS, subjectLabel: "Основание", subjects: ["Свидетельство о браке", "Свидетельство о перемене имени"], defaults: { subject: "Свидетельство о браке" } },
   { id: "high-stipend", category: "Стипендия и оплата", title: "Повышенная стипендия", icon: "award", color: "amber", kind: "app", format: "Заявление", eta: "14 дней", days: 14, steps: APP_STEPS, subjectLabel: "За что", subjects: ["Учёба", "Наука", "Общественная деятельность", "Спорт", "Творчество"], defaults: { subject: "Учёба" } },
   { id: "aid", category: "Стипендия и оплата", title: "Материальная помощь", icon: "heart-handshake", color: "rose", kind: "app", format: "Заявление", eta: "10 дней", days: 10, steps: APP_STEPS, subjectLabel: "Причина", subjects: ["Трудная жизненная ситуация", "Рождение ребёнка", "Лечение"], defaults: { subject: "Трудная жизненная ситуация" } },
@@ -65,6 +68,7 @@ export const REQUEST_TYPES: readonly RequestType[] = [
   { id: "pe-free", category: "Жизнь в университете", title: "Освобождение от физкультуры", icon: "heart-pulse", color: "rose", kind: "app", format: "Заявление", eta: "5 дней", days: 5, steps: APP_STEPS, subjectLabel: "Срок", subjects: ["Семестр", "Учебный год"], defaults: { subject: "Семестр" } },
   { id: "pass", category: "Жизнь в университете", title: "Пропуск для гостя", icon: "ticket", color: "sky", kind: "app", format: "Заявление", eta: "1 день", days: 1, steps: APP_STEPS, subjectLabel: "Корпус", subjects: ["Главный корпус", "Корпус 3", "Библиотека"], defaults: { subject: "Главный корпус" } },
   // ---- Не в каталоге: подаётся со страницы объявления
+  { id: "freshman", category: "Документы", hidden: true, title: "Документы первокурсника", icon: "file-badge", color: "violet", kind: "app", format: "Личное дело", eta: "до 30 ноября", days: 11, steps: ["Открыто", "Документы", "Личное дело готово"], defaults: {} },
   { id: "mobility", category: "Учёба", hidden: true, title: "Семестр за рубежом", icon: "plane", color: "sky", kind: "app", format: "Заявка на конкурс", eta: "до 25 декабря", days: 36, steps: ["Подана", "Документы", "Собеседование", "Решение"], subjectLabel: "Первый приоритет", subjects: [], defaults: {} },
 ];
 
@@ -98,11 +102,19 @@ export function validateParams(type: RequestType, raw: unknown): { ok: true; par
     if (typeof copies !== "number" || !Number.isInteger(copies) || copies < 1 || copies > MAX_COPIES) return { ok: false, error: `Экземпляров от 1 до ${MAX_COPIES}` };
     return { ok: true, params: { purpose: p.purpose, lang: p.lang, format: p.format, copies: p.format === PAPER ? copies : 1 } };
   }
-  if (!oneOf(type.subjects, p.subject)) return { ok: false, error: "Некорректный выбор" };
+  let subject: string;
+  if (type.multi && Array.isArray(p.subject)) {
+    const list = p.subject;
+    if (!list.length || list.length > (type.subjects?.length ?? 0) || new Set(list).size !== list.length || !list.every((x) => oneOf(type.subjects, x))) {
+      return { ok: false, error: "Некорректный выбор" };
+    }
+    subject = list.join(", ");
+  } else if (oneOf(type.subjects, p.subject)) subject = p.subject;
+  else return { ok: false, error: "Некорректный выбор" };
   const comment = p.comment == null ? "" : p.comment;
   if (!isStr(comment)) return { ok: false, error: "Некорректный комментарий" };
   if (comment.trim().length > MAX_COMMENT) return { ok: false, error: `Комментарий не длиннее ${MAX_COMMENT} символов` };
-  return { ok: true, params: { subject: p.subject, comment: comment.trim() } };
+  return { ok: true, params: { subject, comment: comment.trim() } };
 }
 
 /** Строка под названием в каталоге: «PDF с QR за 1 день», «Ответ за 3 дня». */

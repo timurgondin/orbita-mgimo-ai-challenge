@@ -74,6 +74,7 @@ try {
 
   // первокурсница: рейтинга ещё нет
   const { page: np } = await login("n.lanskaya");
+  await db.user.update({ where: { login: "n.lanskaya" }, data: { onboardingDone: true } }); // онбординг — в onboarding-check; здесь — данные первокурсницы
   await open(np, "/study/rating");
   check("first-year: rating after first session", (await text(np)).includes("Рейтинг появится после первой сессии"));
 

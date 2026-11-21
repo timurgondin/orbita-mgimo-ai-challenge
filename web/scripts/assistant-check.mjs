@@ -78,7 +78,7 @@ try {
   await page.keyboard.press("Escape");
   await page.waitForSelector(DLG, { state: "detached" }).catch(() => {});
   await page.waitForFunction(() => !document.querySelector("dialog[open]"));
-  await page.click('button[aria-label^="Спросить Орбиту"]');
+  await page.click('button[aria-label^="Спросить Орбиту"]:visible');
   await page.waitForSelector(DLG);
   check("dock orb opens assistant", true);
 
@@ -173,7 +173,7 @@ try {
 
   // ---- мобильный
   const { page: mp } = await login("m.orlov", { width: 360, height: 760 });
-  await mp.click('button[aria-label^="Спросить Орбиту"]');
+  await mp.click('button[aria-label^="Спросить Орбиту"]:visible');
   await mp.waitForSelector(DLG);
   await askUi(mp, "Запиши на консультацию");
   const overflow = await mp.evaluate((sel) => {

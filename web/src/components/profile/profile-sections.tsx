@@ -4,7 +4,7 @@ import { useRef, useState, useTransition } from "react";
 import Link from "next/link";
 import { Check, ChevronRight, Copy, PenLine } from "lucide-react";
 import { useToast } from "@/components/ui/toast";
-import { normalizeContact, CONTACT_ERROR, type ContactField } from "@/lib/contacts";
+import { CONTACT_ERROR, CONTACT_PREFIX, type ContactField, contactValue, maskContact, normalizeContact } from "@/lib/contacts";
 import { plural } from "@/lib/phrases";
 import { cn } from "@/lib/utils";
 import type { PersonRef, ProfileView } from "@/server/data/types";
@@ -59,9 +59,10 @@ function EditableRow({ k, field, initial, placeholder }: { k: string; field: Con
 
   const save = () => {
     if (draft === null) return;
-    if (normalizeContact(field, draft) === undefined) return toast(CONTACT_ERROR[field], "error");
+    const v = contactValue(field, draft);
+    if (normalizeContact(field, v) === undefined) return toast(CONTACT_ERROR[field], "error");
     start(async () => {
-      const r = await updateContact(field, draft);
+      const r = await updateContact(field, v);
       if (!r.ok) return toast(r.error, "error");
       setValue(r.value);
       setDraft(null);
@@ -85,7 +86,8 @@ function EditableRow({ k, field, initial, placeholder }: { k: string; field: Con
               ? { type: "tel", autoComplete: "tel" }
               : { autoComplete: "nickname", autoCapitalize: "none", autoCorrect: "off", spellCheck: false })}
             disabled={pending}
-            onChange={(e) => setDraft(e.target.value)}
+            onChange={(e) => setDraft(maskContact(field, e.target.value, draft))}
+            onFocus={() => !draft && setDraft(CONTACT_PREFIX[field])}
             onKeyDown={(e) => {
               if (e.key === "Enter") {
                 e.preventDefault();
@@ -105,7 +107,7 @@ function EditableRow({ k, field, initial, placeholder }: { k: string; field: Con
         type="button"
         aria-label={editing ? "Сохранить" : `Изменить: ${k}`}
         disabled={pending}
-        onClick={() => (editing ? save() : setDraft(value ?? ""))}
+        onClick={() => (editing ? save() : setDraft(maskContact(field, value ?? "")))}
         className={cn(ACT, editing && "text-text opacity-100")}
       >
         {editing ? <Check size={16} strokeWidth={1.8} /> : <PenLine size={16} strokeWidth={1.6} />}

@@ -119,6 +119,7 @@ try {
 
   // первокурсница: курс не подходит, заявки Алисы не видно
   const { page: np } = await login("n.lanskaya");
+  await db.user.update({ where: { login: "n.lanskaya" }, data: { onboardingDone: true } }); // онбординг — в onboarding-check; здесь — данные первокурсницы
   await open(np, "/news/mobility-spring-2027");
   check("first-year: course requirement not met", (await np.locator('[data-req="course"][data-ok="no"]').count()) === 1 && !(await text(np)).includes(req.number));
 } catch (e) {

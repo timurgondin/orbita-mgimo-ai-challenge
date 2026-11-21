@@ -403,6 +403,7 @@ const NIKA: Person = {
   ],
   notes: [
     { kind: "grade", category: "study", level: "important", title: "8,5 из 10 за тест по маркетингу", body: "«Уверенно, так держать»", actor: "Лебедева Т. Р.", avatar: "peach", link: "/study?tab=tasks", at: "2026-11-12T16:05", read: true },
+    { kind: "office", category: "office", level: "action", title: "Загрузите медицинскую справку 086/у", body: "Для личного дела первокурсника", action: "Загрузить", actionKind: "link", due: "2026-11-30T18:00", link: "/office?request=R-2490", ref: "R-2490", at: "2026-11-16T09:30" },
     { kind: "announcement", category: "announcement", level: "info", title: "Добро пожаловать в Орбиту", body: "Письмо от учебного офиса", at: "2026-11-16T09:00" },
   ],
 };
@@ -772,6 +773,10 @@ const SEED_REQS: SeedReq[] = [
     events: [{ title: "Заявление подано", actor: "Вы", at: "2026-11-15T11:20" }, { title: "Проверка программ", note: "Кафедра информатики" }, { title: "Решение" }] },
   { login: "m.orlov", number: "R-2479", typeId: "army", params: { purpose: "Военкомат", lang: "Русский", format: "Бумажная", copies: 1 }, status: "work", stage: 2, eta: "2026-11-20", created: "2026-11-17T10:15",
     events: [{ title: "Заявка подана", actor: "Вы", at: "2026-11-17T10:15" }, { title: "Принята в работу", actor: "Смирнова И. А.", at: "2026-11-17T12:30" }, { title: "Готовится", note: "Печать и подпись" }, { title: "Готова", note: "Бумажная справка" }] },
+  { login: "n.lanskaya", number: "R-2490", typeId: "freshman", params: { subject: "Медицинская справка 086/у", comment: "" }, status: "work", stage: 1, eta: "2026-11-30", created: "2026-08-28T10:00",
+    events: [{ title: "Личное дело открыто", actor: "Учебный офис", at: "2026-08-28T10:00" }, { title: "Документы", note: "Медицинская справка 086/у" }, { title: "Личное дело готово" }],
+    needDoc: "Медицинская справка 086/у", needDocDue: "2026-11-30T18:00",
+    messages: [{ author: "Смирнова И. А.", role: "staff", body: "Ника, для личного дела осталась медицинская справка по форме 086/у. Подойдёт скан или фото.", at: "2026-11-16T09:30" }] },
 ];
 const SEED_DOCS: SeedDoc[] = [
   { login: "a.vorontsova", number: "D-2470", typeId: "study", title: "Справка об обучении", subtitle: "По месту требования", issued: "2026-11-18T16:41", status: "ready" },

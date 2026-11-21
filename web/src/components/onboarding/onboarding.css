@@ -1,0 +1,172 @@
+/* Онбординг (глобальные классы ob-*: CSS-модули в проекте выключены правилом turbopack для *.css): появление шагов, сборка Орбита ID из точек, переворот. Без движения при reduce — сразу конечное состояние. */
+
+.ob-rise {
+  @media (prefers-reduced-motion: no-preference) {
+    animation-name: ob-rise;
+    animation-duration: 0.8s;
+    animation-timing-function: var(--ease);
+    animation-fill-mode: both;
+    animation-delay: calc(var(--d, 0) * 1ms);
+  }
+}
+@keyframes ob-rise {
+  from {
+    opacity: 0;
+    translate: 0 16px;
+    filter: blur(8px);
+  }
+}
+
+.ob-step {
+  transition:
+    opacity 0.24s var(--ease),
+    translate 0.24s var(--ease),
+    filter 0.24s var(--ease);
+}
+.ob-leaving {
+  opacity: 0;
+  filter: blur(6px);
+  @media (prefers-reduced-motion: no-preference) {
+    translate: 0 -10px;
+  }
+}
+
+/* Точки индикатора: активная — вытянутая пилюля */
+.ob-pager {
+  display: flex;
+  gap: 6px;
+}
+.ob-pager i {
+  display: block;
+  height: 6px;
+  width: 6px;
+  border-radius: 3px;
+  background: var(--text-3);
+  opacity: 0.45;
+  transition:
+    width 0.45s var(--spring),
+    opacity 0.3s var(--ease),
+    background 0.3s var(--ease);
+}
+.ob-pager i[data-on] {
+  width: 22px;
+  opacity: 1;
+  background: var(--text);
+}
+.ob-pager i[data-done] {
+  opacity: 0.9;
+}
+
+/* ---------- Орбита ID ---------- */
+@property --ob-dot {
+  syntax: "<length>";
+  inherits: false;
+  initial-value: 7px;
+}
+
+.ob-scene {
+  perspective: 1400px;
+}
+.ob-tilt {
+  transform: rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg));
+  transform-style: preserve-3d;
+  transition: transform 0.5s var(--ease);
+}
+
+.ob-card {
+  position: relative;
+  aspect-ratio: 1.586;
+  transform-style: preserve-3d;
+  @media (prefers-reduced-motion: no-preference) {
+    animation-name: ob-flip;
+    animation-duration: 1.2s;
+    animation-timing-function: var(--spring);
+    animation-delay: 1.05s;
+    animation-fill-mode: both;
+  }
+}
+@keyframes ob-flip {
+  from {
+    transform: rotateY(180deg);
+  }
+}
+
+.ob-face {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  border-radius: 22px;
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+  color: #f2f2f5;
+  background:
+    radial-gradient(120% 95% at 100% 0%, color-mix(in oklab, var(--accent) 42%, transparent), transparent 62%),
+    radial-gradient(90% 80% at 0% 100%, color-mix(in oklab, var(--accent) 16%, transparent), transparent 70%),
+    linear-gradient(150deg, #26262d, #151518);
+  box-shadow:
+    inset 0 0 0 0.5px rgb(255 255 255 / 0.14),
+    inset 0 1px 0 rgb(255 255 255 / 0.12),
+    0 30px 60px -20px rgb(0 0 0 / 0.6);
+}
+.ob-back {
+  transform: rotateY(180deg);
+}
+/* Точечный узор, тающий к центру */
+.ob-face::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle, rgb(255 255 255 / 0.11) 1px, transparent 1.6px) 0 0 / 9px 9px;
+  mask-image: linear-gradient(115deg, #000 0%, transparent 55%, #000 100%);
+  pointer-events: none;
+}
+/* Блик следует за указателем */
+.ob-face::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(60% 60% at var(--gx, 30%) var(--gy, 0%), rgb(255 255 255 / 0.14), transparent 70%);
+  pointer-events: none;
+}
+
+/* Сборка из точек: маска-сетка, точки растут до сплошной заливки */
+.ob-materialize {
+  mask-image: radial-gradient(circle, #000 var(--ob-dot), transparent calc(var(--ob-dot) + 0.6px));
+  mask-size: 9px 9px;
+  mask-position: center;
+  @media (prefers-reduced-motion: no-preference) {
+    animation-name: ob-dots;
+    animation-duration: 1.1s;
+    animation-timing-function: var(--ease);
+    animation-delay: 0.1s;
+    animation-fill-mode: both;
+  }
+}
+@keyframes ob-dots {
+  from {
+    --ob-dot: 0px;
+    opacity: 0;
+    scale: 0.92;
+  }
+  25% {
+    opacity: 1;
+  }
+}
+
+.ob-serif {
+  font-family: var(--font-serif), Georgia, serif;
+  font-weight: 400;
+  letter-spacing: -0.02em;
+}
+
+/* «Открыть Орбиту»: текст уходит вперёд, к зрителю, вслед за разлетающимся кольцом */
+.ob-step.ob-launch {
+  transition:
+    opacity 0.4s var(--ease),
+    filter 0.4s var(--ease),
+    scale 0.5s var(--ease);
+  @media (prefers-reduced-motion: no-preference) {
+    scale: 1.08;
+    translate: 0 0;
+  }
+}

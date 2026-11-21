@@ -24,6 +24,8 @@ model User {
   position            String?
   avatar              String               @default("sand") // ключ градиента аватара
   onboardingDone      Boolean              @default(false)
+  dataConfirmedAt     DateTime? // студент подтвердил личные данные (онбординг, «Первые шаги»)
+  photoAt             DateTime? // когда загружено фото (версия для кеша); само фото — UserPhoto
   tiles               String? // JSON: закреплённые плитки «Сегодня» (id из src/lib/tiles.ts); null — по умолчанию
   createdAt           DateTime             @default(now())
   courseRank          Int? // место на курсе
@@ -62,6 +64,15 @@ model User {
   bookOrders          BookOrder[]
   printJobs           PrintJob[]
   scans               Scan[]
+  photo               UserPhoto?
+}
+
+// Фото студента (аватар и Орбита ID): JPEG, уменьшен в браузере, проверен по сигнатуре на сервере
+model UserPhoto {
+  userId String @id
+  data   Bytes
+  mime   String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model Session {
