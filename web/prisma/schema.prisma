@@ -64,6 +64,8 @@ model User {
   bookOrders          BookOrder[]
   printJobs           PrintJob[]
   scans               Scan[]
+  coffeeProfile       CoffeeProfile?
+  coffeeMatches       CoffeeMember[]
   photo               UserPhoto?
 }
 
@@ -618,4 +620,42 @@ model Scan {
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId, createdAt])
+}
+
+// ---- Random Coffee: еженедельная встреча за кофе со студентом другого факультета. Раунд — неделя с понедельника ----
+
+model CoffeeProfile {
+  userId    String   @id
+  active    Boolean  @default(true)
+  interests String   @default("[]") // JSON string[] из COFFEE_INTERESTS (src/lib/coffee.ts)
+  format    String   @default("campus") // campus | online | any
+  updatedAt DateTime
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model CoffeeMatch {
+  id        String         @id @default(cuid())
+  week      String // понедельник раунда, YYYY-MM-DD
+  startsAt  DateTime
+  endsAt    DateTime
+  place     String
+  online    Boolean        @default(false)
+  status    String         @default("active") // active | cancelled
+  createdAt DateTime
+  members   CoffeeMember[]
+
+  @@index([week])
+}
+
+model CoffeeMember {
+  id      String      @id @default(cuid())
+  matchId String
+  userId  String
+  answer  String      @default("new") // new | yes | skip
+  met     Boolean? // после встречи: состоялась ли
+  match   CoffeeMatch @relation(fields: [matchId], references: [id], onDelete: Cascade)
+  user    User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([matchId, userId])
+  @@index([userId])
 }

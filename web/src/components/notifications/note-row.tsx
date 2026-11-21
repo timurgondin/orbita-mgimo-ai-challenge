@@ -6,6 +6,7 @@ import {
   BookOpen,
   CalendarClock,
   Clock3,
+  Coffee,
   FileCheck2,
   FolderOpen,
   Megaphone,
@@ -27,6 +28,7 @@ export const KIND: Record<NotificationKind, { label: string; icon: LucideIcon; c
   library: { label: "Библиотека", icon: BookOpen, color: "var(--c-eng)" },
   security: { label: "Безопасность", icon: ShieldCheck, color: "var(--st-red)" },
   announcement: { label: "Объявление", icon: Megaphone, color: "var(--accent)" },
+  coffee: { label: "Random Coffee", icon: Coffee, color: "var(--c-hist)" },
 };
 const kindOf = (k: NotificationKind) => KIND[k] ?? KIND.announcement;
 

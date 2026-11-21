@@ -96,7 +96,7 @@ try {
   await page.goto(BASE + "/study?tab=perf");
   await page.waitForSelector("[data-past-semester]");
   check("perf: past semesters listed newest first", (await page.locator("[data-past-semester]").first().textContent())?.includes("2 семестр"));
-  check("perf: diploma link", (await page.locator("[data-diploma-link]").count()) === 1);
+  check("perf: diploma link", await page.locator("[data-diploma-link]").waitFor({ timeout: 5000 }).then(() => true, () => false));
   await page.click("[data-past-semester]");
   await page.waitForURL((u) => u.pathname === "/study/semester/2");
   check("perf: past semester opens that semester", (await page.textContent("h1")) === "1 курс, 2 семестр");
@@ -163,8 +163,9 @@ try {
   await page.waitForLoadState("networkidle");
   await page.click('[data-tile="more"]');
   await page.waitForSelector("dialog[open][aria-label='Все сервисы']");
+  await page.waitForTimeout(600); // окно раскрывается пружиной — меряем после анимации
   const all = await page.locator("dialog[open] [data-tile]").evaluateAll((as) => as.map((a) => a.getAttribute("href") ?? a.getAttribute("data-tile")));
-  check("«Ещё»: all 9 services incl. rating, clubs", all.length === 9 && ["/study/rating", "/clubs", "/library", "/print", "/office"].every((h) => all.includes(h)));
+  check("«Ещё»: all 10 services incl. rating, clubs, coffee", all.length === 10 && ["/study/rating", "/clubs", "/library", "/print", "/office", "/coffee"].every((h) => all.includes(h)));
   const closeBox = await page.locator("dialog[open] button[aria-label='Закрыть']").boundingBox();
   const editBox = await page.locator("dialog[open] [data-pin-edit]").boundingBox();
   check("«Ещё»: close button in line with «Настроить»", Math.abs(closeBox.y + closeBox.height / 2 - (editBox.y + editBox.height / 2)) < 1.5);
@@ -172,7 +173,8 @@ try {
   const order = () => page.locator("dialog[open] [data-pin]").evaluateAll((as) => as.map((a) => a.getAttribute("data-pin")));
   await page.click('dialog[open] [data-pin="clubs"]'); // «+»: на главную последней, «Печать» уходит в «Ещё»
   check("«+» puts a tile 5th on the main screen", (await order()).slice(0, 6).join() === "grades,card,teachers,library,clubs,print", (await order()).join());
-  // перетаскивание: «Рейтинг» на первое место
+  // перетаскивание: «Рейтинг» на первое место (после FLIP-анимации от «+»)
+  await page.waitForTimeout(600);
   const from = await page.locator('dialog[open] [data-pin="rating"]').boundingBox();
   const to = await page.locator('dialog[open] [data-pin="grades"]').boundingBox();
   await page.mouse.move(from.x + from.width / 2, from.y + from.height / 3);
@@ -190,7 +192,7 @@ try {
   await page.waitForTimeout(800);
   const after = await page.locator('nav[aria-label="Быстрый доступ"] > [data-tile]').evaluateAll((as) => as.map((a) => a.getAttribute("data-tile")));
   const saved = (await db.user.findUniqueOrThrow({ where: { login: "a.vorontsova" } })).tiles;
-  const want = ["grades", "rating", "card", "teachers", "library", "clubs", "print", "courses", "documents"];
+  const want = ["grades", "rating", "card", "teachers", "library", "clubs", "print", "courses", "documents", "coffee"];
   check("tile order saved, first five shown", after.join() === "grades,rating,card,teachers,library,more" && saved === JSON.stringify(want), after.join() + " / " + saved);
   const maxim = (await db.user.findUniqueOrThrow({ where: { login: "m.orlov" } })).tiles;
   check("other students' tiles untouched", maxim === null);

@@ -243,3 +243,32 @@ export const SCANS: [string, string, number, number, string, string][] = [
   ["a.vorontsova", "Скан 18-11-21-04.pdf", 2, 610_000, "p-c1", "2026-11-18T21:04"],
   ["a.vorontsova", "Скан 03-11-12-40.pdf", 5, 1_540_000, "p-lib", "2026-11-03T12:40"],
 ];
+
+// ---------- Random Coffee: вымышленные студенты других факультетов (входа нет) и встречи демо-студентов ----------
+export interface CoffeePersonDef {
+  first: string; last: string; faculty: string; program: string; course: number; avatar: string; tg: string; interests: string[]; format: "campus" | "online" | "any";
+}
+export const COFFEE_PEOPLE: CoffeePersonDef[] = [
+  { first: "Егор", last: "Миронов", faculty: "Факультет международных отношений", program: "Мировая политика", course: 3, avatar: "mist", tg: "egor_mrn", interests: ["Кино", "Настолки", "Дебаты", "Стартапы", "Политика"], format: "campus" },
+  { first: "Вера", last: "Ткачёва", faculty: "Факультет медиакоммуникаций", program: "Медиаменеджмент", course: 2, avatar: "peach", tg: "vera_tk", interests: ["Фотография", "Кино", "Путешествия", "Книги"], format: "campus" },
+  { first: "Илья", last: "Субботин", faculty: "Факультет права", program: "Международное право", course: 3, avatar: "stone", tg: "ilya_sbt", interests: ["Дебаты", "Бег", "Политика", "Финансы"], format: "any" },
+  { first: "Ксения", last: "Рябова", faculty: "Факультет экономики", program: "Экономика и данные", course: 4, avatar: "lilac", tg: "ks_ryabova", interests: ["ИИ", "Стартапы", "Йога", "Языки"], format: "campus" },
+  { first: "Даниил", last: "Кравец", faculty: "Факультет экономики", program: "Финансы", course: 1, avatar: "sand", tg: "dan_kravets", interests: ["Финансы", "Стартапы", "Бег", "Музыка"], format: "campus" },
+  { first: "Ульяна", last: "Зорина", faculty: "Факультет медиакоммуникаций", program: "Реклама и связи с общественностью", course: 3, avatar: "peach", tg: "ulya_zr", interests: ["Дизайн", "Музыка", "Театр", "Кулинария"], format: "any" },
+  { first: "Арсений", last: "Гордеев", faculty: "Факультет международных отношений", program: "Востоковедение", course: 2, avatar: "mist", tg: "ars_gordeev", interests: ["Языки", "Путешествия", "Книги", "Настолки"], format: "campus" },
+  { first: "Мирослава", last: "Чернова", faculty: "Факультет права", program: "Право и технологии", course: 2, avatar: "lilac", tg: "mira_ch", interests: ["ИИ", "Дебаты", "Театр", "Волонтёрство"], format: "online" },
+  { first: "Роман", last: "Белов", faculty: "Факультет международного бизнеса", program: "Логистика", course: 4, avatar: "stone", tg: "roman_belov", interests: ["Бег", "Фотография", "Кулинария", "Путешествия"], format: "campus" },
+  { first: "Таисия", last: "Лебедева", faculty: "Факультет экономики", program: "Экономика и данные", course: 1, avatar: "sand", tg: "taya_lbd", interests: ["Кино", "Книги", "Волонтёрство", "Йога"], format: "any" },
+];
+
+export const COFFEE_PROFILES: [string, string[], "campus" | "online" | "any"][] = [
+  ["a.vorontsova", ["Стартапы", "Кино", "Настолки", "Языки", "Бег"], "campus"],
+];
+
+/** [логин, № человека в COFFEE_PEOPLE, неделя (пн), начало, место, ответ студента, ответ пары, состоялась, отменена] */
+export const COFFEE_MATCHES: [string, number, string, string, string, "new" | "yes" | "skip", "new" | "yes" | "skip", boolean | null, boolean][] = [
+  ["a.vorontsova", 0, "2026-11-16", "2026-11-20T12:30", "Кофейня «Зерно», корпус А", "new", "yes", null, false],
+  ["a.vorontsova", 1, "2026-11-09", "2026-11-12T16:00", "Терраса библиотеки, 3 этаж", "yes", "yes", null, false],
+  ["a.vorontsova", 2, "2026-11-02", "2026-11-04T12:30", "Кафе в атриуме, корпус Б", "yes", "yes", true, false],
+  ["a.vorontsova", 3, "2026-10-26", "2026-10-27T14:20", "Кофейня «Зерно», корпус А", "yes", "yes", true, false],
+];

@@ -29,6 +29,7 @@ const TILES: Tile[] = [
   { id: "library", label: "Библиотека", icon: "library", color: "var(--c-micro)", href: "/library" },
   { id: "clubs", label: "Клубы", icon: "clubs", color: "var(--c-eng)", href: "/clubs" },
   { id: "print", label: "Печать", icon: "print", color: "var(--c-law)", href: "/print" },
+  { id: "coffee", label: "Random Coffee", icon: "coffee", color: "var(--c-hist)", href: "/coffee" },
 ];
 
 const TILE = "group flex min-w-0 flex-col items-center gap-3 text-center text-[15px] font-medium tracking-[-.01em]";

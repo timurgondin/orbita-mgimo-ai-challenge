@@ -44,7 +44,7 @@ export type Assessment = "exam" | "credit";
 export type ComponentKind = "test" | "homework" | "essay" | "project" | "exam" | "participation";
 export type WorkStatus = "upcoming" | "draft" | "in_progress" | "submitted" | "reviewing" | "graded" | "returned";
 export type EventKind = "lecture" | "seminar" | "practice" | "consultation" | "test";
-export type NotificationKind = "grade" | "document" | "announcement" | "schedule" | "library" | "material" | "security" | "office" | "deadline";
+export type NotificationKind = "grade" | "document" | "announcement" | "schedule" | "library" | "material" | "security" | "office" | "deadline" | "coffee";
 export type NotificationCategory = "study" | "schedule" | "office" | "library" | "announcement" | "security";
 export type NotificationLevel = "action" | "important" | "info";
 
@@ -862,4 +862,49 @@ export interface PrintData {
   nearId: string | null;
   nearReason: string | null;
   printers: (import("@/lib/printers").Printer & { name: string })[];
+}
+
+// ---- Random Coffee ----
+
+export interface CoffeePerson {
+  name: string; // «Егор Миронов»
+  initials: string;
+  gradient: string;
+  study: string; // «Мировая политика, 3 курс»
+  faculty: string | null;
+}
+
+export interface CoffeeSlot {
+  startsAt: string; // ISO
+  endsAt: string;
+}
+
+export interface CoffeeCurrentView {
+  id: string;
+  partner: CoffeePerson & { interests: string[]; shared: string[]; firstName: string };
+  /** Telegram пары — только когда оба согласились */
+  telegram: string | null;
+  startsAt: string;
+  endsAt: string;
+  place: string;
+  online: boolean;
+  mine: "new" | "yes" | "skip";
+  theirs: "new" | "yes" | "skip";
+  cancelled: boolean;
+  alternatives: CoffeeSlot[];
+}
+
+export interface CoffeePastView {
+  id: string;
+  partner: CoffeePerson;
+  date: string; // ISO начала
+  met: boolean | null;
+  cancelled: boolean;
+}
+
+export interface CoffeeView {
+  profile: { active: boolean; interests: string[]; format: "campus" | "online" | "any" } | null;
+  current: CoffeeCurrentView | null;
+  nextRound: string; // YYYY-MM-DD
+  past: CoffeePastView[];
 }

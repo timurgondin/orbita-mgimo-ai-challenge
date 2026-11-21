@@ -4,7 +4,7 @@ import { BELLS } from "../src/lib/bells";
 import { randomBytes } from "node:crypto";
 import { pastContent } from "./seed-past";
 import { LESSON_PREP, PREPARE } from "./seed-prepare";
-import { BOOKS, CLUBS, CLUB_MEMBERS, LOANS, ORDERS, PRINT_JOBS, READINGS, SCANS } from "./seed-campus";
+import { BOOKS, CLUBS, CLUB_MEMBERS, COFFEE_MATCHES, COFFEE_PEOPLE, COFFEE_PROFILES, LOANS, ORDERS, PRINT_JOBS, READINGS, SCANS } from "./seed-campus";
 import { AUTO_PASS, DISCIPLINE_BY_TITLE, LOAD, PLANNED, PROFILES, STAFF, SYLLABI, TASKS, TEACHERS } from "./seed-academic";
 
 const db = new PrismaClient();
@@ -870,6 +870,43 @@ for (const [login, fileName, pages, copies, color, duplex, status, printerId, wh
 }
 for (const [login, fileName, pages, size, printerId, when] of SCANS) {
   await db.scan.create({ data: { userId: await userId(login), fileName, pages, size, printerId, createdAt: at(when) } });
+}
+
+// ---------- Random Coffee ----------
+await db.coffeeMatch.deleteMany(); // участники — каскадом
+await db.coffeeProfile.deleteMany();
+await db.notification.deleteMany({ where: { kind: "coffee" } });
+const coffeeIds: string[] = [];
+for (const [i, p] of COFFEE_PEOPLE.entries()) {
+  const data = {
+    login: `seed.coffee${String(i + 1).padStart(2, "0")}`, passwordHash: await hashPassword(randomBytes(24).toString("base64url")), pepperVersion: PEPPER_VERSION, role: "student",
+    firstName: p.first, lastName: p.last, faculty: p.faculty, program: p.program, course: p.course, avatar: p.avatar, telegram: `@${p.tg}`, onboardingDone: true,
+  };
+  const id = (await db.user.upsert({ where: { login: data.login }, create: data, update: data })).id;
+  coffeeIds.push(id);
+  await db.coffeeProfile.create({ data: { userId: id, interests: JSON.stringify(p.interests), format: p.format, updatedAt: at("2026-09-15") } });
+}
+for (const [login, interests, format] of COFFEE_PROFILES) {
+  await db.coffeeProfile.create({ data: { userId: await userId(login), interests: JSON.stringify(interests), format, updatedAt: at("2026-10-20") } });
+}
+for (const [login, who, week, start, place, mine, theirs, met, cancelled] of COFFEE_MATCHES) {
+  const startsAt = at(start);
+  const uid = await userId(login);
+  const m = await db.coffeeMatch.create({
+    data: {
+      week, startsAt, endsAt: new Date(startsAt.getTime() + 30 * 60_000), place, status: cancelled ? "cancelled" : "active", createdAt: at(`${week}T09:00`),
+      members: { create: [{ userId: uid, answer: mine, met }, { userId: coffeeIds[who], answer: theirs, met: met === null ? null : true }] },
+    },
+  });
+  if (week === "2026-11-16") {
+    const p = COFFEE_PEOPLE[who];
+    await db.notification.create({
+      data: {
+        userId: uid, kind: "coffee", category: "announcement", level: "info", title: "Random Coffee: пара на неделю",
+        body: `**${p.first} ${p.last}**, ${p.program}. Кофе в пт, 20 ноября, в 12:30`, link: "/coffee", refId: m.id, createdAt: at(`${week}T09:00`), readAt: at(`${week}T09:20`),
+      },
+    });
+  }
 }
 
 await db.$disconnect();
