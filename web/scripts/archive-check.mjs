@@ -147,16 +147,11 @@ try {
   const dead = await page.locator('main a[href="#"]').count();
   check("Today: no dead links", dead === 0, `${dead} left`);
   const main = await page.locator('nav[aria-label="Быстрый доступ"] > [data-tile]').evaluateAll((as) => as.map((a) => a.getAttribute("data-tile")));
-  check("Today: 5 pinned tiles + «Ещё»", main.join() === "grades,card,teachers,library,print,more", main.join());
+  check("Today: 5 pinned tiles + «Ещё»", main.join() === "grades,card,people,library,print,more", main.join());
 
-  await page.click('nav[aria-label="Быстрый доступ"] > [data-tile="teachers"]');
-  const tDlg = page.locator("dialog[open][aria-label='Преподаватели']");
-  await tDlg.waitFor();
-  const td = (await tDlg.textContent()) ?? "";
-  check("teachers modal: own teachers", td.includes("Петрова Е. А.") && td.includes("Микроэкономика") && td.includes("Соколов Д. В.") && !td.includes("Лебедева"));
-  await page.click('[data-teacher="Соколов Д. В."]');
-  await page.waitForURL((u) => u.pathname === "/people/sokolov-dv");
-  check("teacher row opens the teacher page", true);
+  await page.click('nav[aria-label="Быстрый доступ"] > [data-tile="people"]');
+  await page.waitForURL((u) => u.pathname === "/people");
+  check("tile «Люди» opens people search (no separate teachers tile)", !main.includes("teachers"));
 
   // «Ещё»: все сервисы; «Настроить» — порядок плиток (перетаскивание, «+», стрелки), первые пять — на главной
   await page.goto(BASE + "/");
@@ -165,14 +160,14 @@ try {
   await page.waitForSelector("dialog[open][aria-label='Все сервисы']");
   await page.waitForTimeout(600); // окно раскрывается пружиной — меряем после анимации
   const all = await page.locator("dialog[open] [data-tile]").evaluateAll((as) => as.map((a) => a.getAttribute("href") ?? a.getAttribute("data-tile")));
-  check("«Ещё»: all 10 services incl. rating, clubs, coffee", all.length === 10 && ["/study/rating", "/clubs", "/library", "/print", "/office", "/coffee"].every((h) => all.includes(h)));
+  check("«Ещё»: all 10 services incl. rating, clubs, coffee, people", all.length === 10 && ["/study/rating", "/clubs", "/library", "/print", "/office", "/coffee", "/people"].every((h) => all.includes(h)));
   const closeBox = await page.locator("dialog[open] button[aria-label='Закрыть']").boundingBox();
   const editBox = await page.locator("dialog[open] [data-pin-edit]").boundingBox();
   check("«Ещё»: close button in line with «Настроить»", Math.abs(closeBox.y + closeBox.height / 2 - (editBox.y + editBox.height / 2)) < 1.5);
   await page.click("dialog[open] [data-pin-edit]");
   const order = () => page.locator("dialog[open] [data-pin]").evaluateAll((as) => as.map((a) => a.getAttribute("data-pin")));
   await page.click('dialog[open] [data-pin="clubs"]'); // «+»: на главную последней, «Печать» уходит в «Ещё»
-  check("«+» puts a tile 5th on the main screen", (await order()).slice(0, 6).join() === "grades,card,teachers,library,clubs,print", (await order()).join());
+  check("«+» puts a tile 5th on the main screen", (await order()).slice(0, 6).join() === "grades,card,people,library,clubs,print", (await order()).join());
   // перетаскивание: «Рейтинг» на первое место (после FLIP-анимации от «+»)
   await page.waitForTimeout(600);
   const from = await page.locator('dialog[open] [data-pin="rating"]').boundingBox();
@@ -192,8 +187,8 @@ try {
   await page.waitForTimeout(800);
   const after = await page.locator('nav[aria-label="Быстрый доступ"] > [data-tile]').evaluateAll((as) => as.map((a) => a.getAttribute("data-tile")));
   const saved = (await db.user.findUniqueOrThrow({ where: { login: "a.vorontsova" } })).tiles;
-  const want = ["grades", "rating", "card", "teachers", "library", "clubs", "print", "courses", "documents", "coffee"];
-  check("tile order saved, first five shown", after.join() === "grades,rating,card,teachers,library,more" && saved === JSON.stringify(want), after.join() + " / " + saved);
+  const want = ["grades", "rating", "card", "people", "library", "clubs", "print", "courses", "documents", "coffee"];
+  check("tile order saved, first five shown", after.join() === "grades,rating,card,people,library,more" && saved === JSON.stringify(want), after.join() + " / " + saved);
   const maxim = (await db.user.findUniqueOrThrow({ where: { login: "m.orlov" } })).tiles;
   check("other students' tiles untouched", maxim === null);
 

@@ -3,7 +3,8 @@
 import { useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Check, MapPin, Video } from "lucide-react";
+import { Check, ChevronRight, MapPin, Video } from "lucide-react";
+import { PersonAvatar } from "@/components/people/people-search";
 import { ProgressBar } from "@/components/ui/progress";
 import { TeacherAvatar } from "@/components/ui/teacher-avatar";
 import type { Toast } from "@/components/ui/toast";
@@ -25,6 +26,8 @@ export function ReplyCard({ card, toast }: { card: AssistantCard; toast: Toast }
       return <Request card={card} toast={toast} />;
     case "consultations":
       return <Consultations card={card} toast={toast} />;
+    case "people":
+      return <People card={card} />;
   }
 }
 
@@ -226,6 +229,24 @@ function Consultations({ card, toast }: { card: Extract<AssistantCard, { kind: "
             )}
           </div>
         </div>
+      ))}
+    </div>
+  );
+}
+
+function People({ card }: { card: Extract<AssistantCard, { kind: "people" }> }) {
+  return (
+    <div className={cn(box, "rows")} style={{ "--row-inset": "12px" } as React.CSSProperties} data-assistant-people>
+      {card.items.map((p) => (
+        <Link key={p.href} href={p.href} className={cn(row, "transition-colors duration-150 hover:bg-hover")}>
+          <PersonAvatar p={p} size={32} />
+          <span className="min-w-0 flex-1">
+            <b className="block truncate text-[14.5px] font-medium">{p.name}</b>
+            <small className="block truncate text-[13px] text-text-3">{p.sub}</small>
+          </span>
+          {p.tag && <span className="shrink-0 text-[13px] text-text-2 tabular-nums">{p.tag}</span>}
+          <ChevronRight aria-hidden="true" size={16} strokeWidth={1.6} className="shrink-0 text-text-3" />
+        </Link>
       ))}
     </div>
   );

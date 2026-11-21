@@ -41,6 +41,9 @@ model User {
   headmanName         String?
   phone               String?
   telegram            String?
+  // приватность в поиске людей (/people): почта видна всегда, телефон и Telegram — только если студент включил
+  showPhone           Boolean              @default(false)
+  showTelegram        Boolean              @default(false)
   // студенческий билет: номер, срок, токен публичной проверки (/verify/<токен>, 32 байта CSPRNG)
   cardNumber          String?
   cardValidUntil      DateTime?

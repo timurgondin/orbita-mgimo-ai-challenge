@@ -8,15 +8,16 @@ import type { CoffeePerson, CoffeeView } from "./types";
 type Answer = "new" | "yes" | "skip";
 const answer = (s: string): Answer => (s === "yes" || s === "skip" ? s : "new");
 
-const person = (u: { firstName: string; lastName: string; avatar: string; program: string | null; course: number | null; faculty: string | null }): CoffeePerson => ({
+const person = (u: { login: string; firstName: string; lastName: string; avatar: string; program: string | null; course: number | null; faculty: string | null }): CoffeePerson => ({
   name: `${u.firstName} ${u.lastName}`,
   initials: `${u.firstName[0] ?? ""}${u.lastName[0] ?? ""}`.toUpperCase(),
   gradient: avatarGradientByKey(u.avatar),
   study: [u.program, u.course ? `${u.course} курс` : null].filter(Boolean).join(", "),
   faculty: u.faculty,
+  href: `/people/${u.login}`,
 });
 
-const PERSON = { firstName: true, lastName: true, avatar: true, program: true, course: true, faculty: true, telegram: true } as const;
+const PERSON = { login: true, firstName: true, lastName: true, avatar: true, program: true, course: true, faculty: true, telegram: true } as const;
 
 /**
  * Random Coffee текущего студента (из сессии). О паре — только то, что нужно для встречи: имя, программа, интересы;

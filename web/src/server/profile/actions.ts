@@ -22,6 +22,19 @@ export async function updateContact(field: unknown, value: unknown): Promise<Con
   return { ok: true, value: v };
 }
 
+const PRIVACY = ["showPhone", "showTelegram"] as const;
+type PrivacyField = (typeof PRIVACY)[number];
+
+/** Видимость телефона и Telegram в поиске людей — только своя (пользователь из сессии) и только у студента. */
+export async function updatePrivacy(field: unknown, value: unknown): Promise<{ ok: boolean }> {
+  const user = await requireUser();
+  if (user.role !== "student" || !PRIVACY.includes(field as PrivacyField) || typeof value !== "boolean") return { ok: false };
+  await db.user.update({ where: { id: user.id }, data: { [field as PrivacyField]: value } });
+  revalidatePath("/profile");
+  revalidatePath(`/people/${user.login}`);
+  return { ok: true };
+}
+
 /** Новый QR Орбита ID — только свой (токен из сессии, параметров нет). */
 export async function refreshCardQr(): Promise<{ qr: string; ttl: number } | null> {
   const user = await requireUser();

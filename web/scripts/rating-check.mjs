@@ -60,7 +60,7 @@ try {
   check("rating: place shown, matches perf card", rank > 0 && rank < 184 && card.includes(`${rank} место из 184`), String(rank));
   check("rating: privacy note, perks, how it is counted", t.includes("Видно только тебе") && t.includes("Повышенная академическая стипендия") && (await page.locator("[data-how]").count()) === 1);
   // однокурсники анонимны: ни одной фамилии из группы
-  const pool = await db.user.findMany({ where: { login: { startsWith: "seed.student" } }, select: { lastName: true } });
+  const pool = await db.user.findMany({ where: { groupName: "МБ-24-1", login: { not: "a.vorontsova" } }, select: { lastName: true } });
   check("rating: no classmates' names on the page", pool.every((p) => !t.includes(p.lastName)));
   check("rating: histogram has own bar and table view", (await page.locator("[data-histogram] table tr").count()) > 10 && t.includes("ты"));
   check("rating: history of places for 2 semesters", (await page.locator("[data-history] table tr").count()) === 2);

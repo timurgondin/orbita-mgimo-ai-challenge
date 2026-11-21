@@ -1,7 +1,7 @@
 // Знаки плиток «Сегодня» — Solar (bold duotone), 480 Design, CC BY 4.0: https://www.figma.com/community/file/1166831539721848736
 // Сгенерировано из @iconify-json/solar; цвет — currentColor (второй слой — тот же цвет с прозрачностью).
 
-export type TileIconName = "courses" | "grades" | "documents" | "card" | "teachers" | "library" | "clubs" | "print" | "rating" | "coffee" | "more";
+export type TileIconName = "courses" | "grades" | "documents" | "card" | "teachers" | "library" | "clubs" | "print" | "rating" | "coffee" | "people" | "more";
 
 const PATHS: Record<TileIconName, React.ReactNode> = {
   courses: (
@@ -27,6 +27,11 @@ const PATHS: Record<TileIconName, React.ReactNode> = {
   teachers: (
     <>
       <path fill="currentColor" d="M12 13C15.3137 13 18 14.567 18 16.5C18 18.433 15.3137 20 12 20C8.68629 20 6 18.433 6 16.5C6 14.567 8.68629 13 12 13Z"/><path fill="currentColor" d="M12 4C13.933 4 15.5 5.567 15.5 7.5C15.5 9.433 13.933 11 12 11C10.067 11 8.5 9.433 8.5 7.5C8.5 5.567 10.067 4 12 4Z"/><g fill="currentColor" opacity=".5"><path d="M6 14C8.20914 14 10 15.1193 10 16.5C10 17.8807 8.20914 19 6 19C3.79086 19 2 17.8807 2 16.5C2 15.1193 3.79086 14 6 14Z"/><path d="M18 14C20.2091 14 22 15.1193 22 16.5C22 17.8807 20.2091 19 18 19C15.7909 19 14 17.8807 14 16.5C14 15.1193 15.7909 14 18 14Z"/><path d="M7 5C8.38071 5 9.5 6.11929 9.5 7.5C9.5 8.88071 8.38071 10 7 10C5.61929 10 4.5 8.88071 4.5 7.5C4.5 6.11929 5.61929 5 7 5Z"/><path d="M17 5C18.3807 5 19.5 6.11929 19.5 7.5C19.5 8.88071 18.3807 10 17 10C15.6193 10 14.5 8.88071 14.5 7.5C14.5 6.11929 15.6193 5 17 5Z"/></g>
+    </>
+  ),
+  people: (
+    <>
+      <g fill="currentColor" opacity=".5"><path d="M16 14C18.7614 14 21 15.3431 21 17C21 18.6569 18.7614 20 16 20C13.2386 20 11 18.6569 11 17C11 15.3431 13.2386 14 16 14Z"/><path d="M15 3C16.6569 3 18 4.34315 18 6C18 7.65685 16.6569 9 15 9C13.3431 9 12 7.65685 12 6C12 4.34315 13.3431 3 15 3Z"/></g><path fill="currentColor" d="M9 13.001C12.866 13.001 16 14.7918 16 17.001C16 19.2101 12.866 21.001 9 21.001C5.13401 21.001 2 19.2101 2 17.001C2 14.7918 5.13401 13.001 9 13.001Z"/><path fill="currentColor" d="M9 2C11.2091 2 13 3.79086 13 6C13 8.20914 11.2091 10 9 10C6.79086 10 5 8.20914 5 6C5 3.79086 6.79086 2 9 2Z"/>
     </>
   ),
   library: (

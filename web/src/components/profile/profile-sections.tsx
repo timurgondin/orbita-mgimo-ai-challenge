@@ -2,7 +2,8 @@
 
 import { useRef, useState, useTransition } from "react";
 import Link from "next/link";
-import { Check, ChevronRight, Copy, PenLine } from "lucide-react";
+import { Check, ChevronRight, Copy, Eye, PenLine } from "lucide-react";
+import { PrivacyButton } from "@/components/profile/privacy";
 import { useToast } from "@/components/ui/toast";
 import { CONTACT_ERROR, CONTACT_PREFIX, type ContactField, contactValue, maskContact, normalizeContact } from "@/lib/contacts";
 import { plural } from "@/lib/phrases";
@@ -158,8 +159,17 @@ export function ProfileSections({ p }: { p: ProfileView }) {
                 </Row>
               )}
               {p.headman && (
-                <Row k="Староста">
-                  <Person p={p.headman} />
+                <Row
+                  k="Староста"
+                  action={p.headmanHref ? <ChevronRight aria-hidden="true" size={16} strokeWidth={1.6} className="mx-2 text-text-3 max-sm:col-start-2 max-sm:row-span-2 max-sm:row-start-1" /> : undefined}
+                >
+                  {p.headmanHref ? (
+                    <Link href={p.headmanHref} data-headman-link className="after:absolute after:inset-0 after:rounded-[14px]">
+                      <Person p={p.headman} />
+                    </Link>
+                  ) : (
+                    <Person p={p.headman} />
+                  )}
                 </Row>
               )}
             </>
@@ -170,9 +180,21 @@ export function ProfileSections({ p }: { p: ProfileView }) {
       </section>
 
       <section aria-labelledby="p-contacts">
-        <h2 id="p-contacts" className="mb-1.5 text-lg font-semibold tracking-[-.02em]">
-          Контакты
-        </h2>
+        <div className="mb-1.5 flex items-center justify-between gap-3">
+          <h2 id="p-contacts" className="text-lg font-semibold tracking-[-.02em]">
+            Контакты
+          </h2>
+          {p.student && (
+            <PrivacyButton
+              p={{ login: p.login, email: p.email, phone: p.phone, telegram: p.telegram, showPhone: p.showPhone, showTelegram: p.showTelegram }}
+              withCardLink
+              className="-my-1 inline-flex h-8 items-center gap-1.5 rounded-full bg-s1 px-3 text-[13px] font-medium text-text-2 transition-colors duration-150 hover:bg-s2 hover:text-text"
+            >
+              <Eye size={14} strokeWidth={1.8} />
+              Приватность
+            </PrivacyButton>
+          )}
+        </div>
         <dl className="rows [--row-inset:14px]">
           <Row k="Почта" action={<CopyButton value={p.email} label="почту" onDone={copied} />}>
             {p.email}

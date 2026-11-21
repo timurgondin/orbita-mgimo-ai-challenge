@@ -2,8 +2,8 @@ import "server-only";
 import { db } from "@/server/db/client";
 import { requireUser } from "@/server/auth/session";
 import { DEMO_NOW, DEMO_DATE, addDays, dayStart, mskDate, mskTime } from "@/lib/demo-clock";
-import { avatarGradientByKey, formatDue, getStudent, teacherInitials } from "./shared";
-import type { EventKind, Lesson, SoonItem, TeacherView, WorkStatus } from "./types";
+import { formatDue, getStudent } from "./shared";
+import type { EventKind, Lesson, SoonItem, WorkStatus } from "./types";
 
 const FORMAT: Partial<Record<EventKind, string>> = { lecture: "Лекция", seminar: "Семинар", practice: "Практика", test: "Контрольная" };
 
@@ -138,39 +138,3 @@ export async function getSoon(): Promise<SoonItem[]> {
     });
 }
 
-/** Преподаватели текущих курсов студента (лекторы и семинаристы) и их ближайшие консультации. Только его записи на курсы. */
-export async function getTeachers(): Promise<TeacherView[]> {
-  const user = await getStudent();
-  if (!user) return [];
-  const enrollments = await db.enrollment.findMany({
-    where: { userId: user.id, course: { format: "offline" } },
-    orderBy: { order: "asc" },
-    select: {
-      course: {
-        select: {
-          title: true, color: true,
-          staff: { orderBy: { order: "asc" }, select: { role: true, teacher: { select: { slug: true, short: true, avatar: true } } } },
-          consultations: { where: { startsAt: { gte: DEMO_NOW } }, orderBy: { startsAt: "asc" }, take: 1, select: { id: true, startsAt: true, teacherName: true } },
-        },
-      },
-    },
-  });
-
-  const bySlug = new Map<string, TeacherView & { at: number }>();
-  for (const { course: c } of enrollments) {
-    for (const { role, teacher } of c.staff) {
-      let t = bySlug.get(teacher.slug);
-      if (!t) {
-        t = { slug: teacher.slug, name: teacher.short, initials: teacherInitials(teacher.short), gradient: avatarGradientByKey(teacher.avatar), courses: [], cons: null, at: Infinity };
-        bySlug.set(teacher.slug, t);
-      }
-      t.courses.push({ title: c.title, color: c.color, role });
-      const next = c.consultations[0];
-      if (next && next.teacherName === teacher.short && next.startsAt.getTime() < t.at) {
-        t.at = next.startsAt.getTime();
-        t.cons = { id: next.id, when: formatDue(next.startsAt).label };
-      }
-    }
-  }
-  return [...bySlug.values()].map(({ at: _at, ...t }) => (void _at, t));
-}

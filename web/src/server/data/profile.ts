@@ -1,12 +1,11 @@
 import "server-only";
 import { avatarGradient, initials, photoUrl } from "@/lib/user-view";
+import { db } from "@/server/db/client";
 import { requireUser } from "@/server/auth/session";
 import { cardQr } from "@/server/profile/card-code";
 import { getArchive } from "./archive";
-import { avatarGradientByKey } from "./shared";
+import { avatarGradientByKey, emailOf } from "./shared";
 import type { PersonRef, ProfileView, StudentCardView } from "./types";
-
-const EMAIL_DOMAIN = "orbita.edu";
 
 const fmtDate = (d: Date) =>
   d.toLocaleDateString("ru-RU", { day: "2-digit", month: "2-digit", year: "numeric", timeZone: "Europe/Moscow" });
@@ -22,6 +21,14 @@ function person(fio: string | null, avatar: string): PersonRef | null {
   };
 }
 
+/** Логин однокурсника по «Фамилия Имя» — для ссылки на карточку в поиске людей. */
+async function classmateHref(fio: string | null, group: string | null): Promise<string | null> {
+  if (!fio || !group) return null;
+  const [lastName = "", firstName = ""] = fio.split(" ");
+  const u = await db.user.findFirst({ where: { role: "student", groupName: group, lastName, firstName }, select: { login: true } });
+  return u ? `/people/${u.login}` : null;
+}
+
 /** Профиль текущего пользователя (только из сессии). */
 export async function getProfile(): Promise<ProfileView> {
   const u = await requireUser();
@@ -29,7 +36,10 @@ export async function getProfile(): Promise<ProfileView> {
   const archive = student ? await getArchive() : null;
   return {
     student,
-    email: `${u.login}@${EMAIL_DOMAIN}`,
+    email: emailOf(u.login),
+    showPhone: u.showPhone,
+    showTelegram: u.showTelegram,
+    login: u.login,
     phone: u.phone,
     telegram: u.telegram,
     faculty: u.faculty,
@@ -42,6 +52,7 @@ export async function getProfile(): Promise<ProfileView> {
     recordBook: u.recordBook,
     curator: person(u.curatorName, "peach"),
     headman: person(u.headmanName, "mist"),
+    headmanHref: await classmateHref(u.headmanName, u.groupName),
     hasCard: student && !!u.cardToken,
     archive: archive?.semesters.length ? { semesters: archive.semesters.length, average: archive.average } : null,
   };

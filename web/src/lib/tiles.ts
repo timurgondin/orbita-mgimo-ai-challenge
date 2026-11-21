@@ -2,11 +2,11 @@
  * Плитки быстрого доступа на «Сегодня». Студент расставляет все сервисы по порядку (перетаскиванием в окне «Ещё»):
  * первые пять видны на главной, остальные — в «Ещё». Общая константа клиента и сервера.
  */
-export const TILE_IDS = ["courses", "grades", "rating", "documents", "card", "teachers", "library", "clubs", "print", "coffee"] as const;
+export const TILE_IDS = ["courses", "grades", "rating", "documents", "card", "library", "clubs", "print", "coffee", "people"] as const;
 export type TileId = (typeof TILE_IDS)[number];
 
 export const MAX_PINNED = 5;
-export const DEFAULT_PINNED: TileId[] = ["grades", "card", "teachers", "library", "print"];
+export const DEFAULT_PINNED: TileId[] = ["grades", "card", "people", "library", "print"];
 
 const isTile = (x: unknown): x is TileId => typeof x === "string" && (TILE_IDS as readonly string[]).includes(x);
 

@@ -5,6 +5,7 @@ import { randomBytes } from "node:crypto";
 import { pastContent } from "./seed-past";
 import { LESSON_PREP, PREPARE } from "./seed-prepare";
 import { BOOKS, CLUBS, CLUB_MEMBERS, COFFEE_MATCHES, COFFEE_PEOPLE, COFFEE_PROFILES, LOANS, ORDERS, PRINT_JOBS, READINGS, SCANS } from "./seed-campus";
+import { attachToGroups, seedDirectory } from "./seed-directory";
 import { AUTO_PASS, DISCIPLINE_BY_TITLE, LOAD, PLANNED, PROFILES, STAFF, SYLLABI, TASKS, TEACHERS } from "./seed-academic";
 
 const db = new PrismaClient();
@@ -27,8 +28,8 @@ const stats: Record<string, { courseRank: number; courseSize: number; creditsEar
 };
 // Профиль (вымышленные данные). Токен студенческого — новый при каждом сиде.
 const profiles: Record<string, Record<string, unknown>> = {
-  "a.vorontsova": { degree: "Бакалавриат", studyForm: "Очная, бюджет", admissionYear: 2025, graduationYear: 2029, recordBook: "25-МБ-0412", curatorName: "Петрова Елена Андреевна", headmanName: "Беляева Дарья", phone: "+7 900 000-12-34", telegram: "@alisa_vrn", cardNumber: "250412", cardValidUntil: new Date("2029-08-31T00:00:00+03:00") },
-  "m.orlov": { degree: "Бакалавриат", studyForm: "Очная, контракт", admissionYear: 2023, graduationYear: 2027, recordBook: "23-МП-0178", curatorName: "Ким Андрей Сергеевич", headmanName: "Жуков Матвей", phone: "+7 900 000-56-78", telegram: "@orlov_m", cardNumber: "230178", cardValidUntil: new Date("2027-08-31T00:00:00+03:00") },
+  "a.vorontsova": { degree: "Бакалавриат", studyForm: "Очная, бюджет", admissionYear: 2025, graduationYear: 2029, recordBook: "25-МБ-0412", curatorName: "Петрова Елена Андреевна", headmanName: "Беляева Дарья", phone: "+7 900 000-12-34", telegram: "@alisa_vrn", showTelegram: true, cardNumber: "250412", cardValidUntil: new Date("2029-08-31T00:00:00+03:00") },
+  "m.orlov": { degree: "Бакалавриат", studyForm: "Очная, контракт", admissionYear: 2023, graduationYear: 2027, recordBook: "23-МП-0178", curatorName: "Ким Андрей Сергеевич", headmanName: "Соболев Никита", phone: "+7 900 000-56-78", telegram: "@orlov_m", showTelegram: true, showPhone: true, cardNumber: "230178", cardValidUntil: new Date("2027-08-31T00:00:00+03:00") },
   "n.lanskaya": { degree: "Бакалавриат", studyForm: "Очная, бюджет", admissionYear: 2026, graduationYear: 2030, recordBook: "26-МК-0931", curatorName: "Петрова Елена Андреевна", headmanName: null, phone: null, telegram: null, cardNumber: "260931", cardValidUntil: new Date("2030-08-31T00:00:00+03:00") },
   "e.petrova": { phone: "+7 900 000-90-12", telegram: "@petrova_econ" },
 };
@@ -36,9 +37,15 @@ for (const u of users) {
   const passwordHash = await hashPassword(PASSWORD);
   const prof = profiles[u.login] ?? {};
   const card = prof.cardNumber ? { cardToken: randomBytes(32).toString("base64url") } : { cardToken: null };
-  const data = { ...u, ...prof, ...card, tiles: null, passwordHash, pepperVersion: PEPPER_VERSION, ...(stats[u.login] ?? { courseRank: null, courseSize: null, creditsEarned: null }) };
+  const data = { showPhone: false, showTelegram: false, ...u, ...prof, ...card, tiles: null, passwordHash, pepperVersion: PEPPER_VERSION, ...(stats[u.login] ?? { courseRank: null, courseSize: null, creditsEarned: null }) };
   await db.user.upsert({ where: { login: u.login }, create: data, update: data });
 }
+// Логин вымышленного студента по имени: «Дарья Беляева» → d.belyaeva (почта в поиске людей — d.belyaeva@orbita.edu)
+const TRANSLIT: Record<string, string> = { а: "a", б: "b", в: "v", г: "g", д: "d", е: "e", ё: "e", ж: "zh", з: "z", и: "i", й: "y", к: "k", л: "l", м: "m", н: "n", о: "o", п: "p", р: "r", с: "s", т: "t", у: "u", ф: "f", х: "kh", ц: "ts", ч: "ch", ш: "sh", щ: "shch", ъ: "", ы: "y", ь: "", э: "e", ю: "yu", я: "ya" };
+const translit = (s: string) => [...s.toLowerCase()].map((c) => TRANSLIT[c] ?? c).join("").replace(/[^a-z]/g, "");
+const personLogin = (first: string, last: string) => `${translit(first)[0]}.${translit(last)}`;
+// все студенты, кроме демо-аккаунтов, пересоздаются (однокурсники, Random Coffee, справочник); связанные записи — каскадом
+await db.user.deleteMany({ where: { role: "student", login: { notIn: users.map((u) => u.login) } } });
 // Вымышленные однокурсники для счётчиков записи на консультации. Входа нет: пароль случайный и нигде не хранится.
 const POOL = [
   ["Беляева", "Дарья"], ["Громова", "Алина"], ["Дьяков", "Артём"], ["Ермолаева", "Полина"], ["Жуков", "Матвей"], ["Захарова", "Вера"],
@@ -46,10 +53,13 @@ const POOL = [
 ] as const;
 const poolIds: string[] = [];
 for (const [i, [lastName, firstName]] of POOL.entries()) {
+  const login = personLogin(firstName, lastName);
+  // у части однокурсников Telegram открыт в поиске людей
+  const tg = i % 3 === 0 ? { telegram: `@${login.replace(".", "_")}`, showTelegram: true } : { telegram: null, showTelegram: false };
   const data = {
-    login: `seed.student${String(i + 1).padStart(2, "0")}`, passwordHash: await hashPassword(randomBytes(24).toString("base64url")), pepperVersion: PEPPER_VERSION, role: "student",
-    firstName, lastName, faculty: "Факультет международного бизнеса", program: "Международный бизнес", course: 2, groupName: "МБ-24-2",
-    avatar: ["sand", "mist", "lilac", "peach"][i % 4], onboardingDone: true,
+    login, passwordHash: await hashPassword(randomBytes(24).toString("base64url")), pepperVersion: PEPPER_VERSION, role: "student",
+    firstName, lastName, faculty: "Факультет международного бизнеса", program: "Международный бизнес", course: 2, groupName: "МБ-24-1",
+    avatar: ["sand", "mist", "lilac", "peach"][i % 4], onboardingDone: true, showPhone: false, ...tg,
   };
   poolIds.push((await db.user.upsert({ where: { login: data.login }, create: data, update: data })).id);
 }
@@ -879,8 +889,8 @@ await db.notification.deleteMany({ where: { kind: "coffee" } });
 const coffeeIds: string[] = [];
 for (const [i, p] of COFFEE_PEOPLE.entries()) {
   const data = {
-    login: `seed.coffee${String(i + 1).padStart(2, "0")}`, passwordHash: await hashPassword(randomBytes(24).toString("base64url")), pepperVersion: PEPPER_VERSION, role: "student",
-    firstName: p.first, lastName: p.last, faculty: p.faculty, program: p.program, course: p.course, avatar: p.avatar, telegram: `@${p.tg}`, onboardingDone: true,
+    login: personLogin(p.first, p.last), passwordHash: await hashPassword(randomBytes(24).toString("base64url")), pepperVersion: PEPPER_VERSION, role: "student",
+    firstName: p.first, lastName: p.last, faculty: p.faculty, program: p.program, course: p.course, avatar: p.avatar, telegram: `@${p.tg}`, showTelegram: i % 4 !== 3, showPhone: false, onboardingDone: true,
   };
   const id = (await db.user.upsert({ where: { login: data.login }, create: data, update: data })).id;
   coffeeIds.push(id);
@@ -908,5 +918,10 @@ for (const [login, who, week, start, place, mine, theirs, met, cancelled] of COF
     });
   }
 }
+
+// ---------- Справочник: факультеты, группы, студенты, преподаватели (поиск людей) ----------
+const dir = await seedDirectory(db, await hashPassword(randomBytes(24).toString("base64url")), PEPPER_VERSION);
+await attachToGroups(db, [...POOL.map(([last, first]) => personLogin(first, last)), ...COFFEE_PEOPLE.map((p) => personLogin(p.first, p.last))]);
+console.log(`Directory: ${dir.students} students, ${dir.teachers} teachers, ${dir.courses} courses, ${dir.events} events`);
 
 await db.$disconnect();

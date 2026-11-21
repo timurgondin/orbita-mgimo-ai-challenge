@@ -56,6 +56,16 @@ async function open(page, path) {
 const body = async (page) => (await page.textContent("body")) ?? "";
 const dialog = (page) => page.locator("dialog[open]");
 
+/** Все пары недели: проходит по полосе дней (виден один день) и собирает строки. */
+async function weekItems(page, scope = "main") {
+  const out = [];
+  for (const b of await page.locator(`${scope} [data-week-day]:visible`).all()) {
+    await b.click();
+    out.push(...(await page.locator(`${scope} [data-week-item]:visible`).allTextContents()));
+  }
+  return out;
+}
+
 try {
   const anon = await fetch(BASE + "/study/micro-24", { redirect: "manual" });
   check("anonymous course page redirects to /login", [307, 308].includes(anon.status) && anon.headers.get("location")?.includes("/login"));
@@ -118,11 +128,12 @@ try {
   const pp = await text(page);
   check("teacher page: position, week, publications, ORCID", pp.includes("Доцент") && pp.includes("Неделя") && pp.includes("ORCID") && pp.includes("Ведёт у тебя") && pp.includes("h-индекс 9"));
   check("teacher page: interests as tags", (await page.locator("[data-interest]").count()) === 3);
-  check("teacher page: full week with other groups", (await page.locator("[data-week-item]").count()) >= 5 && pp.includes("МБ-24-3"));
+  const tw = await weekItems(page);
+  check("teacher page: full week with other groups", tw.length >= 5 && tw.some((x) => x.includes("МБ-24-3")));
   await open(page, "/people/larionov-po");
   check("teacher profiles differ (Ларионов: eLibrary and SSRN only)", (await page.locator("[data-profile]").evaluateAll((els) => els.map((e) => e.getAttribute("data-profile")).join(","))) === "elibrary,ssrn");
   await open(page, "/people/no-such-person");
-  check("unknown teacher → not found", (await body(page)).includes("Преподаватель не найден"));
+  check("unknown person → not found", (await body(page)).includes("Никого не нашли"));
   await open(page, "/study/econometrics-24");
   check("auto-pass: Эконометрика не выходит", (await page.getAttribute("[data-autopass]", "data-autopass")) === "no" && (await text(page)).includes("До автомата не хватает"));
 

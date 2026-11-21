@@ -2,9 +2,9 @@
 
 import Link from "next/link";
 import { ArrowUpRight, ChevronRight, Copy, Mail, MapPin, MessagesSquare } from "lucide-react";
+import { Week } from "@/components/people/week";
 import { DotField } from "@/components/today/dot-field";
 import { useToast } from "@/components/ui/toast";
-import { DEMO_DATE } from "@/lib/demo-clock";
 import { plural } from "@/lib/phrases";
 import { cn } from "@/lib/utils";
 import type { TeacherPageData } from "@/server/data/types";
@@ -13,60 +13,12 @@ const H2 = "mb-3 text-lg font-semibold tracking-[-.02em]";
 const ROW = "-mx-3.5 flex min-h-[54px] items-center gap-3.5 rounded-[14px] px-3.5 py-2.5";
 const MASK = "radial-gradient(80% 140% at 100% 0%, #000 10%, transparent 75%)";
 
-/** Неделя сеткой Пн–Сб: видно ритм нагрузки, свои пары — цветом курса. На телефоне — списком по дням. */
-function Week({ week }: { week: TeacherPageData["week"] }) {
-  return (
-    <section aria-labelledby="week">
-      <h2 id="week" className={H2}>
-        Неделя
-      </h2>
-      <div className="grid grid-cols-6 gap-2 max-[900px]:grid-cols-1 max-[900px]:gap-5">
-        {week.map((d) => {
-          const today = d.date === DEMO_DATE;
-          return (
-            <div key={d.date} className={cn("min-w-0", !d.items.length && "max-[900px]:hidden")}>
-              <div className={cn("mb-2 flex items-baseline gap-1.5 px-1 text-sm", today ? "text-text" : "text-text-3")}>
-                <b className="font-semibold">{d.dow}</b>
-                <span className="tabular-nums">{d.day}</span>
-                {today && <span className="ml-auto size-1.5 self-center rounded-full bg-accent" aria-label="сегодня" />}
-              </div>
-              <div className="flex flex-col gap-1.5">
-                {d.items.map((e) => (
-                  <div
-                    key={e.id}
-                    data-week-item
-                    style={e.color ? ({ "--cc": `var(--c-${e.color})` } as React.CSSProperties) : undefined}
-                    className={cn(
-                      "rounded-[14px] px-2.5 py-2 text-[13px] leading-snug",
-                      e.mine ? "bg-[color-mix(in_srgb,var(--cc)_16%,var(--s1))]" : "bg-s1",
-                    )}
-                  >
-                    <div className="text-text-3 tabular-nums">
-                      {e.start}–{e.end}
-                    </div>
-                    <div className="mt-0.5 line-clamp-2 font-medium text-text">{e.title}</div>
-                    <div className="mt-0.5 text-text-3">
-                      {e.kind}, {/^[А-ЯЁ][а-яё]/.test(e.group) ? e.group.charAt(0).toLowerCase() + e.group.slice(1) : e.group}
-                    </div>
-                    <div className="truncate text-text-3">ауд. {e.room}</div>
-                  </div>
-                ))}
-                {!d.items.length && <div className="rounded-[14px] border border-dashed border-line px-2.5 py-3 text-center text-[13px] text-text-3">Нет пар</div>}
-              </div>
-            </div>
-          );
-        })}
-      </div>
-    </section>
-  );
-}
-
 /** Карточка преподавателя: шапка с интересами, неделя, контакты и профили, о себе и публикации. */
 export function TeacherPage({ t }: { t: TeacherPageData }) {
   const { toast, node } = useToast();
   const copy = () => navigator.clipboard?.writeText(t.email).then(() => toast("Почта скопирована"), () => toast("Почта скопирована"));
   const stats = [
-    { value: String(t.load.pairs), label: `${plural(t.load.pairs, "пара", "пары", "пар")} на этой неделе` },
+    { value: String(t.load.pairs), label: `${plural(t.load.pairs, "пара", "пары", "пар")} ${t.nav.label === "Эта неделя" ? "на этой неделе" : "за неделю"}` },
     { value: String(t.load.groups), label: plural(t.load.groups, "группа", "группы", "групп") },
     { value: String(t.publications.length), label: plural(t.publications.length, "публикация", "публикации", "публикаций") },
   ];
@@ -118,7 +70,7 @@ export function TeacherPage({ t }: { t: TeacherPageData }) {
       </header>
 
       <div className="mt-12">
-        <Week week={t.week} />
+        <Week key={t.nav.monday} week={t.week} nav={t.nav} />
       </div>
 
       <div className="mt-14 grid grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)] gap-12 max-[1000px]:grid-cols-1">

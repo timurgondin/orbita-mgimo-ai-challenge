@@ -1,9 +1,9 @@
 import "server-only";
 import { db } from "@/server/db/client";
-import { DEMO_DATE, DEMO_NOW, addDays, dayStart, formatShortWeekday, mskDate, mskTime } from "@/lib/demo-clock";
+import { DEMO_DATE, DEMO_NOW, addDays, dayStart, formatDayMonth, formatShortWeekday, mskDate, mskTime } from "@/lib/demo-clock";
 import { requireUser } from "@/server/auth/session";
 import { avatarGradientByKey, formatDue, teacherInitials } from "./shared";
-import type { EventKind, TeacherPageData } from "./types";
+import type { EventKind, TeacherPageData, WeekDay, WeekNav } from "./types";
 
 const KIND: Record<EventKind, string> = { lecture: "Лекция", seminar: "Семинар", practice: "Практика", consultation: "Консультация", test: "Контрольная" };
 
@@ -17,43 +17,43 @@ function list<T>(raw: string): T[] {
 }
 
 /** Понедельник недели, в которую попадает дата. */
-function mondayOf(iso: string): string {
+export function mondayOf(iso: string): string {
   const dow = new Date(`${iso}T12:00:00+03:00`).getUTCDay();
   return addDays(iso, -((dow + 6) % 7));
 }
 
-/**
- * Публичная карточка преподавателя — для любого вошедшего: должность, контакты, публикации, расписание недели.
- * «Ведёт у тебя» и ссылки на консультации — только по курсам, на которые записан текущий студент.
- */
-export async function getTeacher(slug: string): Promise<TeacherPageData | null> {
-  const user = await requireUser();
-  if (typeof slug !== "string" || slug.length > 60) return null;
-  const t = await db.teacher.findUnique({
-    where: { slug },
-    include: { courses: { include: { course: { select: { id: true, slug: true, title: true, color: true, enrollments: { where: { userId: user.id }, select: { id: true } } } } } } },
-  });
-  if (!t) return null;
+/** Листать карточки людей можно на столько недель в обе стороны (как «Время»). */
+const WEEKS_RANGE = 3;
 
-  const enrolled = new Set(
-    (await db.enrollment.findMany({ where: { userId: user.id }, select: { courseId: true } })).map((e) => e.courseId),
-  );
-  const monday = mondayOf(DEMO_DATE);
-  const [events, cons] = await Promise.all([
-    db.scheduleEvent.findMany({
-      where: { teacherName: t.short, startsAt: { gte: dayStart(monday), lt: dayStart(addDays(monday, 7)) }, pair: { not: null } },
-      include: { course: { select: { id: true, title: true, color: true } } },
-      orderBy: { startsAt: "asc" },
-    }),
-    db.consultation.findFirst({
-      where: { teacherName: t.short, startsAt: { gte: DEMO_NOW }, courseId: { in: [...enrolled] } },
-      include: { course: { select: { title: true } } },
-      orderBy: { startsAt: "asc" },
-    }),
-  ]);
+/** Понедельник недели из адреса (?week=2026-11-23): только понедельники в пределах ±3 недель, иначе — текущая. */
+export function weekNav(raw: unknown): WeekNav {
+  const base = mondayOf(DEMO_DATE);
+  const offsets = Array.from({ length: WEEKS_RANGE * 2 + 1 }, (_, i) => i - WEEKS_RANGE);
+  const k = offsets.find((o) => addDays(base, 7 * o) === raw) ?? 0;
+  const monday = addDays(base, 7 * k);
+  const sat = addDays(monday, 5);
+  const noon = (iso: string) => new Date(`${iso}T12:00:00+03:00`);
+  const range =
+    monday.slice(5, 7) === sat.slice(5, 7)
+      ? `${Number(monday.slice(8))} – ${formatDayMonth(noon(sat))}`
+      : `${formatDayMonth(noon(monday))} – ${formatDayMonth(noon(sat))}`;
+  return {
+    monday,
+    label: k === 0 ? "Эта неделя" : k === 1 ? "Следующая неделя" : k === -1 ? "Прошлая неделя" : range,
+    range,
+    prev: k > -WEEKS_RANGE ? addDays(monday, -7) : null,
+    next: k < WEEKS_RANGE ? addDays(monday, 7) : null,
+  };
+}
 
-  // неделя целиком: Пн–Сб, даже пустые дни — так видно ритм нагрузки
-  const week: TeacherPageData["week"] = Array.from({ length: 6 }, (_, i) => {
+type WeekEvent = {
+  id: string; startsAt: Date; endsAt: Date; room: string; kind: string; title: string | null; groupName: string | null; teacherName: string;
+  course: { id: string; title: string; color: string } | null;
+};
+
+/** Неделя Пн–Сб по дням (даже пустые дни — так видно ритм нагрузки); свои пары (курсы текущего студента) помечены. */
+export function buildWeek(events: WeekEvent[], enrolled: Set<string>, monday = mondayOf(DEMO_DATE)): WeekDay[] {
+  const week: WeekDay[] = Array.from({ length: 6 }, (_, i) => {
     const date = addDays(monday, i);
     return { date, dow: formatShortWeekday(date), day: date.slice(8).replace(/^0/, ""), items: [] };
   });
@@ -72,9 +72,45 @@ export async function getTeacher(slug: string): Promise<TeacherPageData | null> 
       group: e.groupName ?? "",
       color: e.course?.color ?? null,
       room: e.room,
+      teacher: e.teacherName,
       mine: !!e.course && enrolled.has(e.course.id),
     });
   }
+  return week;
+}
+
+/**
+ * Публичная карточка преподавателя — для любого вошедшего: должность, контакты, публикации, расписание недели.
+ * «Ведёт у тебя» и ссылки на консультации — только по курсам, на которые записан текущий студент.
+ */
+export async function getTeacher(slug: string, rawWeek?: unknown): Promise<TeacherPageData | null> {
+  const user = await requireUser();
+  if (typeof slug !== "string" || slug.length > 60) return null;
+  const t = await db.teacher.findUnique({
+    where: { slug },
+    include: { courses: { include: { course: { select: { id: true, slug: true, title: true, color: true, enrollments: { where: { userId: user.id }, select: { id: true } } } } } } },
+  });
+  if (!t) return null;
+
+  const enrolled = new Set(
+    (await db.enrollment.findMany({ where: { userId: user.id }, select: { courseId: true } })).map((e) => e.courseId),
+  );
+  const nav = weekNav(rawWeek);
+  const monday = nav.monday;
+  const [events, cons] = await Promise.all([
+    db.scheduleEvent.findMany({
+      where: { teacherName: t.short, startsAt: { gte: dayStart(monday), lt: dayStart(addDays(monday, 7)) }, pair: { not: null } },
+      include: { course: { select: { id: true, title: true, color: true } } },
+      orderBy: { startsAt: "asc" },
+    }),
+    db.consultation.findFirst({
+      where: { teacherName: t.short, startsAt: { gte: DEMO_NOW }, courseId: { in: [...enrolled] } },
+      include: { course: { select: { title: true } } },
+      orderBy: { startsAt: "asc" },
+    }),
+  ]);
+
+  const week = buildWeek(events, enrolled, monday);
 
   const PROFILE: Record<string, { label: string; href: (id: string) => string; value?: (id: string) => string }> = {
     orcid: { label: "ORCID", href: (id) => `https://orcid.org/${id}` },
@@ -112,6 +148,7 @@ export async function getTeacher(slug: string): Promise<TeacherPageData | null> 
     load: { pairs: items.length, groups: new Set(items.map((i) => i.group).filter(Boolean)).size },
     mine: t.courses.filter((c) => c.course.enrollments.length).map((c) => ({ slug: c.course.slug, title: c.course.title, color: c.course.color, role: c.role })),
     week,
+    nav,
     consultation: cons ? { id: cons.id, when: formatDue(cons.startsAt).label, place: cons.place, course: cons.course.title } : null,
   };
 }

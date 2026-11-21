@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useState, useTransition } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Check, CircleHelp, Clock3, MapPin, Pause, Send, Shuffle, SlidersHorizontal, Tags, Video } from "lucide-react";
 import { Modal } from "@/components/time/modal";
@@ -162,9 +163,9 @@ function MatchCard({
         <span className="inline-block rounded-full ring-4 ring-s1">
           <Avatar p={p} size={68} />
         </span>
-        <div className="mt-3 text-[26px] leading-[1.15] font-semibold tracking-[-.03em]" data-partner>
+        <Link href={p.href} className="mt-3 block w-fit text-[26px] leading-[1.15] font-semibold tracking-[-.03em] hover:underline" data-partner>
           {p.name}
-        </div>
+        </Link>
         <div className="mt-1 text-[15px] text-text-2">{p.study}</div>
         {p.faculty && <div className="mt-0.5 text-sm text-text-3">{p.faculty}</div>}
 
@@ -285,7 +286,9 @@ function PastRow({ m, run, pending }: { m: CoffeePastView; run: (fn: () => Promi
     <div data-past={m.id} className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3.5 py-3">
       <Avatar p={m.partner} size={40} />
       <span className="min-w-0">
-        <b className="block truncate font-medium">{m.partner.name}</b>
+        <Link href={m.partner.href} className="block truncate font-medium hover:underline">
+          {m.partner.name}
+        </Link>
         <small className="block truncate text-[13px] text-text-3">{m.partner.study}</small>
       </span>
       <span className="text-right">

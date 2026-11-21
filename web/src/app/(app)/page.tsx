@@ -15,7 +15,7 @@ import {
 import { requireUser } from "@/server/auth/session";
 import { getStudentCard } from "@/server/data/profile";
 import { getTopNews } from "@/server/data/notifications";
-import { getScheduleForToday, getSoon, getTeachers } from "@/server/data/today";
+import { getScheduleForToday, getSoon } from "@/server/data/today";
 import { UrgentStrip } from "@/components/notifications/urgent-strip";
 import { FirstSteps } from "@/components/today/first-steps";
 import { getFirstSteps } from "@/server/data/first-steps";
@@ -23,9 +23,9 @@ import { getFirstSteps } from "@/server/data/first-steps";
 export default async function TodayPage() {
   const user = await requireUser();
   const student = user.role === "student";
-  const [schedule, soon, news, card, teachers, firstSteps] = student
-    ? await Promise.all([getScheduleForToday(), getSoon(), getTopNews(), getStudentCard(), getTeachers(), getFirstSteps()])
-    : [null, [], [], null, [], null];
+  const [schedule, soon, news, card, firstSteps] = student
+    ? await Promise.all([getScheduleForToday(), getSoon(), getTopNews(), getStudentCard(), getFirstSteps()])
+    : [null, [], [], null, null];
   const today = schedule?.today ?? [];
   const tomorrow = schedule?.tomorrow;
 
@@ -56,7 +56,7 @@ export default async function TodayPage() {
 
       {firstSteps && card && <FirstSteps view={firstSteps} card={card} />}
 
-      <QuickTiles card={card} teachers={teachers} order={parseOrder(user.tiles)} />
+      <QuickTiles card={card} order={parseOrder(user.tiles)} />
 
       <div className="mt-14 grid grid-cols-[minmax(0,1fr)] gap-12 min-[900px]:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
         <SoonList items={soon} />

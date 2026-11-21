@@ -1,3 +1,5 @@
+import type { PersonHit } from "@/server/data/types";
+
 /** Ответ ИИ-помощника. Модели нет: намерение распознаётся на сервере, данные — из того же слоя, что и экраны. */
 
 export type OrbState = "searching" | "solving" | "composing" | "connecting" | "working";
@@ -41,7 +43,8 @@ export type AssistantCard =
   | { kind: "grades"; average: string; rank: number | null; size: number | null; rows: { id: string; title: string; color: string; value: string; fill: number }[] }
   | { kind: "tasks"; items: { id: string; title: string; course: string; color: string; due: string; hot: boolean; note: string }[] }
   | { kind: "request"; typeId: string; title: string; eta: string; params: { purpose: string; lang: string; format: string; copies: number } }
-  | { kind: "consultations"; items: AssistantConsultation[] };
+  | { kind: "consultations"; items: AssistantConsultation[] }
+  | { kind: "people"; items: PersonHit[] };
 
 export interface AssistantReply {
   steps: ThinkStep[];

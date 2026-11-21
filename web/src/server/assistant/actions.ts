@@ -1,12 +1,13 @@
 "use server";
 
-import { DEMO_DATE, DEMO_MINUTES, daysBetween, formatDayMonth, formatShortWeekday, toMinutes } from "@/lib/demo-clock";
+import { DEMO_DATE, DEMO_MINUTES, addDays, daysBetween, formatDayMonth, formatShortWeekday, toMinutes } from "@/lib/demo-clock";
 import { REQUEST_TYPES, type RequestType } from "@/lib/office-catalog";
-import { getStudent } from "@/server/data/shared";
+import { findByName, groupRoles, weekOf } from "@/server/data/directory";
+import { emailOf, getStudent } from "@/server/data/shared";
 import { getStudyData } from "@/server/data/study";
 import { getTimeData } from "@/server/data/time";
 import { getScheduleForToday, getSoon } from "@/server/data/today";
-import type { Lesson } from "@/server/data/types";
+import type { Lesson, PersonHit } from "@/server/data/types";
 import type { AssistantConsultation, AssistantLesson, AssistantReply } from "./types";
 
 /**
@@ -169,6 +170,132 @@ async function consultations(t: string): Promise<AssistantReply> {
   return { steps: [...steps], text, card: { kind: "consultations", items } };
 }
 
+// служебные слова запроса о человеке: остаток — ФИО
+const PEOPLE_STOP = new Set(
+  ("найди найти найдите поищи покажи открой кто такой такая такие где учится учатся есть ли мне меня мой моя моё мое мои моего моей наш наша нашей нашего " +
+    "пожалуйста плиз дай скинь скажи подскажи какие какая какой какое что там когда " +
+    "студент студентка студента студентку студентов однокурсник однокурсника однокурсницу одногруппник одногруппника одногруппницу " +
+    "преподаватель преподавателя преподавательницу препод препода почта почту почты email мейл контакт контакты телеграм телеграмм telegram телефон " +
+    "расписание расписания пары пара пар занятия занятий профиль карточку карточка группа группы группе " +
+    "староста старосты старосту старостой куратор куратора куратору куратором " +
+    "сегодня завтра послезавтра понедельник вторник среда среду четверг пятница пятницу суббота субботу воскресенье неделю неделе " +
+    "из по у к с о об и а в во на это его ее её их").split(" "),
+);
+/** «расписание Матвея Жукова» → основы «матве», «жуко»: падеж не мешает найти по началу слова. */
+const nameStems = (t: string) =>
+  t
+    .split(/[^a-zа-я-]+/)
+    .filter((w) => w.length >= 3 && !PEOPLE_STOP.has(w))
+    .map((w) => (w.length >= 5 ? w.slice(0, -2) : w));
+/** «Жуков Матвей Петрович» → «Матвей Жуков» */
+const firstLast = (name: string) => {
+  const [last = "", first = ""] = name.split(" ");
+  return `${first} ${last}`;
+};
+
+async function people(t: string): Promise<AssistantReply | null> {
+  const stems = nameStems(t);
+  if (!stems.length || stems.length > 3) return null;
+  const items = await findByName(stems);
+  if (!items.length) return null;
+  const steps = [{ state: "searching", label: "Ищу в справочнике" } as const];
+  if (items.length === 1) {
+    const p = items[0];
+    const login = p.kind === "student" ? p.href.slice("/people/".length) : null;
+    const text = login
+      ? `${p.name}: ${p.sub}${p.tag ? `, группа ${p.tag}` : ""}. Почта ${emailOf(login)}, расписание — в карточке.`
+      : `${p.name}: ${p.sub}. Контакты и расписание — в карточке.`;
+    return { steps: [...steps], text, card: { kind: "people", items } };
+  }
+  return { steps: [...steps], text: `Нашёл ${items.length} ${plural(items.length, "человека", "человек", "человек")}. Кого открыть?`, card: { kind: "people", items } };
+}
+
+const WEEKDAYS = ["понедельник", "вторник", "среда", "четверг", "пятница", "суббота", "воскресенье"];
+/** День из запроса: «на вторник», «в пятницу», «завтра»; по умолчанию — сегодня. */
+function askedDay(t: string): string {
+  if (has(t, /послезавтра/)) return addDays(DEMO_DATE, 2);
+  if (has(t, /завтра/)) return addDays(DEMO_DATE, 1);
+  const monday = addDays(DEMO_DATE, -((noon(DEMO_DATE).getUTCDay() + 6) % 7));
+  const idx = [/понедельн/, /вторник/, /(?<![а-я])сред[аыуе]?(?![а-я])/, /четверг/, /пятниц/, /суббот/, /воскресен/].findIndex((re) => re.test(t));
+  return idx >= 0 ? addDays(monday, idx) : DEMO_DATE;
+}
+const dayPhrase = (iso: string) => {
+  const d = daysBetween(noon(DEMO_DATE), noon(iso));
+  const name = WEEKDAYS[(noon(iso).getUTCDay() + 6) % 7];
+  return d === 0 ? `сегодня, ${formatDayMonth(noon(iso))}` : d === 1 ? `завтра, ${formatDayMonth(noon(iso))}` : `${name}, ${formatDayMonth(noon(iso))}`;
+};
+
+/** «расписание Матвея Жукова на вторник», «пары Петровой завтра»: личное расписание человека на день. */
+async function personSchedule(t: string): Promise<AssistantReply | null> {
+  if (!has(t, /расписан|(?<![а-я])пар[аыу]?(?![а-я])|заняти/)) return null;
+  const stems = nameStems(t);
+  if (!stems.length || stems.length > 3) return null;
+  const [p] = await findByName(stems, 1);
+  if (!p) return null;
+  const date = askedDay(t);
+  const steps = [
+    { state: "searching", label: "Ищу в справочнике" },
+    { state: "connecting", label: "Смотрю расписание" },
+  ] as const;
+  const day = (await weekOf(p))?.find((d) => d.date === date);
+  const who = firstLast(p.name);
+  if (!day) return { steps: [...steps], text: `${who}: ${dayPhrase(date)} — пар нет.`, card: { kind: "people", items: [p] } };
+  if (!day.items.length) return { steps: [...steps], text: `${who}: ${dayPhrase(date)} — пар нет.`, card: { kind: "people", items: [p] } };
+  const n = day.items.length;
+  const items: AssistantLesson[] = day.items.map((i) => ({
+    title: i.title,
+    start: i.start,
+    end: i.end,
+    place: `ауд. ${i.room}`,
+    teacher: p.kind === "student" ? i.teacher : "",
+    when: i.group && p.kind === "teacher" ? `${i.kind}, ${i.group}` : i.kind,
+    live: false,
+  }));
+  return {
+    steps: [...steps],
+    text: `${who}: ${dayPhrase(date)} — ${n} ${plural(n, "пара", "пары", "пар")}, с ${day.items[0].start} до ${day.items[n - 1].end}.`,
+    card: { kind: "lessons", items },
+  };
+}
+
+const withoutEmail = ({ kind, href, name, initials, gradient, photo, sub, tag }: PersonHit): PersonHit => ({ kind, href, name, initials, gradient, photo, sub, tag });
+
+/** «кто староста», «почта куратора», «кто куратор у Жукова» — своя группа или группа найденного студента. */
+async function roles(t: string): Promise<AssistantReply | null> {
+  const wantHead = has(t, /старост/);
+  const wantCurator = has(t, /куратор/);
+  if (!wantHead && !wantCurator) return null;
+  const steps = [{ state: "searching", label: "Ищу в справочнике" } as const];
+  const stems = nameStems(t);
+  let login: string | null = null;
+  if (stems.length) {
+    const hit = (await findByName(stems, 5)).find((h) => h.kind === "student");
+    if (hit) login = hit.href.slice("/people/".length);
+  }
+  const r = await groupRoles(login);
+  if (!r) return login ? null : noStudent();
+  const lines: string[] = [];
+  const items: PersonHit[] = [];
+  const subject = r.who ? `${r.who}, группа ${r.group ?? "—"}` : `Группа ${r.group ?? "—"}`;
+  if (wantHead) {
+    if (r.headman) {
+      lines.push(`староста — ${firstLast(r.headman.name)}, ${r.headman.email}`);
+      items.push(withoutEmail(r.headman));
+    } else lines.push("старосту ещё не выбрали");
+  }
+  if (wantCurator) {
+    if (r.curator) {
+      lines.push(`куратор — ${firstLast(r.curator.name)}, ${r.curator.email}`);
+      items.push(withoutEmail(r.curator));
+    } else lines.push("куратора пока нет");
+  }
+  return {
+    steps: [...steps],
+    text: `${subject}: ${lines.join("; ")}.`,
+    ...(items.length ? { card: { kind: "people" as const, items } } : {}),
+  };
+}
+
 function greeting(): AssistantReply {
   return { steps: [{ state: "composing", label: "Думаю" }], text: "Привет! Знаю ваше расписание, оценки и сроки, могу заказать справку или записать на консультацию.", chips: CHIPS.slice(0, 4) };
 }
@@ -189,6 +316,9 @@ export async function askAssistant(raw: unknown): Promise<AssistantReply> {
   if (typeof raw !== "string") return fallback();
   const t = norm(raw.trim().slice(0, MAX_TEXT));
   if (!t) return fallback();
+  // о людях: староста и куратор, расписание человека, «найди Беляеву» / «почта Жукова» (если остаток запроса — чьё-то ФИО)
+  const person = (await roles(t)) ?? (await personSchedule(t)) ?? (await people(t));
+  if (person) return person;
   if (has(t, /справк|выписк/)) return request(t);
   if (has(t, /консультац|запиш|записа/)) return consultations(t);
   if (has(t, /средн|балл|оценк|успеваем|рейтинг|gpa/)) return grades();

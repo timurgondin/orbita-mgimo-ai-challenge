@@ -10,14 +10,14 @@ import { useToast } from "@/components/ui/toast";
 import { MAX_PINNED, type TileId } from "@/lib/tiles";
 import { cn } from "@/lib/utils";
 import { setTileOrder } from "@/server/today/actions";
-import type { StudentCardView, TeacherView } from "@/server/data/types";
+import type { StudentCardView } from "@/server/data/types";
 import { TileIcon, type TileIconName } from "./tile-icons";
 
 // Знаки Solar (bold duotone) в цвете раздела; цвета — токены курсов, статусов и акцента.
-// href — ссылка; card / teachers — плитка открывает окно
+// href — ссылка; card — плитка открывает окно
 type Tile = { id: TileId; label: string; icon: TileIconName; color: string } & (
   | { href: string }
-  | { action: "card" | "teachers" }
+  | { action: "card" }
 );
 const TILES: Tile[] = [
   { id: "courses", label: "Мои курсы", icon: "courses", color: "var(--c-econ)", href: "/study" },
@@ -25,11 +25,11 @@ const TILES: Tile[] = [
   { id: "rating", label: "Рейтинг", icon: "rating", color: "var(--c-hist)", href: "/study/rating" },
   { id: "documents", label: "Справки", icon: "documents", color: "var(--st-violet)", href: "/office" },
   { id: "card", label: "Орбита ID", icon: "card", color: "var(--accent)", action: "card" },
-  { id: "teachers", label: "Преподаватели", icon: "teachers", color: "var(--c-world)", action: "teachers" },
   { id: "library", label: "Библиотека", icon: "library", color: "var(--c-micro)", href: "/library" },
   { id: "clubs", label: "Клубы", icon: "clubs", color: "var(--c-eng)", href: "/clubs" },
   { id: "print", label: "Печать", icon: "print", color: "var(--c-law)", href: "/print" },
   { id: "coffee", label: "Random Coffee", icon: "coffee", color: "var(--c-hist)", href: "/coffee" },
+  { id: "people", label: "Люди", icon: "people", color: "var(--c-py)", href: "/people" },
 ];
 
 const TILE = "group flex min-w-0 flex-col items-center gap-3 text-center text-[15px] font-medium tracking-[-.01em]";
@@ -40,39 +40,7 @@ const FACE_SMALL = "grid aspect-square w-full place-items-center rounded-[20px] 
 const ICON =
   "h-auto w-[46%] transition-transform duration-[450ms] ease-spring group-hover:-translate-y-0.5 group-hover:scale-[1.07] group-active:scale-[.97]";
 
-function TeacherRow({ t }: { t: TeacherView }) {
-  const inner = (
-    <>
-      <span className="mono grid size-9 shrink-0 place-items-center rounded-full text-xs font-semibold" style={{ background: t.gradient }}>
-        {t.initials}
-      </span>
-      <span className="min-w-0 flex-1">
-        <b className="block truncate font-medium">{t.name}</b>
-        {t.courses.map((c) => (
-          <span key={c.title} className="flex items-center gap-2 text-sm text-text-3">
-            <i className="size-1.5 shrink-0 rounded-full" style={{ background: `var(--c-${c.color})` }} />
-            <span className="truncate">
-              {c.title}, {c.role.toLowerCase()}
-            </span>
-          </span>
-        ))}
-      </span>
-      {t.cons && (
-        <span className="text-right whitespace-nowrap">
-          <span className="block text-sm text-text-2">{t.cons.when}</span>
-          <span className="block text-[13px] text-text-3">консультация</span>
-        </span>
-      )}
-    </>
-  );
-  return (
-    <Link href={`/people/${t.slug}`} data-teacher={t.name} className="-mx-3 flex items-center gap-3.5 rounded-[14px] px-3 py-3 transition-colors duration-150 hover:bg-hover">
-      {inner}
-    </Link>
-  );
-}
-
-type Dlg = "more" | "teachers" | "card" | null;
+type Dlg = "more" | "card" | null;
 
 const byId = (id: TileId) => TILES.find((t) => t.id === id)!;
 const moveTo = (list: TileId[], id: TileId, to: number) => {
@@ -88,10 +56,8 @@ const ROUND = "grid size-9 shrink-0 place-items-center rounded-full bg-s3 text-t
  * «Настроить»: плитки перетаскиваются (мышь, палец — pointer events, работает и в Safari на iPhone) или стрелками с клавиатуры;
  * первые пять — на главной. Порядок хранится на сервере (User.tiles).
  */
-export function QuickTiles({ card, teachers, order }: { card: StudentCardView | null; teachers: TeacherView[]; order: TileId[] }) {
+export function QuickTiles({ card, order }: { card: StudentCardView | null; order: TileId[] }) {
   const [dlg, setDlg] = useState<Dlg>(null);
-  // список преподавателей рисуем с первого открытия: на «Сегодня» он не нужен, пока окно не открыли
-  const [opened, setOpened] = useState(false);
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState<TileId[]>(order);
   const [dragId, setDragId] = useState<TileId | null>(null);
@@ -223,7 +189,6 @@ export function QuickTiles({ card, teachers, order }: { card: StudentCardView | 
 
   const activate = (tile: Tile) => {
     if ("href" in tile) return;
-    if (tile.action === "teachers") setOpened(true);
     setEditing(false);
     setDlg(tile.action === "card" && !card ? null : tile.action);
   };
@@ -369,13 +334,6 @@ export function QuickTiles({ card, teachers, order }: { card: StudentCardView | 
         </div>
       </Modal>
 
-      <Modal open={dlg === "teachers"} onClose={close} accent="var(--c-world)" cover={false} title="Преподаватели" width={480}>
-        <h2 className="mb-2 text-[22px] font-semibold tracking-[-.025em]">Преподаватели</h2>
-        <div className="rows [--row-inset:12px]">
-          {opened && teachers.map((t) => <TeacherRow key={t.name} t={t} />)}
-        </div>
-        {!teachers.length && <p className="text-[15px] text-text-3">Курсов пока нет</p>}
-      </Modal>
       {card && <StudentCardModal card={card} open={dlg === "card"} onClose={close} />}
       {node}
     </nav>

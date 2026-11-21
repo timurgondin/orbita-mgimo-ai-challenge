@@ -10,6 +10,9 @@ export async function getStudent(): Promise<CurrentUser | null> {
   return user.role === "student" ? user : null;
 }
 
+/** Университетская почта по логину: у студента всегда видна в поиске людей. */
+export const emailOf = (login: string) => `${login}@orbita.edu`;
+
 export const fmt1 = (n: number) => n.toFixed(1).replace(".", ",");
 export const fmtWork = (n: number) => (Number.isInteger(n) ? String(n) : fmt1(n));
 export const round1 = (n: number) => Math.round(n * 10) / 10;

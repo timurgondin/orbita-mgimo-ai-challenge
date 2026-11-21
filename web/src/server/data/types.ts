@@ -7,6 +7,12 @@ export interface PersonRef {
 }
 
 export interface ProfileView {
+  /** карточка старосты в поиске людей */
+  headmanHref: string | null;
+  login: string;
+  /** приватность в поиске людей */
+  showPhone: boolean;
+  showTelegram: boolean;
   student: boolean;
   email: string;
   phone: string | null;
@@ -450,17 +456,6 @@ export interface ArchiveData {
   semesters: ArchiveSemester[];
 }
 
-/** Преподаватель текущих курсов: для окна «Преподаватели» на «Сегодня». */
-export interface TeacherView {
-  /** карточка /people/<slug> */
-  slug: string;
-  name: string;
-  initials: string;
-  gradient: string;
-  courses: { title: string; color: string; role: string }[];
-  /** ближайшая групповая консультация по его курсам */
-  cons: { id: string; when: string } | null;
-}
 
 // ---- Страница курса ----
 export interface CourseNavItem {
@@ -564,8 +559,9 @@ export interface TeacherPageData {
   load: { pairs: number; groups: number };
   /** курсы текущего студента у этого преподавателя */
   mine: { slug: string; title: string; color: string; role: string }[];
-  /** занятия на этой неделе по дням */
-  week: { date: string; /** «Пн» */ dow: string; day: string; items: { id: string; start: string; end: string; title: string; kind: string; group: string; color: string | null; room: string; mine: boolean }[] }[];
+  /** занятия выбранной недели по дням */
+  week: WeekDay[];
+  nav: WeekNav;
   consultation: { id: string; when: string; place: string; course: string } | null;
 }
 
@@ -872,6 +868,8 @@ export interface CoffeePerson {
   gradient: string;
   study: string; // «Мировая политика, 3 курс»
   faculty: string | null;
+  /** карточка в поиске людей */
+  href: string;
 }
 
 export interface CoffeeSlot {
@@ -907,4 +905,69 @@ export interface CoffeeView {
   current: CoffeeCurrentView | null;
   nextRound: string; // YYYY-MM-DD
   past: CoffeePastView[];
+}
+
+/** Какая неделя открыта в карточке человека и куда можно перейти (понедельники ISO; null — дальше нельзя). */
+export interface WeekNav {
+  monday: string;
+  /** «Эта неделя», «Следующая неделя», «7–12 декабря» */
+  label: string;
+  /** «16–21 ноября» */
+  range: string;
+  prev: string | null;
+  next: string | null;
+}
+
+/** День недели в карточке человека (преподаватель, студент): занятия по порядку, свои — цветом курса. */
+export interface WeekDay {
+  date: string;
+  /** «Пн» */
+  dow: string;
+  day: string;
+  items: { id: string; start: string; end: string; title: string; kind: string; group: string; color: string | null; room: string; teacher: string; mine: boolean }[];
+}
+
+/** Строка поиска людей (/people). */
+export interface PersonHit {
+  kind: "student" | "teacher";
+  href: string;
+  /** «Беляева Дарья», «Петрова Елена Андреевна» */
+  name: string;
+  initials: string;
+  gradient: string;
+  photo: string | null;
+  /** студент — «Международный бизнес, 2 курс»; преподаватель — должность */
+  sub: string;
+  /** группа студента или кафедра преподавателя — справа */
+  tag: string | null;
+}
+
+/** Круг по умолчанию, пока запрос пуст: своя группа и свои преподаватели. */
+export interface PeopleCircle {
+  group: string | null;
+  classmates: PersonHit[];
+  teachers: PersonHit[];
+}
+
+/** Карточка студента для других (/people/<логин>): только справочные данные; оценок, рейтинга и формы оплаты нет. */
+export interface StudentPageData {
+  login: string;
+  name: string;
+  initials: string;
+  gradient: string;
+  photo: string | null;
+  faculty: string | null;
+  program: string | null;
+  /** «Бакалавриат, 2 курс» */
+  level: string | null;
+  group: string | null;
+  email: string;
+  /** только если студент открыл в профиле */
+  telegram: string | null;
+  phone: string | null;
+  /** своя карточка: так её видят другие; own — свои контакты и настройки для окна «Приватность» */
+  me: boolean;
+  nav: WeekNav;
+  own: { phone: string | null; telegram: string | null; showPhone: boolean; showTelegram: boolean } | null;
+  week: WeekDay[];
 }
