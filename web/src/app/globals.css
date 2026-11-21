@@ -658,6 +658,126 @@ dialog::backdrop {
   }
 }
 
+/* Телефон (< 640 px): окна — шторки снизу на всю ширину, меню профиля — тоже шторка, навигация — док внизу.
+   !important — чтобы перекрыть утилиты ширины, высоты и отступов, заданные окнам для компьютера (в слое components
+   важные объявления сильнее обычных утилит). Шторку можно смахнуть вниз за верхнюю полосу (ui/dialog.tsx). */
+@layer components {
+  @media (max-width: 639.98px) {
+    .dlg {
+      inset: auto 0 0 0 !important;
+      margin: 0 !important;
+      width: 100% !important;
+      height: auto !important;
+      max-height: calc(100dvh - max(env(safe-area-inset-top), 10px) - 22px) !important;
+      border-radius: 28px 28px 0 0 !important;
+      padding-bottom: env(safe-area-inset-bottom);
+      opacity: 1;
+      translate: 0 100%;
+      scale: none;
+      transition-duration: 0.2s, 0.42s, 0.42s, 0.42s, 0.42s;
+      transition-timing-function: var(--ease), cubic-bezier(0.32, 0.72, 0, 1), linear, linear, linear;
+    }
+    /* длинные окна (уведомления, помощник) — сразу во весь рост, список прокручивается внутри */
+    .dlg[data-sheet="full"] {
+      height: calc(100dvh - max(env(safe-area-inset-top), 10px) - 22px) !important;
+    }
+    .dlg[open]:where(:not([data-closing])) {
+      translate: none;
+    }
+    @starting-style {
+      .dlg[open] {
+        opacity: 1;
+        translate: 0 100%;
+      }
+    }
+    .dlg[data-dragging] {
+      transition: none;
+    }
+    /* ручка шторки */
+    .dlg::after {
+      content: "";
+      position: absolute;
+      top: 7px;
+      left: 50%;
+      z-index: 3;
+      width: 36px;
+      height: 5px;
+      margin-left: -18px;
+      border-radius: 3px;
+      background: color-mix(in srgb, var(--text) 28%, transparent);
+      pointer-events: none;
+    }
+
+    .pmenu {
+      inset: auto 0 0 0;
+      width: 100% !important;
+      border-radius: 28px 28px 0 0 !important;
+      padding-bottom: calc(env(safe-area-inset-bottom) + 10px);
+      opacity: 1;
+      scale: none;
+      translate: 0 100%;
+      transition-duration: 0.42s;
+      transition-timing-function: cubic-bezier(0.32, 0.72, 0, 1);
+    }
+    .pmenu:popover-open {
+      translate: none;
+    }
+    @starting-style {
+      .pmenu:popover-open {
+        opacity: 1;
+        scale: none;
+        translate: 0 100%;
+      }
+    }
+    .pmenu::backdrop {
+      background: rgb(10 10 12 / 0.45);
+    }
+    @supports not (anchor-name: --a) {
+      .pmenu {
+        top: auto;
+        right: 0;
+      }
+    }
+  }
+  @media (max-width: 639.98px) and (prefers-reduced-motion: reduce) {
+    .dlg,
+    .pmenu {
+      translate: none;
+    }
+    @starting-style {
+      .dlg[open],
+      .pmenu:popover-open {
+        opacity: 0;
+        translate: none;
+      }
+    }
+    .dlg:where(:not([open])),
+    .dlg[data-closing],
+    .pmenu:where(:not(:popover-open)) {
+      opacity: 0;
+    }
+  }
+
+  .dock-bottom {
+    bottom: max(10px, calc(env(safe-area-inset-bottom) - 8px));
+  }
+}
+
+/* iOS увеличивает страницу при фокусе на поле с шрифтом меньше 16 px */
+@media (max-width: 639.98px) {
+  input:not([type="checkbox"], [type="radio"], [type="range"], [type="file"]),
+  textarea,
+  select {
+    font-size: max(16px, 1em);
+  }
+}
+
+/* Касания: без серой вспышки iOS и без задержки двойного тапа */
+html {
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
 /* Шапка (components/shell/scroll-header.tsx): вид «прилипла» — [data-stuck] по IntersectionObserver.
    scroll-padding-top под шапку не ставим: в Chromium фокус на кнопках самой шапки (колокольчик, аватар)
    тогда прокручивает страницу наверх. Своя композиционная подложка (translateZ) — чтобы размытие в Safari
@@ -756,4 +876,31 @@ dialog::backdrop {
   inset: 0 auto 0 0;
   width: 5%;
   background: rgb(0 0 0 / 0.22);
+}
+
+/* QR Орбита ID: новый код проявляется, полоска тает до следующей смены */
+@keyframes qr-in {
+  from {
+    opacity: 0.15;
+  }
+}
+@keyframes qr-drain {
+  from {
+    transform: scaleX(1);
+  }
+  to {
+    transform: scaleX(0);
+  }
+}
+.qr-in {
+  animation: qr-in 0.35s var(--ease);
+}
+.qr-drain {
+  transform-origin: left;
+  animation: qr-drain linear forwards;
+}
+@media (prefers-reduced-motion: reduce) {
+  .qr-in {
+    animation: none;
+  }
 }

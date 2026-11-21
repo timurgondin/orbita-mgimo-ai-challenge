@@ -2,6 +2,7 @@ import { Suspense } from "react";
 import { CircleCheck, CircleX } from "lucide-react";
 import { DEMO_NOW, formatDayMonth, mskDate } from "@/lib/demo-clock";
 import { db } from "@/server/db/client";
+import { cardCodeValid } from "@/server/profile/card-code";
 
 const TOKEN_RE = /^[A-Za-z0-9_-]{20,64}$/;
 
@@ -14,8 +15,9 @@ function Row({ k, v }: { k: string; v: string }) {
   );
 }
 
-async function Result({ params }: { params: Promise<{ token: string }> }) {
+async function Result({ params, searchParams }: { params: Promise<{ token: string }>; searchParams: Promise<{ c?: string | string[] }> }) {
   const { token } = await params;
+  const { c } = await searchParams;
   // Поиск по уникальному индексу; в ответ — только данные документа и маска владельца
   const doc = TOKEN_RE.test(token)
     ? await db.document.findUnique({
@@ -32,6 +34,18 @@ async function Result({ params }: { params: Promise<{ token: string }> }) {
           select: { role: true, lastName: true, firstName: true, middleName: true, groupName: true, cardNumber: true, cardValidUntil: true },
         })
       : null;
+  if (card?.role === "student" && card.cardNumber && card.cardValidUntil && !cardCodeValid(token, typeof c === "string" ? c : undefined)) {
+    // Код в QR живёт 30 с: снимок экрана или старая ссылка ничего не подтверждают и данных не раскрывают
+    return (
+      <div className="flex flex-col items-center text-center">
+        <span className="grid size-[72px] place-items-center rounded-full bg-[color-mix(in_srgb,var(--st-orange)_16%,transparent)] text-(--st-orange)">
+          <CircleX size={34} strokeWidth={2} />
+        </span>
+        <h1 className="mt-[18px] text-[28px] font-semibold tracking-[-.03em]">QR-код устарел</h1>
+        <p className="mt-2 text-[15px] text-text-2">Попросите студента открыть Орбита ID заново</p>
+      </div>
+    );
+  }
   if (card?.role === "student" && card.cardNumber && card.cardValidUntil) {
     const valid = card.cardValidUntil.getTime() > DEMO_NOW.getTime(); // демо-часы, как во всём сайте
     const mask = [card.lastName, `${card.firstName[0]}.`, card.middleName ? `${card.middleName[0]}.` : ""].join(" ").trim();
@@ -91,10 +105,10 @@ async function Result({ params }: { params: Promise<{ token: string }> }) {
   );
 }
 
-export default function VerifyPage({ params }: { params: Promise<{ token: string }> }) {
+export default function VerifyPage({ params, searchParams }: { params: Promise<{ token: string }>; searchParams: Promise<{ c?: string | string[] }> }) {
   return (
     <Suspense fallback={null}>
-      <Result params={params} />
+      <Result params={params} searchParams={searchParams} />
     </Suspense>
   );
 }
