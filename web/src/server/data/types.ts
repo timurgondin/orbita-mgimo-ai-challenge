@@ -30,10 +30,8 @@ export interface StudentCardView {
   meta: string;
   number: string;
   validUntil: string;
-  /** SVG QR-кода (генерирует сервер библиотекой qrcode; ведёт на /verify/<токен>?c=<подписанный код на 10 с>) */
+  /** SVG QR-кода (генерирует сервер библиотекой qrcode; ведёт на /verify/<токен>) */
   qr: string;
-  /** Сколько мс QR ещё действует до смены */
-  ttl: number;
 }
 export type CourseFormat = "offline" | "online";
 export type Assessment = "exam" | "credit";

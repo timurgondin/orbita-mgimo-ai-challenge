@@ -1,6 +1,6 @@
 import "server-only";
 import { requireUser } from "@/server/auth/session";
-import { cardQr } from "@/server/profile/card-code";
+import { qrSvg, verifyUrl } from "@/server/office/documents";
 import { getArchive } from "./archive";
 import { avatarGradientByKey } from "./shared";
 import type { PersonRef, ProfileView, StudentCardView } from "./types";
@@ -55,6 +55,6 @@ export async function getStudentCard(): Promise<StudentCardView | null> {
     meta: u.groupName ? `${u.program}, группа ${u.groupName}` : (u.program ?? ""),
     number: u.cardNumber,
     validUntil: fmtDate(u.cardValidUntil),
-    ...(await cardQr(u.cardToken)),
+    qr: await qrSvg(verifyUrl(u.cardToken)),
   };
 }

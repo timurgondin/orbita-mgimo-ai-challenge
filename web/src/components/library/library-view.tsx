@@ -5,7 +5,6 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Check, ChevronRight, Clock3, MapPin, Package, QrCode, RotateCcw, RotateCw, Undo2 } from "lucide-react";
 import { StudentCardModal } from "@/components/profile/student-card";
-import { OrbitaQr } from "@/components/profile/orbita-qr";
 import { Modal } from "@/components/time/modal";
 import { ProgressBar } from "@/components/ui/progress";
 import { Segmented } from "@/components/ui/segmented";
@@ -139,9 +138,11 @@ function PickupModal({ o, card, open, onClose, toast }: { o: OrderView | null; c
               <b className="mt-1 text-[44px] leading-none font-semibold tracking-[-.04em] tabular-nums">Ячейка {o.cell}</b>
               <span className="mt-2 text-sm text-text-3">{o.point.place}</span>
               {card && (
-                <div className="mt-6">
-                  <OrbitaQr initial={card} active={open} className="rounded-[20px] p-3 [&_svg]:size-[168px]" />
-                </div>
+                <div
+                  className="mt-6 rounded-[20px] bg-white p-3 [&_svg]:block [&_svg]:size-[168px]"
+                  // SVG строит сервер (qrcode) — тот же Орбита ID, что и в профиле
+                  dangerouslySetInnerHTML={{ __html: card.qr }}
+                />
               )}
               <span className="mt-3 text-[13.5px] text-text-3">Орбита ID для сканера постамата</span>
               <button

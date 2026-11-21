@@ -2,7 +2,6 @@
 // «Профиль»: данные только свои, правка контактов, студенческий с QR, публичная проверка билета, подделки.
 import { execSync, spawn } from "node:child_process";
 import { readFileSync } from "node:fs";
-import { createHmac } from "node:crypto";
 import { chromium } from "playwright";
 import { PrismaClient } from "@prisma/client";
 
@@ -78,13 +77,6 @@ try {
   await page.waitForSelector("dialog[open][aria-label='Студенческий билет'] svg");
   const modal = (await page.textContent("dialog[open][aria-label='Студенческий билет']")) ?? "";
   check("card modal: QR + name + number + validity", modal.includes("Алиса Воронцова") && modal.includes("250412") && modal.includes("31.08.2029"));
-  // QR сам меняется каждые 10 с, пока окно открыто
-  const qrSel = "dialog[open] [data-orbita-qr]";
-  await page.waitForFunction((s) => Number(document.querySelector(s)?.dataset.qrRev) >= 1, qrSel);
-  const rev1 = Number(await page.getAttribute(qrSel, "data-qr-rev"));
-  const svg1 = await page.innerHTML(qrSel + " .qr-in");
-  await page.waitForFunction(([s, r]) => Number(document.querySelector(s)?.dataset.qrRev) > r, [qrSel, rev1], { timeout: 15000 });
-  check("Orbita ID QR rotates (new code within 10 s)", (await page.innerHTML(qrSel + " .qr-in")) !== svg1);
   await page.keyboard.press("Escape");
 
   // правка контакта через интерфейс
@@ -135,21 +127,7 @@ try {
   );
 
   // публичная проверка билета
-  // код в QR: окно 10 с, подпись HMAC от ключа, выведенного из перца (src/server/profile/card-code.ts)
-  const pepper = readFileSync(new URL("../.env", import.meta.url), "utf8").match(/^AUTH_PEPPER=["']?([^"'\n]+)/m)?.[1];
-  const qrKey = createHmac("sha256", Buffer.from(pepper, "base64")).update("orbita-card-qr/v1").digest();
-  const code = (tok, w) => `${w.toString(36)}.${createHmac("sha256", qrKey).update(`${tok}.${w}`).digest().subarray(0, 12).toString("base64url")}`;
-  const nowW = () => Math.floor(Date.now() / 10_000);
-  const v = await (await fetch(BASE + "/verify/" + alisa.cardToken + "?c=" + code(alisa.cardToken, nowW()))).text();
-  const vStatic = await (await fetch(BASE + "/verify/" + alisa.cardToken)).text();
-  const vOld = await (await fetch(BASE + "/verify/" + alisa.cardToken + "?c=" + code(alisa.cardToken, nowW() - 4))).text();
-  const vFuture = await (await fetch(BASE + "/verify/" + alisa.cardToken + "?c=" + code(alisa.cardToken, nowW() + 3))).text();
-  const vForged = await (await fetch(BASE + "/verify/" + alisa.cardToken + "?c=" + nowW().toString(36) + "." + "A".repeat(16))).text();
-  const vSwap = await (await fetch(BASE + "/verify/" + alisa.cardToken + "?c=" + code(maxim.cardToken, nowW()))).text();
-  check(
-    "/verify card: без кода, старый (40 с), из будущего, поддельный, чужой — «устарел», без данных",
-    [vStatic, vOld, vFuture, vForged, vSwap].every((x) => x.includes("QR-код устарел") && !x.includes("Воронцова") && !x.includes("250412")),
-  );
+  const v = await (await fetch(BASE + "/verify/" + alisa.cardToken)).text();
   check("/verify/<card token>: действителен, masked name only", v.includes("Студенческий действителен") && v.includes("Воронцова А. С.") && !v.includes("Алиса") && !v.includes("Сергеевна") && !v.includes("25-МБ-0412"));
   check("cardToken is 43-char base64url", /^[A-Za-z0-9_-]{43}$/.test(alisa.cardToken));
   const vBad = await (await fetch(BASE + "/verify/" + "y".repeat(43))).text();
@@ -160,8 +138,6 @@ try {
   await tp.goto(BASE + "/profile");
   await tp.waitForSelector("text=Контакты");
   const tt = await text(tp);
-  const tq = await forge(tp.context(), "refreshCardQr", []);
-  check("teacher: refreshCardQr → no QR", tq.status === 200 && !tq.body.includes("<svg"));
   check("teacher: «Работа», no student card", tt.includes("Работа") && tt.includes("Кафедра экономики") && (await tp.locator("[data-open-card]").count()) === 0);
 } finally {
   await browser.close();
