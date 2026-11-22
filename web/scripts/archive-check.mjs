@@ -160,7 +160,7 @@ try {
   await page.waitForSelector("dialog[open][aria-label='Все сервисы']");
   await page.waitForTimeout(600); // окно раскрывается пружиной — меряем после анимации
   const all = await page.locator("dialog[open] [data-tile]").evaluateAll((as) => as.map((a) => a.getAttribute("href") ?? a.getAttribute("data-tile")));
-  check("«Ещё»: all 10 services incl. rating, clubs, coffee, people", all.length === 10 && ["/study/rating", "/clubs", "/library", "/print", "/office", "/coffee", "/people"].every((h) => all.includes(h)));
+  check("«Ещё»: all 11 services incl. rating, clubs, coffee, people, rooms", all.length === 11 && ["/study/rating", "/clubs", "/library", "/print", "/office", "/coffee", "/people", "/rooms"].every((h) => all.includes(h)));
   const closeBox = await page.locator("dialog[open] button[aria-label='Закрыть']").boundingBox();
   const editBox = await page.locator("dialog[open] [data-pin-edit]").boundingBox();
   check("«Ещё»: close button in line with «Настроить»", Math.abs(closeBox.y + closeBox.height / 2 - (editBox.y + editBox.height / 2)) < 1.5);
@@ -187,7 +187,7 @@ try {
   await page.waitForTimeout(800);
   const after = await page.locator('nav[aria-label="Быстрый доступ"] > [data-tile]').evaluateAll((as) => as.map((a) => a.getAttribute("data-tile")));
   const saved = (await db.user.findUniqueOrThrow({ where: { login: "a.vorontsova" } })).tiles;
-  const want = ["grades", "rating", "card", "people", "library", "clubs", "print", "courses", "documents", "coffee"];
+  const want = ["grades", "rating", "card", "people", "library", "clubs", "print", "courses", "documents", "coffee", "rooms"];
   check("tile order saved, first five shown", after.join() === "grades,rating,card,people,library,more" && saved === JSON.stringify(want), after.join() + " / " + saved);
   const maxim = (await db.user.findUniqueOrThrow({ where: { login: "m.orlov" } })).tiles;
   check("other students' tiles untouched", maxim === null);

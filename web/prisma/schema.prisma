@@ -69,6 +69,7 @@ model User {
   scans               Scan[]
   coffeeProfile       CoffeeProfile?
   coffeeMatches       CoffeeMember[]
+  roomBookings        RoomBooking[]
   photo               UserPhoto?
   assisting           CourseAssistant[]
 }
@@ -677,4 +678,23 @@ model CoffeeMember {
 
   @@unique([matchId, userId])
   @@index([userId])
+}
+
+// ---- Бронирование аудиторий: переговорки и свободные учебные аудитории (список — src/lib/rooms.ts) ----
+
+// Бронь комнаты. Отметка по Орбита ID у двери: с 15 минут до начала до 15 минут после; не отметились — бронь снимается сама
+model RoomBooking {
+  id        String    @id @default(cuid())
+  roomId    String
+  userId    String
+  title     String?
+  startsAt  DateTime
+  endsAt    DateTime
+  status    String // booked | checked | cancelled
+  checkedAt DateTime?
+  createdAt DateTime
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([roomId, startsAt])
+  @@index([userId, startsAt])
 }

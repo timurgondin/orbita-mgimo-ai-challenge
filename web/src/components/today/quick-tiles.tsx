@@ -30,6 +30,7 @@ const TILES: Tile[] = [
   { id: "print", label: "Печать", icon: "print", color: "var(--c-law)", href: "/print" },
   { id: "coffee", label: "Random Coffee", icon: "coffee", color: "var(--c-hist)", href: "/coffee" },
   { id: "people", label: "Люди", icon: "people", color: "var(--c-py)", href: "/people" },
+  { id: "rooms", label: "Аудитории", icon: "rooms", color: "var(--c-world)", href: "/rooms" },
 ];
 
 const TILE = "group flex min-w-0 flex-col items-center gap-3 text-center text-[15px] font-medium tracking-[-.01em]";
