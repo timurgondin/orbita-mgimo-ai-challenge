@@ -6,8 +6,11 @@ export const metadata: Metadata = { title: "О проекте — Орбита" 
 // Сторонние материалы и лицензии (полный список — docs/licenses.md). Атрибуция CC BY 4.0 для Solar — здесь.
 const GROUPS: { title: string; items: { name: string; author?: string; license: string; href: string }[] }[] = [
   {
-    title: "Шрифт",
-    items: [{ name: "Onest", license: "SIL Open Font License 1.1", href: "https://fonts.google.com/specimen/Onest" }],
+    title: "Шрифты",
+    items: [
+      { name: "Onest", license: "SIL Open Font License 1.1", href: "https://fonts.google.com/specimen/Onest" },
+      { name: "Source Serif 4", author: "Adobe", license: "SIL Open Font License 1.1", href: "https://fonts.google.com/specimen/Source+Serif+4" },
+    ],
   },
   {
     title: "Иконки",
