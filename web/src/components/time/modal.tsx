@@ -13,6 +13,7 @@ export function Modal({
   width = 480,
   title,
   closeButton = true,
+  sheet,
   children,
 }: {
   open: boolean;
@@ -25,6 +26,8 @@ export function Modal({
   title: string;
   /** false — своя кнопка закрытия в шапке содержимого (чтобы стояла в одну линию с заголовком и действиями) */
   closeButton?: boolean;
+  /** телефон: шторка во весь экран (длинные списки) */
+  sheet?: "full";
   children: React.ReactNode;
 }) {
   return (
@@ -32,6 +35,7 @@ export function Modal({
       open={open}
       onClose={onClose}
       label={title}
+      sheet={sheet}
       style={{ "--cc": accent, "--mw": `${width}px` } as React.CSSProperties}
       className="max-h-[min(740px,calc(100dvh-48px))] w-[min(var(--mw),calc(100vw-32px))] flex-col overflow-hidden rounded-[28px] open:flex"
     >

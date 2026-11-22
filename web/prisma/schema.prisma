@@ -70,6 +70,7 @@ model User {
   coffeeProfile       CoffeeProfile?
   coffeeMatches       CoffeeMember[]
   roomBookings        RoomBooking[]
+  appeals             Appeal[]
   photo               UserPhoto?
   assisting           CourseAssistant[]
 }
@@ -697,4 +698,30 @@ model RoomBooking {
 
   @@index([roomId, startsAt])
   @@index([userId, startsAt])
+}
+
+// «Красная кнопка»: жалоба, благодарность или предложение — в приёмную ректора, оттуда в подразделение.
+// Автор хранится всегда (чтобы видеть свои обращения); при anonymous ректорат имени не видит.
+model Appeal {
+  id          String    @id @default(cuid())
+  number      Int       @unique // «№ 1042»
+  userId      String
+  kind        String // complaint | thanks | idea
+  targetKind  String // teacher | staff | unit | none
+  targetId    String? // Teacher.slug или id из src/lib/appeals.ts
+  targetName  String // как показать: «Петрова Елена Андреевна», «Библиотека»
+  targetLine  String? // вторая строка: должность, кафедра
+  text        String
+  anonymous   Boolean   @default(false)
+  status      String // sent | review | forwarded | answered
+  createdAt   DateTime
+  reviewAt    DateTime? // принято в приёмной ректора
+  forwardedAt DateTime?
+  forwardedTo String? // «Кафедра экономики»
+  answeredAt  DateTime?
+  answer      String?
+  answerBy    String? // «Приёмная ректора»
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
 }

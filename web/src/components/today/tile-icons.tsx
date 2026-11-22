@@ -1,7 +1,7 @@
 // Знаки плиток «Сегодня» — Solar (bold duotone), 480 Design, CC BY 4.0: https://www.figma.com/community/file/1166831539721848736
 // Сгенерировано из @iconify-json/solar; цвет — currentColor (второй слой — тот же цвет с прозрачностью).
 
-export type TileIconName = "courses" | "grades" | "documents" | "card" | "teachers" | "library" | "clubs" | "print" | "rating" | "coffee" | "people" | "rooms" | "more";
+export type TileIconName = "courses" | "grades" | "documents" | "card" | "teachers" | "library" | "clubs" | "print" | "rating" | "coffee" | "people" | "rooms" | "redbutton" | "more";
 
 const PATHS: Record<TileIconName, React.ReactNode> = {
   courses: (
@@ -62,6 +62,11 @@ const PATHS: Record<TileIconName, React.ReactNode> = {
   rooms: (
     <>
       <path fill="currentColor" fillRule="evenodd" d="M5 22V6C5 4.1144 5 3.1716 5.5858 2.5858C6.1716 2 7.1144 2 9 2H15C16.8856 2 17.8284 2 18.4142 2.5858C19 3.1716 19 4.1144 19 6V22H5Z" clipRule="evenodd" opacity=".5"/><path fill="currentColor" d="M22 21.2496C22.4141 21.2496 22.7498 21.5856 22.75 21.9996C22.75 22.4138 22.4142 22.7496 22 22.7496H2C1.58579 22.7496 1.25 22.4138 1.25 21.9996C1.2502 21.5856 1.58591 21.2496 2 21.2496H22Z"/><path fill="currentColor" d="M15.5 11.65C15.9693 11.65 16.3504 12.0304 16.3506 12.4996C16.3506 12.969 15.9694 13.3502 15.5 13.3502C15.0308 13.35 14.6504 12.9689 14.6504 12.4996C14.6506 12.0305 15.0309 11.6502 15.5 11.65Z"/>
+    </>
+  ),
+  redbutton: (
+    <>
+      <path fill="currentColor" d="M22 12C22 17.5228 17.5228 22 12 22C6.47715 22 2 17.5228 2 12C2 6.47715 6.47715 2 12 2C17.5228 2 22 6.47715 22 12Z" opacity=".5"/><path fill="currentColor" d="M17 12C17 14.7614 14.7614 17 12 17C9.23858 17 7 14.7614 7 12C7 9.23858 9.23858 7 12 7C14.7614 7 17 9.23858 17 12Z"/>
     </>
   ),
   more: (

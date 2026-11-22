@@ -2,7 +2,7 @@
 
 import { useRef } from "react";
 import Link from "next/link";
-import { Info, LogOut, Moon, Settings, Sun, SunMoon, UserRound } from "lucide-react";
+import { CircleDot, Info, LogOut, Moon, Settings, Sun, SunMoon, UserRound } from "lucide-react";
 import { useTheme } from "next-themes";
 import { logoutAction } from "@/server/auth/actions";
 import { avatarGradient, fullName, initials, photoUrl, subtitle, type UserView } from "@/lib/user-view";
@@ -52,6 +52,10 @@ export function ProfileMenu({ user }: { user: UserView }) {
         <Link href="/profile" className={ITEM} onClick={hide}>
           <UserRound className="size-4 max-sm:size-5" strokeWidth={1.6} />
           Профиль
+        </Link>
+        <Link href="/redbutton" className={ITEM} onClick={hide} data-redbutton-link>
+          <CircleDot className="size-4 text-(--st-red) max-sm:size-5" strokeWidth={2} />
+          Красная кнопка
         </Link>
         <button type="button" className={ITEM}>
           <Settings className="size-4 max-sm:size-5" strokeWidth={1.6} />

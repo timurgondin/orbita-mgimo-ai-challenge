@@ -2,7 +2,7 @@
  * Плитки быстрого доступа на «Сегодня». Студент расставляет все сервисы по порядку (перетаскиванием в окне «Ещё»):
  * первые пять видны на главной, остальные — в «Ещё». Общая константа клиента и сервера.
  */
-export const TILE_IDS = ["courses", "grades", "rating", "documents", "card", "library", "clubs", "print", "coffee", "people", "rooms"] as const;
+export const TILE_IDS = ["courses", "grades", "rating", "documents", "card", "library", "clubs", "print", "coffee", "people", "rooms", "redbutton"] as const;
 export type TileId = (typeof TILE_IDS)[number];
 
 export const MAX_PINNED = 5;

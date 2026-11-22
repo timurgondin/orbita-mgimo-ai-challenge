@@ -8,6 +8,7 @@ import { BOOKS, CLUBS, CLUB_MEMBERS, COFFEE_MATCHES, COFFEE_PEOPLE, COFFEE_PROFI
 import { attachToGroups, seedDirectory } from "./seed-directory";
 import { seedTeacher } from "./seed-teacher";
 import { seedRooms } from "./seed-rooms";
+import { seedAppeals } from "./seed-appeals";
 import { AUTO_PASS, DISCIPLINE_BY_TITLE, LOAD, PLANNED, PROFILES, STAFF, SYLLABI, TASKS, TEACHERS } from "./seed-academic";
 
 const db = new PrismaClient();
@@ -930,6 +931,9 @@ await seedTeacher(db, await hashPassword(randomBytes(24).toString("base64url")),
 // ---------- Бронирование аудиторий ----------
 const roomRows = await seedRooms(db);
 console.log(`Room bookings: ${roomRows}`);
+
+// ---------- Красная кнопка ----------
+console.log(`Appeals: ${await seedAppeals(db)}`);
 
 console.log(`Directory: ${dir.students} students, ${dir.teachers} teachers, ${dir.courses} courses, ${dir.events} events`);
 
