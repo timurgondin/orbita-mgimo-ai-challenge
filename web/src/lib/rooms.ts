@@ -42,7 +42,9 @@ export const OPEN = 8 * 60;
 export const CLOSE = 21 * 60;
 export const STEP = 30;
 export const DURATIONS = [30, 60, 90, 120] as const;
-export const DAYS_AHEAD = 6;
+export const DAYS_AHEAD = 20; // три недели вперёд, включая сегодня
+/** Дней в полосе на одной странице (как неделя Пн–Сб). */
+export const DAYS_PER_PAGE = 6;
 /** Отметка у двери: за 15 минут до начала и до 15 минут после. Не отметились — бронь снимается, комната свободна. */
 export const CHECKIN_BEFORE = 15;
 export const CHECKIN_AFTER = 15;

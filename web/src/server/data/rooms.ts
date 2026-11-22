@@ -19,6 +19,7 @@ export function bookingDays(): RoomsDay[] {
       date,
       dow: formatShortWeekday(date),
       day: date.slice(8).replace(/^0/, ""),
+      dm,
       label: i === 0 ? "Сегодня" : i === 1 ? "Завтра" : `${formatShortWeekday(date)}, ${dm}`,
       minStart: i === 0 ? Math.ceil(DEMO_MINUTES / STEP) * STEP : 0,
     });

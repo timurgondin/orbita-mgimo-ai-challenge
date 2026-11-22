@@ -62,6 +62,31 @@ export async function seedRooms(db: PrismaClient) {
       }
     }
   }
+  // недели 2–3: брони реже — чем дальше, тем меньше (своя последовательность, чтобы первая неделя не менялась)
+  const rand2 = rng(20261126);
+  const later: string[] = [];
+  for (let i = 7; i <= 20; i++) {
+    const d = new Date(NOW.getTime() + i * 86_400_000);
+    const iso = new Date(d.getTime() + 3 * 3_600_000).toISOString().slice(0, 10);
+    if (new Date(`${iso}T12:00:00+03:00`).getUTCDay() !== 0) later.push(iso);
+  }
+  for (const room of ROOMS.filter((r) => r.kind === "meet")) {
+    for (const date of later) {
+      const sat = new Date(`${date}T12:00:00+03:00`).getUTCDay() === 6;
+      const far = date >= "2026-12-03" ? 0.4 : 0.65;
+      const busy = ((sat ? 0.12 : 0.3) + (room.seats >= 8 ? 0.06 : 0)) * far;
+      for (let t = 8 * 60 + 30; t < 20 * 60; ) {
+        const len = [60, 90, 60, 120, 30][Math.floor(rand2() * 5)];
+        const peak = t >= 11 * 60 && t < 17 * 60 ? 0.1 * far : 0;
+        if (rand2() < busy + peak && t + len <= 21 * 60) {
+          const startsAt = at(date, hm(t));
+          const endsAt = at(date, hm(t + len));
+          if (free(room.id, startsAt, endsAt)) rows.push({ roomId: room.id, userId: others[k++ % others.length], title: null, startsAt, endsAt, status: "booked", checkedAt: null, createdAt: new Date(NOW.getTime() - 86_400_000) });
+          t += len + (rand2() < 0.5 ? 0 : 30);
+        } else t += 30 * (1 + Math.floor(rand2() * 2));
+      }
+    }
+  }
   await db.roomBooking.createMany({ data: rows });
   return rows.length;
 }

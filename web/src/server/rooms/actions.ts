@@ -21,7 +21,7 @@ export async function bookRoom(input: { roomId?: unknown; date?: unknown; start?
   const room = roomById(input?.roomId);
   if (!room) return { ok: false, error: "Комната не найдена" };
   const day = bookingDays().find((d) => d.date === input.date);
-  if (!day) return { ok: false, error: "Бронировать можно на неделю вперёд, кроме воскресенья" };
+  if (!day) return { ok: false, error: "Бронировать можно на три недели вперёд, кроме воскресенья" };
   const start = Number(input.start);
   const duration = Number(input.duration);
   if (!Number.isInteger(start) || start % STEP || start < OPEN || start < day.minStart) return { ok: false, error: "Это время уже прошло" };

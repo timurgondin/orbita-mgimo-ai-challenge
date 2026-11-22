@@ -2,13 +2,13 @@
 
 import { useCallback, useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { ChevronDown, Minus, Monitor, Plus, PenLine, QrCode, Users, Video } from "lucide-react";
+import { ChevronDown, ChevronLeft, ChevronRight, Minus, Monitor, Plus, PenLine, QrCode, Users, Video } from "lucide-react";
 import { StudentCardModal } from "@/components/profile/student-card";
 import { Modal } from "@/components/time/modal";
 import { Segmented } from "@/components/ui/segmented";
 import { useToast, type Toast } from "@/components/ui/toast";
 import { plural } from "@/lib/phrases";
-import { CLOSE, DURATIONS, EQUIP, OPEN, STEP, TITLE_MAX, durationLabel, hhmm, type Equip } from "@/lib/rooms";
+import { CLOSE, DAYS_PER_PAGE, DURATIONS, EQUIP, OPEN, STEP, TITLE_MAX, durationLabel, hhmm, type Equip } from "@/lib/rooms";
 import { cn } from "@/lib/utils";
 import { bookRoom, cancelBooking, checkIn, releaseRoom } from "@/server/rooms/actions";
 import type { BookingView, RoomBusy, RoomView, RoomsData } from "@/server/data/rooms-types";
@@ -192,6 +192,16 @@ export function RoomsView({ d, card }: { d: RoomsData; card: StudentCardView | n
   const { pending, run } = useRun(toast);
   const [date, setDate] = useState(d.days[0].date);
   const day = d.days.find((x) => x.date === date) ?? d.days[0];
+  const pages = Math.ceil(d.days.length / DAYS_PER_PAGE);
+  const [page, setPage] = useState(0);
+  const shown = d.days.slice(page * DAYS_PER_PAGE, (page + 1) * DAYS_PER_PAGE);
+  const first = shown[0];
+  const last = shown[shown.length - 1];
+  const range = first.dm.split(" ")[1] === last.dm.split(" ")[1] ? `${first.day} – ${last.dm}` : `${first.dm} – ${last.dm}`;
+  const goPage = (p: number) => {
+    setPage(p);
+    setDate(d.days[p * DAYS_PER_PAGE].date);
+  };
   const [rawStart, setStart] = useState(() => Math.max(d.days[0].minStart, 10 * 60));
   const [rawDuration, setDuration] = useState(60);
   const start = Math.max(rawStart, day.minStart, OPEN);
@@ -246,8 +256,21 @@ export function RoomsView({ d, card }: { d: RoomsData; card: StudentCardView | n
 
       <section aria-label="Когда и кто" className="mt-9 grid grid-cols-[minmax(0,1fr)] gap-6 rounded-[28px] bg-s1 p-5 min-[900px]:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] min-[900px]:gap-10 min-[900px]:p-6" data-finder>
         <div className="flex min-w-0 flex-col gap-4">
+          <div className="-mb-1.5 flex items-center justify-between gap-3 pl-1">
+            <span className="text-[15px] font-medium tabular-nums" aria-live="polite" data-range>
+              {range}
+            </span>
+            <span className="flex gap-1">
+              <button type="button" aria-label="Раньше" disabled={page === 0} onClick={() => goPage(page - 1)} data-days-prev className="grid size-9 place-items-center rounded-xl text-text-2 transition-colors hover:bg-hover disabled:opacity-30 disabled:hover:bg-transparent">
+                <ChevronLeft size={18} strokeWidth={1.8} />
+              </button>
+              <button type="button" aria-label="Дальше" disabled={page >= pages - 1} onClick={() => goPage(page + 1)} data-days-next className="grid size-9 place-items-center rounded-xl text-text-2 transition-colors hover:bg-hover disabled:opacity-30 disabled:hover:bg-transparent">
+                <ChevronRight size={18} strokeWidth={1.8} />
+              </button>
+            </span>
+          </div>
           <div role="group" aria-label="День" className="grid grid-cols-6 gap-1" data-days>
-            {d.days.map((x) => {
+            {shown.map((x) => {
               const on = x.date === date;
               return (
                 <button

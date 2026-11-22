@@ -71,6 +71,17 @@ try {
   await open(page, "/rooms");
   await page.waitForSelector("[data-room-list]");
   check("rooms: 14 rooms, 6 days, own bookings", (await page.locator("[data-room]").count()) === 14 && (await page.locator("[data-day]").count()) === 6 && (await page.locator('[data-mine] [data-booking="vega"][data-state="upcoming"]').count()) === 1);
+  const range = () => page.locator("[data-range]").innerText();
+  check("day strip: first page 19 – 25 ноября, no way back", (await range()) === "19 – 25 ноября" && (await page.locator("[data-days-prev]").isDisabled()));
+  await page.click("[data-days-next]");
+  await page.click("[data-days-next]");
+  const lastDays = await page.locator("[data-day]").evaluateAll((els) => els.map((e) => e.getAttribute("data-day")));
+  check("day strip: three weeks ahead, Sundays skipped", (await range()) === "3 – 9 декабря" && lastDays.length === 6 && lastDays.at(-1) === "2026-12-09" && !lastDays.includes("2026-12-06") && (await page.locator("[data-days-next]").isDisabled()) && (await page.locator('[data-day="2026-12-03"][aria-pressed="true"]').count()) === 1);
+  const w3 = await db.roomBooking.count({ where: { startsAt: { gte: new Date("2026-12-03T00:00:00+03:00"), lt: new Date("2026-12-10T00:00:00+03:00") } } });
+  const w1 = await db.roomBooking.count({ where: { startsAt: { gte: new Date("2026-11-19T00:00:00+03:00"), lt: new Date("2026-11-26T00:00:00+03:00") } } });
+  check("later weeks booked too, but sparser", w3 > 0 && w3 < w1, `${w1} / ${w3}`);
+  await page.click("[data-days-prev]");
+  await page.click("[data-days-prev]");
   check("missed booking shown as released", (await page.locator('[data-past] [data-state="missed"]').count()) === 1);
   check("free rooms listed first", (await page.locator("[data-room]").first().getAttribute("data-free")) === "1");
 
@@ -102,13 +113,15 @@ try {
 
   // подделанные запросы
   check("unknown room", (await book(ctx, { roomId: "zzz", date: "2026-11-20", start: 600, duration: 60 })).body.includes("Комната не найдена"));
-  check("date outside the week", (await book(ctx, { roomId: "vega", date: "2026-12-01", start: 600, duration: 60 })).body.includes("на неделю вперёд"));
-  check("sunday refused", (await book(ctx, { roomId: "vega", date: "2026-11-22", start: 600, duration: 60 })).body.includes("на неделю вперёд"));
+  check("date beyond three weeks refused", (await book(ctx, { roomId: "vega", date: "2026-12-10", start: 600, duration: 60 })).body.includes("на три недели вперёд"));
+  check("third week is inside the window", (await book(ctx, { roomId: "vega", date: "2026-12-09", start: 600, duration: 45 })).body.includes("до 2 часов"));
+  check("sunday refused", (await book(ctx, { roomId: "vega", date: "2026-11-22", start: 600, duration: 60 })).body.includes("на три недели вперёд"));
   check("past time refused", (await book(ctx, { roomId: "vega", date: "2026-11-19", start: 600, duration: 60 })).body.includes("уже прошло"));
   check("off-grid start refused", (await book(ctx, { roomId: "vega", date: "2026-11-20", start: 605, duration: 60 })).body.includes("уже прошло"));
   check("bad duration refused", (await book(ctx, { roomId: "vega", date: "2026-11-20", start: 600, duration: 45 })).body.includes("до 2 часов"));
   check("after closing refused", (await book(ctx, { roomId: "vega", date: "2026-11-20", start: 1230, duration: 60 })).body.includes("до 21:00"));
-  check("classroom during a class refused", (await book(ctx, { roomId: "a3108", date: "2026-11-20", start: 720, duration: 30 })).body.includes("пара с 11:10 до 12:30"));
+  const cls = await book(ctx, { roomId: "a3108", date: "2026-11-20", start: 720, duration: 30 });
+  check("classroom during a class refused", cls.body.includes("пара с 11:10 до 12:30"), (cls.body.match(/(В аудитории|Это время|Занято|Не больше|уже бронь|Комната|Кампус|От 30|Бронировать)[^"]*/) ?? [String(cls.status)])[0]);
   const other = await db.roomBooking.findFirstOrThrow({ where: { userId: { not: me }, status: "booked", startsAt: { gte: new Date("2026-11-20T00:00:00+03:00") } }, orderBy: { startsAt: "asc" } });
   const msk = new Date(other.startsAt.getTime() + 3 * 3600_000);
   const taken = await book(ctx, { roomId: other.roomId, date: msk.toISOString().slice(0, 10), start: msk.getUTCHours() * 60 + msk.getUTCMinutes(), duration: 30 });
