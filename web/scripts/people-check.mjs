@@ -182,6 +182,7 @@ try {
   await page.click("dialog[open] [data-my-card]");
   await page.waitForURL((u) => u.pathname === "/people/a.vorontsova");
   await page.waitForLoadState("networkidle");
+  await page.waitForSelector("[data-student-contacts] [data-contact='phone']", { timeout: 5000 }).catch(() => {});
   check("own card: phone visible after switch, «Приватность» opens the modal", (await page.locator("[data-student-contacts] [data-contact='phone']").count()) === 1 && (await page.locator("main [data-privacy-open]:visible").count()) === 1);
   await page.click("main [data-privacy-open]:visible");
   await page.waitForSelector("dialog[open] [data-privacy-modal]");

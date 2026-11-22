@@ -48,11 +48,11 @@ export async function classBusy(rooms: Room[], dates: string[]): Promise<Map<str
     where: { room: { in: classes.map((r) => r.number) }, startsAt: { gte: dayStart(sorted[0]), lt: dayStart(addDays(sorted[sorted.length - 1], 1)) } },
     select: { room: true, startsAt: true, endsAt: true },
   });
+  const byRoomDay = groupBy(events, (e) => `${e.room}|${mskDate(e.startsAt)}`);
   for (const r of classes) {
     for (const date of dates) {
       const sat = new Date(`${date}T12:00:00+03:00`).getUTCDay() === 6;
-      const list: RoomBusy[] = events
-        .filter((e) => e.room === r.number && mskDate(e.startsAt) === date)
+      const list: RoomBusy[] = (byRoomDay.get(`${r.number}|${date}`) ?? [])
         .map((e) => ({ from: mskMinutes(e.startsAt), to: mskMinutes(e.endsAt), kind: "class" as const }));
       for (const p of PAIRS) {
         const d = sat ? (p <= 4 ? 30 : 0) : DENSITY[p];
@@ -62,6 +62,18 @@ export async function classBusy(rooms: Room[], dates: string[]): Promise<Map<str
     }
   }
   return out;
+}
+
+/** Разложить записи по ключу за один проход — вместо фильтра по всему списку для каждой комнаты и дня. */
+function groupBy<T>(items: T[], key: (x: T) => string): Map<string, T[]> {
+  const m = new Map<string, T[]>();
+  for (const x of items) {
+    const k = key(x);
+    const list = m.get(k);
+    if (list) list.push(x);
+    else m.set(k, [x]);
+  }
+  return m;
 }
 
 /** Склеить пересекающиеся отрезки одного вида (своя бронь не склеивается с чужой). */
@@ -148,11 +160,11 @@ export async function getRooms(): Promise<RoomsData | null> {
     db.roomBooking.findMany({ where: { userId: user.id }, orderBy: { startsAt: "desc" }, take: 30 }),
     classBusy(ROOMS, days.map((d) => d.date)),
   ]);
+  const bookingsByRoomDay = groupBy(bookings, (b) => `${b.roomId}|${mskDate(b.startsAt)}`);
   const rooms = ROOMS.map((r) => {
     const busy: Record<string, RoomBusy[]> = {};
     for (const d of days) {
-      const own = bookings
-        .filter((b) => b.roomId === r.id && mskDate(b.startsAt) === d.date)
+      const own = (bookingsByRoomDay.get(`${r.id}|${d.date}`) ?? [])
         .map((b) => ({ from: mskMinutes(b.startsAt), to: mskMinutes(b.endsAt), kind: "booking" as const, mine: b.userId === user.id || undefined }));
       busy[d.date] = merge([...(classes.get(`${r.id}|${d.date}`) ?? []), ...own]);
     }

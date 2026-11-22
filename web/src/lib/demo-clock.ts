@@ -2,6 +2,15 @@
 export const DEMO_DATE = "2026-11-19";
 export const DEMO_MINUTES = 11 * 60 + 49;
 const TZ = "Europe/Moscow";
+/** Москва всегда UTC+3 (без перехода на летнее время с 2014 года) — даты и время считаем арифметикой, без Intl. */
+const MSK_OFFSET = 3 * 3_600_000;
+const mskIso = (d: Date) => new Date(d.getTime() + MSK_OFFSET).toISOString();
+
+/** Форматтеры Intl создаются один раз: создание на каждый вызов стоило десятки микросекунд. */
+const FMT_LONG = new Intl.DateTimeFormat("ru-RU", { weekday: "long", day: "numeric", month: "long", timeZone: TZ });
+const FMT_WEEKDAY = new Intl.DateTimeFormat("ru-RU", { weekday: "short", timeZone: TZ });
+const FMT_DAY_MONTH = new Intl.DateTimeFormat("ru-RU", { day: "numeric", month: "long", timeZone: TZ });
+const FMT_MONTH_SHORT = new Intl.DateTimeFormat("ru-RU", { month: "short", timeZone: TZ });
 
 export function toMinutes(hhmm: string): number {
   const [h, m] = hhmm.split(":").map(Number);
@@ -19,28 +28,17 @@ function capitalize(s: string): string {
 export function addDays(isoDate: string, days: number): string {
   const d = atNoon(isoDate);
   d.setUTCDate(d.getUTCDate() + days);
-  return d.toLocaleDateString("sv-SE", { timeZone: TZ });
+  return mskDate(d);
 }
 
 /** «Четверг, 19 ноября» */
 export function formatLongDate(isoDate: string): string {
-  return capitalize(
-    new Intl.DateTimeFormat("ru-RU", {
-      weekday: "long",
-      day: "numeric",
-      month: "long",
-      timeZone: TZ,
-    }).format(atNoon(isoDate)),
-  );
+  return capitalize(FMT_LONG.format(atNoon(isoDate)));
 }
 
 /** «Пн» */
 export function formatShortWeekday(isoDate: string): string {
-  return capitalize(
-    new Intl.DateTimeFormat("ru-RU", { weekday: "short", timeZone: TZ }).format(
-      atNoon(isoDate),
-    ),
-  );
+  return capitalize(FMT_WEEKDAY.format(atNoon(isoDate)));
 }
 
 export function greeting(minutes: number): string {
@@ -64,16 +62,17 @@ export const DEMO_NOW = new Date(`${DEMO_DATE}T11:49:00+03:00`);
 
 /** Дата YYYY-MM-DD по Москве. */
 export function mskDate(d: Date): string {
-  return d.toLocaleDateString("sv-SE", { timeZone: TZ });
+  return mskIso(d).slice(0, 10);
 }
 
 /** «HH:MM» по Москве. */
 export function mskTime(d: Date): string {
-  return new Intl.DateTimeFormat("ru-RU", { hour: "2-digit", minute: "2-digit", hour12: false, timeZone: TZ }).format(d);
+  return mskIso(d).slice(11, 16);
 }
 
 export function mskMinutes(d: Date): number {
-  return toMinutes(mskTime(d));
+  const m = Math.floor((d.getTime() + MSK_OFFSET) / 60_000) % 1440;
+  return m < 0 ? m + 1440 : m;
 }
 
 /** Начало суток по Москве. */
@@ -88,11 +87,11 @@ export function daysBetween(a: Date, b: Date): number {
 
 /** «3 декабря» */
 export function formatDayMonth(d: Date): string {
-  return new Intl.DateTimeFormat("ru-RU", { day: "numeric", month: "long", timeZone: TZ }).format(d);
+  return FMT_DAY_MONTH.format(d);
 }
 
 /** «дек» */
 export function formatMonthShort(d: Date): string {
-  return new Intl.DateTimeFormat("ru-RU", { month: "short", timeZone: TZ }).format(d).replace(".", "");
+  return FMT_MONTH_SHORT.format(d).replace(".", "");
 }
 
