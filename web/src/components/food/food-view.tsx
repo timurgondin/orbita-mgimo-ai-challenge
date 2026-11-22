@@ -2,7 +2,7 @@
 
 import { useCallback, useState } from "react";
 import Link from "next/link";
-import { BadgePercent, Clock3, Coffee, Flame, Leaf, MapPin } from "lucide-react";
+import { Activity, BadgePercent, Clock3, Coffee, Flame, Leaf, MapPin } from "lucide-react";
 import { Modal } from "@/components/time/modal";
 import { cn } from "@/lib/utils";
 import type { Dish, VenueView } from "@/server/data/food-types";
@@ -109,7 +109,7 @@ function Load({ v }: { v: VenueView }) {
   );
 }
 
-function DishRow({ d }: { d: Dish }) {
+function DishRow({ d, kbju }: { d: Dish; kbju: boolean }) {
   const sub = d.note ?? d.size;
   return (
     <li className="grid grid-cols-[minmax(0,1fr)_auto] items-baseline gap-4 py-2.5" data-dish>
@@ -122,13 +122,23 @@ function DishRow({ d }: { d: Dish }) {
           {d.tags?.includes("season") && <span className="rounded-md bg-[color-mix(in_srgb,var(--st-orange)_16%,transparent)] px-1.5 py-px text-[11px] font-medium" style={{ color: "var(--st-orange)" }}>Сезонное</span>}
         </span>
         {sub && <small className="mt-0.5 block text-[13px] text-text-3">{sub}</small>}
+        {kbju && d.kbju && (
+          <span className="mt-1.5 flex flex-wrap gap-x-3 text-[12.5px] text-text-2 tabular-nums" data-kbju>
+            <b className="font-medium text-text">{d.kbju[0]} ккал</b>
+            {(["Б", "Ж", "У"] as const).map((k, i) => (
+              <span key={k}>
+                <span className="text-text-3">{k}</span> {d.kbju![i + 1]}
+              </span>
+            ))}
+          </span>
+        )}
       </span>
       <b className="font-medium tabular-nums">{rub(d.price)}</b>
     </li>
   );
 }
 
-function VenueContent({ v }: { v: VenueView }) {
+function VenueContent({ v, kbju, onKbju }: { v: VenueView; kbju: boolean; onKbju: () => void }) {
   return (
     <>
       <div className="text-sm text-text-2">{v.kind}</div>
@@ -173,12 +183,28 @@ function VenueContent({ v }: { v: VenueView }) {
         <Load v={v} />
       </section>
 
-      {v.menu.map((s) => (
-        <section key={s.title} aria-label={s.title} className="mt-6">
+      <div className="mt-8 flex items-center justify-between gap-3">
+        <h2 className="text-lg font-semibold tracking-[-.02em]">Меню</h2>
+        <button
+          type="button"
+          aria-pressed={kbju}
+          onClick={onKbju}
+          data-kbju-toggle
+          className={cn(
+            "inline-flex h-8 items-center gap-1.5 rounded-[10px] px-3 text-[13px] font-medium transition-[background,color,transform] duration-150 active:scale-[.97]",
+            kbju ? "bg-text text-bg" : "bg-s3 text-text-2 hover:text-text",
+          )}
+        >
+          <Activity size={14} strokeWidth={1.9} />
+          КБЖУ
+        </button>
+      </div>
+      {v.menu.map((s, i) => (
+        <section key={s.title} aria-label={s.title} className={i ? "mt-6" : "mt-3"}>
           <h3 className="font-semibold">{s.title}</h3>
           <ul className="rows mt-1 [--row-inset:0px]">
             {s.items.map((d) => (
-              <DishRow key={d.name} d={d} />
+              <DishRow key={d.name} d={d} kbju={kbju} />
             ))}
           </ul>
         </section>
@@ -190,6 +216,7 @@ function VenueContent({ v }: { v: VenueView }) {
 export function FoodView({ venues, initial }: { venues: VenueView[]; initial: string | null }) {
   const [openSlug, setOpenSlug] = useState<string | null>(initial);
   const [open, setOpen] = useState(initial !== null);
+  const [kbju, setKbju] = useState(false);
   const current = venues.find((v) => v.slug === openSlug);
   const close = useCallback(() => {
     setOpen(false);
@@ -210,7 +237,7 @@ export function FoodView({ venues, initial }: { venues: VenueView[]; initial: st
         ))}
       </div>
       <Modal open={open} onClose={close} accent={`var(--c-${current?.color ?? "econ"})`} title={current?.name ?? "Заведение"} width={560} sheet="full">
-        {current && <VenueContent v={current} />}
+        {current && <VenueContent v={current} kbju={kbju} onKbju={() => setKbju((x) => !x)} />}
       </Modal>
     </>
   );

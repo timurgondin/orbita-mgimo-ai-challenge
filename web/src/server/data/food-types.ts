@@ -10,6 +10,8 @@ export interface Dish {
   note?: string;
   price: number;
   tags?: DishTag[];
+  /** на порцию: ккал, белки, жиры, углеводы (г) */
+  kbju?: [number, number, number, number];
 }
 
 export interface MenuSection {

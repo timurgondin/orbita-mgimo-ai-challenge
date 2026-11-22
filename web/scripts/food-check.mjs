@@ -69,6 +69,10 @@ try {
   check("сейчас — один столбец", (await dlg.locator("[data-load] [data-now]").count()) === 1);
   const dishes = await dlg.locator("[data-dish]").count();
   check("меню с ценами", dishes >= 15 && /\d+\s₽/.test(await dlg.innerText()), String(dishes));
+  check("КБЖУ скрыт по умолчанию", (await dlg.locator("[data-kbju]").count()) === 0);
+  await dlg.locator("[data-kbju-toggle]").click();
+  check("КБЖУ у каждого блюда", (await dlg.locator("[data-kbju]").count()) === dishes && /ккал/.test(await dlg.locator("[data-kbju]").first().innerText()));
+  await dlg.locator("[data-kbju-toggle]").click();
   await page.waitForTimeout(400);
   await shot(page, "food-venue");
   await page.keyboard.press("Escape");
@@ -76,8 +80,26 @@ try {
   check("закрытие возвращает /food", new URL(page.url()).search === "");
 
   // прямая ссылка и неверный параметр
+  // КБЖУ во всех заведениях: включён один раз — остаётся при переходе к другому
+  await page.locator('[data-venue="peremena"]').click();
+  await page.locator("dialog[open] [data-kbju-toggle]").click();
+  let kOk = true;
+  for (const slug of ["zerno", "atrium", "terrace", "fresh", "peremena"]) {
+    await page.keyboard.press("Escape");
+    await page.waitForTimeout(400);
+    await page.locator(`[data-venue="${slug}"]`).click();
+    const d = page.locator("dialog[open]");
+    await d.waitFor();
+    const n = await d.locator("[data-dish]").count();
+    const k = await d.locator("[data-kbju]").count();
+    if (!n || n !== k) kOk = false;
+  }
+  check("КБЖУ у всех блюд всех заведений, переключатель запоминается", kOk);
+  await page.waitForTimeout(300);
+  await shot(page, "food-kbju");
   await open(page, "/food?place=zerno");
-  check("прямая ссылка открывает кофейню", (await page.locator("dialog[open]").innerText()).includes("«Зерно»"));
+  const direct = await page.locator("dialog[open]").innerText().catch((e) => "ERR " + e.message.slice(0, 80));
+  check("прямая ссылка открывает кофейню", direct.includes("«Зерно»"), direct.slice(0, 60));
   await open(page, "/food?place=../../etc");
   check("неизвестное заведение — просто список", (await page.locator("dialog[open]").count()) === 0 && (await page.locator("[data-venue]").count()) === 5);
 
