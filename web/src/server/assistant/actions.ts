@@ -3,6 +3,8 @@
 import { DEMO_DATE, DEMO_MINUTES, addDays, daysBetween, formatDayMonth, formatShortWeekday, toMinutes } from "@/lib/demo-clock";
 import { REQUEST_TYPES, type RequestType } from "@/lib/office-catalog";
 import { findByName, groupRoles, weekOf } from "@/server/data/directory";
+import { getFood } from "@/server/data/food";
+import type { VenueView } from "@/server/data/food-types";
 import { emailOf, getStudent } from "@/server/data/shared";
 import { getStudyData } from "@/server/data/study";
 import { getTimeData } from "@/server/data/time";
@@ -296,6 +298,49 @@ async function roles(t: string): Promise<AssistantReply | null> {
   };
 }
 
+const CROWD_WORD = { low: "свободно", mid: "средне", high: "многолюдно" } as const;
+const rub = (n: number) => `${n}\u202f₽`;
+const venueRow = (v: VenueView) => ({
+  slug: v.slug,
+  name: v.name,
+  place: `${v.building}, ${v.floor}`,
+  color: v.color,
+  crowd: v.crowd ? CROWD_WORD[v.crowd] : "закрыто",
+  note: v.highlight ? `${v.highlight.label}: ${v.highlight.dish.name.charAt(0).toLowerCase()}${v.highlight.dish.name.slice(1)}, ${rub(v.highlight.dish.price)}` : "",
+});
+
+/** «где поесть», «что в столовой», «где свободно попить кофе»: открытые заведения, свободные — первыми. */
+async function food(t: string): Promise<AssistantReply> {
+  const steps = [
+    { state: "searching", label: "Смотрю меню" },
+    { state: "connecting", label: "Сверяю с переменами" },
+  ] as const;
+  const all = await getFood();
+  const canteen = all.find((v) => v.slug === "peremena")!;
+  if (has(t, /столов|обед|комплекс/)) {
+    const set = canteen.menu[0].items[0];
+    const now = canteen.crowd ? `сейчас ${CROWD_WORD[canteen.crowd]}${canteen.rushAt ? `, наплыв в ${canteen.rushAt.replace(/^0/, "")}` : ""}` : `откроется в ${canteen.open.replace(/^0/, "")}`;
+    return {
+      steps: [...steps],
+      text: `В столовой ${now}. Обед дня — ${rub(set.price)}: ${set.note!.charAt(0).toLowerCase()}${set.note!.slice(1)}.`,
+      card: { kind: "food", items: [venueRow(canteen)] },
+      chips: ["Где выпить кофе?"],
+    };
+  }
+  const coffee = has(t, /кофе|кофейн|капучино|латте/);
+  const open = all.filter((v) => v.isOpen && (!coffee || v.kind !== "Столовая"));
+  if (!open.length) return { steps: [...steps], text: "Сейчас всё закрыто.", chips: CHIPS.slice(0, 2) };
+  const order = { low: 0, mid: 1, high: 2 } as const;
+  const list = [...open].sort((a, b) => order[a.crowd!] - order[b.crowd!] || a.load[a.nowIndex].value - b.load[b.nowIndex].value).slice(0, 3);
+  const best = list[0];
+  return {
+    steps: [...steps],
+    text: `Сейчас открыто ${open.length} ${plural(open.length, "место", "места", "мест")}. Свободнее всего — ${best.name}, ${best.building.charAt(0).toLowerCase()}${best.building.slice(1)}.`,
+    card: { kind: "food", items: list.map(venueRow) },
+    chips: ["Что в столовой?"],
+  };
+}
+
 function greeting(): AssistantReply {
   return { steps: [{ state: "composing", label: "Думаю" }], text: "Привет! Знаю ваше расписание, оценки и сроки, могу заказать справку или записать на консультацию.", chips: CHIPS.slice(0, 4) };
 }
@@ -316,6 +361,7 @@ export async function askAssistant(raw: unknown): Promise<AssistantReply> {
   if (typeof raw !== "string") return fallback();
   const t = norm(raw.trim().slice(0, MAX_TEXT));
   if (!t) return fallback();
+  if (has(t, /поест|покушат|пообедат|позавтракат|перекус|(?<![а-я])обед|столов|кафе(?![а-я])|кафеш|кофейн|буфет|(?<![а-я])меню|(?<![а-я])ед[аыу](?![а-я])|голод|выпить кофе|кофе выпить|где кофе/)) return food(t);
   // о людях: староста и куратор, расписание человека, «найди Беляеву» / «почта Жукова» (если остаток запроса — чьё-то ФИО)
   const person = (await roles(t)) ?? (await personSchedule(t)) ?? (await people(t));
   if (person) return person;

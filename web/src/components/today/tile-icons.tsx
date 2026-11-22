@@ -1,7 +1,7 @@
 // Знаки плиток «Сегодня» — Solar (bold duotone), 480 Design, CC BY 4.0: https://www.figma.com/community/file/1166831539721848736
 // Сгенерировано из @iconify-json/solar; цвет — currentColor (второй слой — тот же цвет с прозрачностью).
 
-export type TileIconName = "courses" | "grades" | "documents" | "card" | "teachers" | "library" | "clubs" | "print" | "rating" | "coffee" | "people" | "rooms" | "redbutton" | "more";
+export type TileIconName = "courses" | "grades" | "documents" | "card" | "teachers" | "library" | "clubs" | "print" | "rating" | "coffee" | "people" | "rooms" | "food" | "redbutton" | "more";
 
 const PATHS: Record<TileIconName, React.ReactNode> = {
   courses: (
@@ -62,6 +62,11 @@ const PATHS: Record<TileIconName, React.ReactNode> = {
   rooms: (
     <>
       <path fill="currentColor" fillRule="evenodd" d="M5 22V6C5 4.1144 5 3.1716 5.5858 2.5858C6.1716 2 7.1144 2 9 2H15C16.8856 2 17.8284 2 18.4142 2.5858C19 3.1716 19 4.1144 19 6V22H5Z" clipRule="evenodd" opacity=".5"/><path fill="currentColor" d="M22 21.2496C22.4141 21.2496 22.7498 21.5856 22.75 21.9996C22.75 22.4138 22.4142 22.7496 22 22.7496H2C1.58579 22.7496 1.25 22.4138 1.25 21.9996C1.2502 21.5856 1.58591 21.2496 2 21.2496H22Z"/><path fill="currentColor" d="M15.5 11.65C15.9693 11.65 16.3504 12.0304 16.3506 12.4996C16.3506 12.969 15.9694 13.3502 15.5 13.3502C15.0308 13.35 14.6504 12.9689 14.6504 12.4996C14.6506 12.0305 15.0309 11.6502 15.5 11.65Z"/>
+    </>
+  ),
+  food: (
+    <>
+      <path fill="currentColor" d="M18.9981 18H5.00146C5.01166 19.3969 5.0832 20.9119 5.58556 21.4142C6.17135 22 7.11415 22 8.99977 22H14.9998C16.8854 22 17.8282 22 18.414 21.4142C18.9163 20.9119 18.9879 19.3969 18.9981 18Z"/><path fill="currentColor" d="M7 5C4.23858 5 2 7.23858 2 10C2 12.0503 3.2341 13.8124 5 14.584V18H19L19 14.584C20.7659 13.8124 22 12.0503 22 10C22 7.23858 19.7614 5 17 5C16.7495 5 16.5033 5.01842 16.2626 5.05399C15.6604 3.27806 13.9794 2 12 2C10.0206 2 8.33961 3.27806 7.73736 5.05399C7.49673 5.01842 7.25052 5 7 5Z" opacity=".5"/>
     </>
   ),
   redbutton: (

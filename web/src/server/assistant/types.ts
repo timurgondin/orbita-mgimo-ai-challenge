@@ -44,7 +44,8 @@ export type AssistantCard =
   | { kind: "tasks"; items: { id: string; title: string; course: string; color: string; due: string; hot: boolean; note: string }[] }
   | { kind: "request"; typeId: string; title: string; eta: string; params: { purpose: string; lang: string; format: string; copies: number } }
   | { kind: "consultations"; items: AssistantConsultation[] }
-  | { kind: "people"; items: PersonHit[] };
+  | { kind: "people"; items: PersonHit[] }
+  | { kind: "food"; items: { slug: string; name: string; place: string; color: string; crowd: string; note: string }[] };
 
 export interface AssistantReply {
   steps: ThinkStep[];

@@ -3,11 +3,11 @@
 import { useCallback, useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Check, CircleHelp, Clock3, MapPin, Pause, Send, Shuffle, SlidersHorizontal, Tags, Video } from "lucide-react";
+import { Check, ChevronRight, CircleHelp, Clock3, MapPin, Pause, Send, Shuffle, SlidersHorizontal, Tags, Video } from "lucide-react";
 import { Modal } from "@/components/time/modal";
 import { Segmented } from "@/components/ui/segmented";
 import { useToast } from "@/components/ui/toast";
-import { COFFEE_INTERESTS, MAX_INTERESTS, MIN_INTERESTS, type CoffeeFormat } from "@/lib/coffee";
+import { CAFE_SLUGS, COFFEE_INTERESTS, MAX_INTERESTS, MIN_INTERESTS, type CoffeeFormat } from "@/lib/coffee";
 import { formatDayMonth, formatLongDate, mskDate, mskTime } from "@/lib/demo-clock";
 import { plural } from "@/lib/phrases";
 import { cn } from "@/lib/utils";
@@ -193,10 +193,18 @@ function MatchCard({
             <Clock3 size={17} strokeWidth={1.6} className="shrink-0 text-text-3" />
             {longDay(c.startsAt)}, {span(c.startsAt, c.endsAt)}
           </span>
-          <span className="inline-flex items-center gap-2.5">
-            {c.online ? <Video size={17} strokeWidth={1.6} className="shrink-0 text-text-3" /> : <MapPin size={17} strokeWidth={1.6} className="shrink-0 text-text-3" />}
-            {c.place}
-          </span>
+          {CAFE_SLUGS[c.place] ? (
+            <Link href={`/food?place=${CAFE_SLUGS[c.place]}`} data-coffee-place className="group inline-flex items-center gap-2.5 self-start">
+              <MapPin size={17} strokeWidth={1.6} className="shrink-0 text-text-3" />
+              <span className="underline decoration-line underline-offset-4 transition-colors group-hover:decoration-text-3">{c.place}</span>
+              <ChevronRight size={15} strokeWidth={1.8} className="-ml-1 text-text-3" />
+            </Link>
+          ) : (
+            <span className="inline-flex items-center gap-2.5">
+              {c.online ? <Video size={17} strokeWidth={1.6} className="shrink-0 text-text-3" /> : <MapPin size={17} strokeWidth={1.6} className="shrink-0 text-text-3" />}
+              {c.place}
+            </span>
+          )}
         </div>
 
         <div className="mt-6 border-t border-line pt-5">

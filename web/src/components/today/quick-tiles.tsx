@@ -31,6 +31,7 @@ const TILES: Tile[] = [
   { id: "coffee", label: "Random Coffee", icon: "coffee", color: "var(--c-hist)", href: "/coffee" },
   { id: "people", label: "Люди", icon: "people", color: "var(--c-py)", href: "/people" },
   { id: "rooms", label: "Аудитории", icon: "rooms", color: "var(--c-world)", href: "/rooms" },
+  { id: "food", label: "Еда", icon: "food", color: "var(--c-econ)", href: "/food" },
   { id: "redbutton", label: "Красная кнопка", icon: "redbutton", color: "var(--st-red)", href: "/redbutton" },
 ];
 

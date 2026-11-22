@@ -28,6 +28,8 @@ export function ReplyCard({ card, toast }: { card: AssistantCard; toast: Toast }
       return <Consultations card={card} toast={toast} />;
     case "people":
       return <People card={card} />;
+    case "food":
+      return <Food card={card} />;
   }
 }
 
@@ -245,6 +247,24 @@ function People({ card }: { card: Extract<AssistantCard, { kind: "people" }> }) 
             <small className="block truncate text-[13px] text-text-3">{p.sub}</small>
           </span>
           {p.tag && <span className="shrink-0 text-[13px] text-text-2 tabular-nums">{p.tag}</span>}
+          <ChevronRight aria-hidden="true" size={16} strokeWidth={1.6} className="shrink-0 text-text-3" />
+        </Link>
+      ))}
+    </div>
+  );
+}
+
+function Food({ card }: { card: Extract<AssistantCard, { kind: "food" }> }) {
+  return (
+    <div className={cn(box, "rows")} style={{ "--row-inset": "12px" } as React.CSSProperties} data-assistant-food>
+      {card.items.map((v) => (
+        <Link key={v.slug} href={`/food?place=${v.slug}`} className={cn(row, "transition-colors duration-150 hover:bg-hover")}>
+          {dot(v.color)}
+          <span className="min-w-0 flex-1">
+            <b className="block truncate text-[14.5px] font-medium">{v.name}</b>
+            <small className="block truncate text-[13px] text-text-3">{v.note || v.place}</small>
+          </span>
+          <span className="shrink-0 text-[13px] text-text-2">{v.crowd.charAt(0).toUpperCase() + v.crowd.slice(1)}</span>
           <ChevronRight aria-hidden="true" size={16} strokeWidth={1.6} className="shrink-0 text-text-3" />
         </Link>
       ))}

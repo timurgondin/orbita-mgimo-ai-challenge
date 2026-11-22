@@ -14,6 +14,8 @@ export const COFFEE_FORMATS = ["campus", "online", "any"] as const;
 export type CoffeeFormat = (typeof COFFEE_FORMATS)[number];
 
 export const CAFES = ["Кофейня «Зерно», корпус А", "Кафе в атриуме, корпус Б", "Терраса библиотеки, 3 этаж"] as const;
+/** Кафе встречи → заведение в разделе «Еда» (`/food?place=<slug>`). */
+export const CAFE_SLUGS: Record<string, string> = { [CAFES[0]]: "zerno", [CAFES[1]]: "atrium", [CAFES[2]]: "terrace" };
 export const ONLINE_PLACE = "Видеозвонок в Орбите";
 export const COFFEE_MINUTES = 30;
 
