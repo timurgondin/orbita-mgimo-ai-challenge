@@ -85,12 +85,13 @@ try {
   await page.waitForTimeout(400);
   check("picked target shown", (await page.locator('[data-picked="petrova-ea"]').count()) === 1);
   await page.fill("[data-text]", TEXT);
-  await page.click("[data-author] [role=switch]");
+  check("sender: own name chosen by default", (await page.locator('[data-from="me"][aria-checked="true"]').count()) === 1 && (await page.locator('[data-from="anon"][aria-checked="false"]').count()) === 1);
+  await page.click('[data-from="anon"]');
   await page.click("[data-send]");
   await page.waitForSelector('[data-appeal="1047"]');
   const created = await db.appeal.findUnique({ where: { number: 1047 } });
   check("appeal saved: author from session, anonymous, routed to department", created?.userId === me && created.anonymous === true && created.kind === "thanks" && created.forwardedTo === "Кафедра экономики" && created.status === "sent");
-  check("form reset after sending", (await page.locator("[data-text]").inputValue()) === "" && (await page.locator('[data-picked]').count()) === 0);
+  check("form reset after sending", (await page.locator("[data-text]").inputValue()) === "" && (await page.locator('[data-picked]').count()) === 0 && (await page.locator('[data-from="me"][aria-checked="true"]').count()) === 1);
 
   // подделанные запросы
   const before = await db.appeal.count();

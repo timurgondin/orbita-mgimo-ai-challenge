@@ -7,7 +7,6 @@ import {
   MessageCircleWarning, Search, ShieldCheck, Sparkles, UtensilsCrossed, VenetianMask, type LucideIcon,
 } from "lucide-react";
 import { Modal } from "@/components/time/modal";
-import { Switch } from "@/components/profile/privacy";
 import { useToast } from "@/components/ui/toast";
 import { KINDS, RECTOR_OFFICE, STATUS, TEXT_MAX, TEXT_MIN, kindOf, type AppealKind } from "@/lib/appeals";
 import { cn } from "@/lib/utils";
@@ -204,25 +203,53 @@ export function AppealsView({ data }: { data: AppealsData }) {
             />
           </label>
 
-          <label className="mt-4 flex min-h-[56px] cursor-pointer items-center gap-3 rounded-[16px] px-0.5" data-author>
-            {anonymous ? (
-              <span className="grid size-9 shrink-0 place-items-center rounded-full bg-s3 text-text-2" aria-hidden="true">
-                <VenetianMask size={18} strokeWidth={1.7} />
-              </span>
-            ) : data.me.photo ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={data.me.photo} alt="" className="size-9 shrink-0 rounded-full object-cover" />
-            ) : (
-              <span aria-hidden="true" className="mono grid size-9 shrink-0 place-items-center rounded-full text-[13px] font-semibold" style={{ background: data.me.gradient }}>
-                {data.me.initials}
-              </span>
-            )}
-            <span className="min-w-0 flex-1">
-              <b className="block truncate font-medium">{anonymous ? "Анонимно" : data.me.name}</b>
-              <small className="block truncate text-[13px] text-text-3">{anonymous ? "Имя скрыто от ректората" : data.me.line}</small>
+          <div className="mt-5">
+            <span className={LABEL} id="appeal-from">
+              От кого
             </span>
-            <Switch on={anonymous} label="Анонимно" onClick={() => setAnonymous((v) => !v)} />
-          </label>
+            <div role="radiogroup" aria-labelledby="appeal-from" className="grid grid-cols-2 gap-2.5 max-sm:gap-2" data-author>
+              {([false, true] as const).map((anon) => {
+                const on = anonymous === anon;
+                return (
+                  <button
+                    key={String(anon)}
+                    type="button"
+                    role="radio"
+                    aria-checked={on}
+                    data-from={anon ? "anon" : "me"}
+                    onClick={() => setAnonymous(anon)}
+                    className={cn(
+                      "flex min-h-[60px] min-w-0 items-center gap-3 rounded-[16px] px-3.5 py-2.5 text-left transition-[background,box-shadow,transform] duration-300 ease-spring active:scale-[.97] max-sm:gap-2 max-sm:px-2.5 max-sm:[&>img]:size-8 max-sm:[&>span]:size-8",
+                      on ? "bg-[color-mix(in_srgb,var(--accent)_10%,var(--s2))] shadow-[inset_0_0_0_1.5px_color-mix(in_srgb,var(--accent)_70%,transparent)]" : "bg-s2 hover:bg-s3",
+                    )}
+                  >
+                    {anon ? (
+                      <span className="grid size-9 shrink-0 place-items-center rounded-full bg-s3 text-text-2" aria-hidden="true">
+                        <VenetianMask size={18} strokeWidth={1.7} />
+                      </span>
+                    ) : data.me.photo ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={data.me.photo} alt="" className="size-9 shrink-0 rounded-full object-cover" />
+                    ) : (
+                      <span aria-hidden="true" className="mono grid size-9 shrink-0 place-items-center rounded-full text-[13px] font-semibold" style={{ background: data.me.gradient }}>
+                        {data.me.initials}
+                      </span>
+                    )}
+                    <b className="min-w-0 truncate font-medium max-sm:text-[14.5px]">
+                      {anon ? (
+                        "Анонимно"
+                      ) : (
+                        <>
+                          <span className="max-sm:hidden">{data.me.name}</span>
+                          <span className="sm:hidden">{data.me.name.split(" ")[0]}</span>
+                        </>
+                      )}
+                    </b>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
 
           <button
             type="button"
