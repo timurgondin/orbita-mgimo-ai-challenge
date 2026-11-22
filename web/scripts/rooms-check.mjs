@@ -149,6 +149,15 @@ try {
   const someone = await db.user.findUniqueOrThrow({ where: { id: other.userId } });
   check("no other people's names on the page", !html.includes(someone.lastName));
 
+  // преподаватель: плитка на «Сегодня», страница и бронь
+  const { ctx: tc, page: tp } = await login("e.petrova");
+  check("teacher: «Аудитории» tile on Today", await tp.waitForSelector('a[href="/rooms"]', { timeout: 8000 }).then(() => true, () => false));
+  await open(tp, "/rooms");
+  check("teacher: rooms page", new URL(tp.url()).pathname === "/rooms" && (await tp.locator("[data-room]").count()) === 14);
+  const ts = await freeSlot("2026-11-20");
+  const tb = await book(tc, { roomId: ts.id, date: "2026-11-20", start: ts.t, duration: 30, title: "Консультация по курсовым" });
+  check("teacher: can book", tb.body.includes('"ok":true') && (await db.roomBooking.count({ where: { user: { login: "e.petrova" } } })) === 1);
+
   // учебный офис — нет доступа
   const { ctx: oc, page: op } = await login("office");
   await op.goto(BASE + "/rooms");

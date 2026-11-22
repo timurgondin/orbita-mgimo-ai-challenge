@@ -79,8 +79,8 @@ const TILES: { label: string; icon: TileIconName; color: string; href: string }[
   { label: "Проверка", icon: "documents", color: "var(--st-violet)", href: "/study?tab=review" },
   { label: "Журнал", icon: "grades", color: "var(--st-green)", href: "/study?tab=journal" },
   { label: "Консультации", icon: "teachers", color: "var(--accent)", href: "/time?tab=cons" },
-  { label: "Мои курсы", icon: "courses", color: "var(--c-econ)", href: "/study" },
   { label: "Люди", icon: "people", color: "var(--c-py)", href: "/people" },
+  { label: "Аудитории", icon: "rooms", color: "var(--c-world)", href: "/rooms" },
   { label: "Печать", icon: "print", color: "var(--c-law)", href: "/print" },
 ];
 
