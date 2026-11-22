@@ -1,7 +1,7 @@
 "use client";
 
 import { useActionState, useEffect, useRef, useState } from "react";
-import { ChevronDown, CircleAlert, Eye, EyeOff, Stamp, UsersRound } from "lucide-react";
+import { ChevronDown, CircleAlert, Eye, EyeOff, UsersRound } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useTheme } from "next-themes";
 import { ThinkingOrb } from "thinking-orbs";
@@ -14,7 +14,6 @@ const DEMO = [
   { login: "m.orlov", initials: "МО", name: "Максим Орлов", sub: "Студент 4 курса", bg: "linear-gradient(160deg,#9FAAC8,#56627F)" },
   { login: "n.lanskaya", initials: "НЛ", name: "Ника Ланская", sub: "Первокурсница", bg: "linear-gradient(160deg,#B79BCC,#6E5287)" },
   { login: "e.petrova", initials: "ЕП", name: "Елена Петрова", sub: "Преподаватель", bg: "linear-gradient(160deg,#D8A889,#8F5F48)" },
-  { login: "office", initials: "", name: "Учебный офис", sub: "Сотрудник", bg: "" },
 ];
 const DEMO_PASSWORD = "orbita-demo";
 
@@ -216,10 +215,10 @@ export function LoginForm() {
                   className="flex w-full items-center gap-3 rounded-xl px-2.5 py-2 text-left transition-colors hover:bg-hover focus-visible:bg-hover focus-visible:outline-none"
                 >
                   <span
-                    className={cn("grid size-[34px] shrink-0 place-items-center rounded-full text-xs font-semibold", a.bg ? "mono" : "bg-s3 text-text-2")}
-                    style={a.bg ? { background: a.bg } : undefined}
+                    className="mono grid size-[34px] shrink-0 place-items-center rounded-full text-xs font-semibold"
+                    style={{ background: a.bg }}
                   >
-                    {a.bg ? a.initials : <Stamp size={16} strokeWidth={1.6} />}
+                    {a.initials}
                   </span>
                   <span className="flex min-w-0 flex-col">
                     <span className="text-[14.5px] font-medium">{a.name}</span>
