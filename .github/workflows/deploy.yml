@@ -1,0 +1,39 @@
+# Автодеплой на продакшн (https://111-88-81-94.sslip.io) после каждого push в main.
+# Ключ DEPLOY_KEY на сервере ограничен: он может только запустить /srv/orbita/deploy.sh
+# (git pull → npm ci → db push → seed → build → restart).
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    environment:
+      name: production
+      url: https://111-88-81-94.sslip.io
+    steps:
+      - name: Deploy over SSH
+        env:
+          DEPLOY_KEY: ${{ secrets.DEPLOY_KEY }}
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          DEPLOY_KNOWN_HOSTS: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
+        run: |
+          install -m 700 -d ~/.ssh
+          printf '%s\n' "$DEPLOY_KEY" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          printf '%s\n' "$DEPLOY_KNOWN_HOSTS" > ~/.ssh/known_hosts
+          ssh -i ~/.ssh/deploy_key -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes \
+            -o ServerAliveInterval=30 orbita@"$DEPLOY_HOST" deploy
+
+      - name: Smoke check
+        run: |
+          sleep 5
+          curl -fsS -o /dev/null -w "%{http_code}\n" https://111-88-81-94.sslip.io/login
