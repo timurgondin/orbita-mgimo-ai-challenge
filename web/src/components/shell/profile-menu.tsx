@@ -83,7 +83,12 @@ export function ProfileMenu({ user }: { user: UserView }) {
           <Info className="size-4 max-sm:size-5" strokeWidth={1.6} />
           О проекте
         </Link>
-        <form action={logoutAction}>
+        <form
+          action={async () => {
+            await logoutAction();
+            location.replace("/login");
+          }}
+        >
           <button type="submit" className={ITEM}>
             <LogOut className="size-4 max-sm:size-5" strokeWidth={1.6} />
             Выйти

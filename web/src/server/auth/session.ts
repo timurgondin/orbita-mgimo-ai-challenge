@@ -66,5 +66,6 @@ export async function destroySession(): Promise<void> {
   const jar = await cookies();
   const token = jar.get(SESSION_COOKIE)?.value;
   if (token) await db.session.deleteMany({ where: { id: sha256(token) } });
-  jar.delete(SESSION_COOKIE);
+  // те же атрибуты, что при выдаче: удаление __Host- cookie без Secure браузер игнорирует
+  jar.set(SESSION_COOKIE, "", sessionCookieOptions(0));
 }

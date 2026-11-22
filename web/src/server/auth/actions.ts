@@ -1,7 +1,6 @@
 "use server";
 
 import { headers } from "next/headers";
-import { redirect } from "next/navigation";
 import { db } from "@/server/db/client";
 import { DEMO_FRESHMAN, resetDemoFreshman } from "@/server/onboarding/reset";
 import { PEPPER_VERSION, needsRehash, hashPassword, verifyDummy, verifyPassword } from "./password";
@@ -65,7 +64,7 @@ export async function loginAction(_prev: LoginState, formData: FormData): Promis
   return { to: user.role === "student" && !user.onboardingDone ? "/welcome" : "/" };
 }
 
+/** Без redirect: клиент уходит на /login полной загрузкой, чтобы сбросить кэш роутера (иначе — петля / ↔ /login). */
 export async function logoutAction(): Promise<void> {
   await destroySession();
-  redirect("/login");
 }
