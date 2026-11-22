@@ -56,8 +56,8 @@ function Availability({ b, className }: { b: CatalogBook; className?: string }) 
 
 function BookTile({ b, onOpen, course }: { b: CatalogBook; onOpen: () => void; course?: boolean }) {
   return (
-    <button type="button" onClick={onOpen} data-book={b.slug} className="group flex min-w-0 flex-col gap-2.5 text-left">
-      <Cover b={b} className="w-full transition-transform duration-300 ease-spring [--fs:12px] group-hover:-translate-y-1 group-active:scale-[.97] max-sm:[--fs:10px]" />
+    <button type="button" onClick={onOpen} data-book={b.slug} className="group grid min-w-0 grid-cols-[minmax(0,1fr)] content-start gap-2.5 text-left">
+      <Cover b={b} className="w-full max-w-full transition-transform duration-300 ease-spring [--fs:12px] group-hover:-translate-y-1 group-active:scale-[.97] max-sm:[--fs:10px]" />
       <span className="min-w-0">
         <b className="line-clamp-2 text-sm leading-snug font-medium">{b.title}</b>
         {course && b.course ? (
