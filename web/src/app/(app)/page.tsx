@@ -19,10 +19,18 @@ import { getScheduleForToday, getSoon } from "@/server/data/today";
 import { UrgentStrip } from "@/components/notifications/urgent-strip";
 import { FirstSteps } from "@/components/today/first-steps";
 import { getFirstSteps } from "@/server/data/first-steps";
+import { TeachToday } from "@/components/teach/teach-today";
+import { getTeachCourses, getTeachToday } from "@/server/data/teach";
 
 export default async function TodayPage() {
   const user = await requireUser();
   const student = user.role === "student";
+  if (user.role === "teacher") {
+    const [data, courses] = await Promise.all([getTeachToday(), getTeachCourses()]);
+    if (data && courses) {
+      return <TeachToday firstName={user.firstName} greeting={greeting(DEMO_MINUTES)} date={formatLongDate(DEMO_DATE)} data={data} courses={courses} />;
+    }
+  }
   const [schedule, soon, news, card, firstSteps] = student
     ? await Promise.all([getScheduleForToday(), getSoon(), getTopNews(), getStudentCard(), getFirstSteps()])
     : [null, [], [], null, null];

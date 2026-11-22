@@ -180,7 +180,7 @@ try {
   await page.goto(BASE + "/time");
   await page.waitForSelector("main h1");
   const t = await text(page);
-  check("teacher /time: placeholder only", t.includes("Кабинет сотрудника появится здесь") && !t.includes("Эконометрика"));
+  check("teacher /time: own schedule, no student data", t.includes("Расписание") && t.includes("пар на этой неделе") && !t.includes("Эконометрика"));
   const tf = await forge(ctx, "signUp", [alisaEng.id, "q"]);
   check("teacher forged signUp rejected", tf.body.includes("студентам") && (await count(alisaEng.id)) === 9);
   await ctx.close();

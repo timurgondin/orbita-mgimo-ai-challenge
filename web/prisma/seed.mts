@@ -6,6 +6,7 @@ import { pastContent } from "./seed-past";
 import { LESSON_PREP, PREPARE } from "./seed-prepare";
 import { BOOKS, CLUBS, CLUB_MEMBERS, COFFEE_MATCHES, COFFEE_PEOPLE, COFFEE_PROFILES, LOANS, ORDERS, PRINT_JOBS, READINGS, SCANS } from "./seed-campus";
 import { attachToGroups, seedDirectory } from "./seed-directory";
+import { seedTeacher } from "./seed-teacher";
 import { AUTO_PASS, DISCIPLINE_BY_TITLE, LOAD, PLANNED, PROFILES, STAFF, SYLLABI, TASKS, TEACHERS } from "./seed-academic";
 
 const db = new PrismaClient();
@@ -922,6 +923,9 @@ for (const [login, who, week, start, place, mine, theirs, met, cancelled] of COF
 // ---------- Справочник: факультеты, группы, студенты, преподаватели (поиск людей) ----------
 const dir = await seedDirectory(db, await hashPassword(randomBytes(24).toString("base64url")), PEPPER_VERSION);
 await attachToGroups(db, [...POOL.map(([last, first]) => personLogin(first, last)), ...COFFEE_PEOPLE.map((p) => personLogin(p.first, p.last))]);
+// ---------- Кабинет преподавателя ----------
+await seedTeacher(db, await hashPassword(randomBytes(24).toString("base64url")), PEPPER_VERSION, personLogin);
+
 console.log(`Directory: ${dir.students} students, ${dir.teachers} teachers, ${dir.courses} courses, ${dir.events} events`);
 
 await db.$disconnect();

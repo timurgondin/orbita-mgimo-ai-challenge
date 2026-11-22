@@ -1,9 +1,15 @@
 import { TimeView } from "@/components/time/time-view";
 import { requireUser } from "@/server/auth/session";
 import { getTimeData } from "@/server/data/time";
+import { TeachTime } from "@/components/teach/teach-time";
+import { getTeachTime } from "@/server/data/teach";
 
 export default async function TimePage() {
   const user = await requireUser();
+  if (user.role === "teacher") {
+    const t = await getTeachTime();
+    if (t) return <TeachTime data={t} />;
+  }
   const data = user.role === "student" ? await getTimeData() : null;
   if (!data) {
     return (

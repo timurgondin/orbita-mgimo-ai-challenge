@@ -187,8 +187,8 @@ try {
   // сотрудник
   const { page: tp } = await login("e.petrova");
   await tp.goto(BASE + "/office");
-  await tp.waitForSelector("text=Кабинет сотрудника появится здесь");
-  check("teacher sees placeholder", true);
+  await tp.waitForSelector("text=Ведомости");
+  check("teacher sees own office, no student requests", !(await text(tp)).includes("R-2481"));
   const tf = await forge((await tp.context()), "createRequest", ["study", goodCert]);
   check("teacher cannot create request", tf.body.includes("доступны студентам"));
 } finally {

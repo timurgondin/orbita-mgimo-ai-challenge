@@ -2,7 +2,7 @@ import "server-only";
 import { DEMO_NOW, daysBetween, formatDayMonth, mskDate, mskTime } from "@/lib/demo-clock";
 import { PRINTERS, QUOTA, printerById, printerName } from "@/lib/printers";
 import { db } from "@/server/db/client";
-import { getStudent } from "./shared";
+import { requireUser } from "@/server/auth/session";
 import type { PrintData } from "./types";
 
 const fileSize = (b: number) => (b < 1024 * 1024 ? `${Math.max(1, Math.round(b / 1024))} КБ` : `${(b / 1024 / 1024).toFixed(1).replace(".", ",")} МБ`);
@@ -23,7 +23,8 @@ export async function quotaUsed(userId: string) {
 
 /** Печать текущего студента: очередь, история, сканы, квота и принтеры. Принтер у следующей пары — первым. */
 export async function getPrint(): Promise<PrintData | null> {
-  const user = await getStudent();
+  const me = await requireUser();
+  const user = me.role === "student" || me.role === "teacher" ? me : null; // печать — студентам и преподавателям
   if (!user) return null;
   const [jobs, scans, used, next] = await Promise.all([
     db.printJob.findMany({ where: { userId: user.id }, orderBy: { createdAt: "desc" }, take: 30 }),

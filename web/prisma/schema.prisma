@@ -70,6 +70,7 @@ model User {
   coffeeProfile       CoffeeProfile?
   coffeeMatches       CoffeeMember[]
   photo               UserPhoto?
+  assisting           CourseAssistant[]
 }
 
 // Фото студента (аватар и Орбита ID): JPEG, уменьшен в браузере, проверен по сигнатуре на сервере
@@ -128,6 +129,7 @@ model Course {
   events         ScheduleEvent[]
   consultations  Consultation[]
   onlineProgress OnlineProgress[]
+  assistants     CourseAssistant[]
 }
 
 model Enrollment {
@@ -259,6 +261,20 @@ model Teacher {
   publications String          @default("[]") // JSON {title, venue, year}[]
   profiles     String          @default("[]") // JSON {kind, id, metric?}[]: orcid | scholar | elibrary | scopus | ssrn | site
   courses      CourseTeacher[]
+}
+
+// Учебный ассистент курса: старшекурсник или магистрант, назначает преподаватель. Права — что ему можно на курсе.
+model CourseAssistant {
+  id        String   @id @default(cuid())
+  courseId  String
+  userId    String
+  canReview Boolean  @default(true) // проверять работы
+  canGrade  Boolean  @default(false) // ставить оценки в журнал
+  createdAt DateTime @default(now())
+  course    Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([courseId, userId])
 }
 
 model CourseTeacher {

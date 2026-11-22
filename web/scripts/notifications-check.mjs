@@ -168,11 +168,12 @@ try {
   const { page: mp } = await login("m.orlov");
   check("Maxim: bell 1, no urgent strip", (await bell(mp)) === "1" && (await mp.locator("[data-urgent]").count()) === 0);
 
-  // преподаватель: пустой центр
+  // преподаватель: свои уведомления (сдачи, ведомость), без студенческих
   const { page: tp } = await login("e.petrova");
   await tp.click("[data-bell]");
-  await tp.waitForSelector("text=Здесь пусто");
-  check("teacher: empty center", true);
+  await tp.waitForSelector("text=Ведомость по Микроэкономике");
+  const tc = (await tp.locator("dialog[open]").textContent()) ?? "";
+  check("teacher: own notifications only", tc.includes("Problem set 6") && !tc.includes("8 из 10 за контрольную"));
 } finally {
   await browser.close();
   server.kill();

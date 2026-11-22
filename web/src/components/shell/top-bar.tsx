@@ -48,7 +48,7 @@ export function TopBar({ user }: { user: UserView }) {
         <Logo textOnMobile />
         {/* одна навигация видна в каждый момент: на телефоне док внизу (вне шапки — у неё своё размытие, fixed внутри него не работает) */}
         <div className="max-sm:hidden">
-          <Dock />
+          <Dock teacher={user.role === "teacher"} />
         </div>
         <div className="flex items-center justify-end gap-1.5">
           <BellButton />
@@ -56,7 +56,7 @@ export function TopBar({ user }: { user: UserView }) {
         </div>
       </ScrollHeader>
       <div className="sm:hidden">
-        <Dock bottom />
+        <Dock bottom teacher={user.role === "teacher"} />
       </div>
     </>
   );

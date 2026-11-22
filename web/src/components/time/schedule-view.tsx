@@ -78,7 +78,7 @@ function Slot({ item, date, onOpen }: { item: Item; date: string; onOpen: (item:
           {/* на телефоне статус — в той же строке, справа места нет */}
           {(mine || st.text) && (
             <span className={cn("sm:hidden", st.tone === "live" && "text-text", st.tone === "hot" && "text-urgent", mine && "text-(--st-green)")}>
-              {mine ? "Вы записаны" : st.text}
+              {mine ? (item.type === "cons" && item.cons.note) || "Вы записаны" : st.text}
             </span>
           )}
         </div>
@@ -91,7 +91,7 @@ function Slot({ item, date, onOpen }: { item: Item; date: string; onOpen: (item:
           mine && "text-(--st-green)",
         )}
       >
-        {mine ? "Вы записаны" : st.text}
+        {mine ? (item.type === "cons" && item.cons.note) || "Вы записаны" : st.text}
       </span>
       {st.state === "live" && <ProgressBar value={st.progress ?? 0} label="Прошло от пары" className="col-[2/-1] mt-0.5" />}
     </button>

@@ -280,7 +280,8 @@ try {
   // ---- преподаватель
   const { page: tp } = await login("e.petrova");
   await open(tp, "/study/micro-24");
-  check("teacher: no student course page", !(await body(tp)).includes("Формула оценки"));
+  const tb = await body(tp);
+  check("teacher: own teacher course page, not the student one", tb.includes("Команда") && tb.includes("Сдали") && !tb.includes("Ближайших консультаций"));
 
   // ---- 360 px без горизонтальной прокрутки
   const { page: mob } = await login("a.vorontsova", { width: 360, height: 780 });

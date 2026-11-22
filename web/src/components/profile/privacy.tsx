@@ -20,7 +20,7 @@ export interface PrivacyState {
 
 const ROW = "-mx-3 flex min-h-[60px] items-center gap-3.5 rounded-[14px] px-3 py-2.5";
 
-function Switch({ on, label, onClick, disabled }: { on: boolean; label: string; onClick: () => void; disabled?: boolean }) {
+export function Switch({ on, label, onClick, disabled }: { on: boolean; label: string; onClick: () => void; disabled?: boolean }) {
   return (
     <button
       type="button"

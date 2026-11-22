@@ -338,6 +338,8 @@ export interface TimeConsultation {
   going: boolean;
   myQuestion: string;
   past: boolean;
+  /** подпись статуса вместо «Вы записаны» (у преподавателя — «Записались 3 из 6») */
+  note?: string;
 }
 
 export interface TimeData {

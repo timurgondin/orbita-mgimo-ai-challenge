@@ -99,7 +99,7 @@ try {
   await page.goto(BASE + "/study");
   await page.waitForSelector("main h1");
   const t = await text(page);
-  check("teacher /study shows placeholder, no student data", t.includes("Кабинет сотрудника появится здесь") && ALISA_ONLY.every((x) => !t.includes(x)));
+  check("teacher /study shows own courses, no student data", t.includes("Микроэкономика") && t.includes("Журнал") && ALISA_ONLY.filter((x) => x !== "Микроэкономика").every((x) => !t.includes(x)));
   await ctx.close();
 } catch (e) {
   check("script error", false, String(e));

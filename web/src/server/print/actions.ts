@@ -17,7 +17,7 @@ const MAX_HELD = 10;
 
 async function student() {
   const user = await requireUser();
-  return user.role === "student" ? user : null;
+  return user.role === "student" || user.role === "teacher" ? user : null;
 }
 
 /** Сколько страниц: PDF — по документу, картинка — одна. Тип — по сигнатуре; иначе null. */

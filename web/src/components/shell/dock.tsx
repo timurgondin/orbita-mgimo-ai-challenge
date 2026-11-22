@@ -27,7 +27,7 @@ function isActive(pathname: string, href: string) {
   return href === "/" ? pathname === "/" : pathname === href || pathname.startsWith(`${href}/`);
 }
 
-export function Dock({ bottom = false }: { bottom?: boolean }) {
+export function Dock({ bottom = false, teacher = false }: { bottom?: boolean; teacher?: boolean }) {
   const pathname = usePathname();
   const dockRef = useRef<HTMLElement>(null);
   const indRef = useRef<HTMLSpanElement>(null);
@@ -95,7 +95,7 @@ export function Dock({ bottom = false }: { bottom?: boolean }) {
         aria-hidden="true"
         className="absolute top-[5px] bottom-[5px] left-0 w-0 rounded-full bg-dock-ind shadow-[inset_0_.5px_0_var(--dock-hi)] transition-[left,width] duration-500 ease-spring"
       />
-      {LEFT_TABS.map(renderTab)}
+      {(teacher ? LEFT_TABS.map((t) => (t.href === "/study" ? { ...t, label: "Курсы" } : t)) : LEFT_TABS).map(renderTab)}
       <button
         type="button"
         onClick={assistant.open}

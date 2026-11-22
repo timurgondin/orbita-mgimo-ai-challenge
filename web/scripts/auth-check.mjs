@@ -128,7 +128,7 @@ try {
   await submit(page, "e.petrova", "orbita-demo");
   await page.waitForURL(BASE + "/");
   await page.waitForSelector("main h1");
-  check("teacher sees calm line", (await page.content()).includes("Кабинет сотрудника появится здесь"));
+  check("teacher sees own cabinet", !!(await page.$("[data-teach-now]")) || (await page.content()).includes("Пар сегодня больше нет"));
   await ctx.close();
 
   // 7. БД
