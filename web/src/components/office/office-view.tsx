@@ -156,7 +156,7 @@ export function OfficeView({ data }: { data: OfficeData }) {
       </section>
 
       <div className="mt-11 flex items-center gap-4 rounded-[20px] bg-s1 px-[22px] py-[18px] max-md:flex-wrap">
-        <span className="grid size-11 shrink-0 place-items-center rounded-[14px] bg-s2 text-text-2">
+        <span className="grid size-11 shrink-0 place-items-center rounded-[14px] bg-s2 text-text-2 max-md:self-start">
           <Building2 size={16} strokeWidth={1.6} />
         </span>
         <div className="min-w-0 flex-1 max-md:basis-[calc(100%-60px)]">
@@ -175,7 +175,7 @@ export function OfficeView({ data }: { data: OfficeData }) {
         <span className={cn("inline-flex items-center gap-1.5 text-[13.5px] before:size-[7px] before:rounded-full before:bg-current", data.open ? "text-(--st-green)" : "text-text-3")}>
           {data.open ? "Открыто до 18:00" : "Закрыто"}
         </span>
-        <a href={`mailto:${OFFICE.email}`} className={cn(ghostBtn, "ml-3 max-md:ml-0")}>
+        <a href={`mailto:${OFFICE.email}`} className={cn(ghostBtn, "ml-3 max-md:ml-auto")}>
           <MessageCircle size={15} strokeWidth={1.6} />
           Написать
         </a>
